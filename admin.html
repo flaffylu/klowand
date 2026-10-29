@@ -1,0 +1,266 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Klo-Wand Admin</title>
+<meta name="theme-color" content="#1d2321">
+<meta name="robots" content="noindex">
+<link rel="icon" href="icon-192.png">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Permanent+Marker&family=Caveat:wght@500;700&family=Gochi+Hand&family=Barlow+Condensed:wght@500;600;700&display=swap">
+<style>
+/* Layout: Leitstand im Kabinen-Look. Kopfleiste mit Anmeldung, Wand-Filter, darunter ein Live-Feed aller Wände */
+:root{
+  --bg:#161b19; --panel:#1f2623; --line:#33403b; --fg:#e9ece9; --muted:#9aa59f;
+  --door:#b9c7bf; --ink:#1d2321; --red:#e0564c; --red-deep:#b3261e; --blue:#6f9be0; --green:#6fbf7e; --amber:#e8b44c;
+  --f-hand:"Gochi Hand","Comic Sans MS",cursive; --f-marker:"Permanent Marker","Gochi Hand",cursive;
+  --f-scrawl:"Caveat","Gochi Hand",cursive; --f-ui:"Barlow Condensed","Arial Narrow",system-ui,sans-serif;
+  color-scheme:dark;
+}
+html,body{background:var(--bg);color:var(--fg)}
+body{margin:0;font:500 1rem/1.35 var(--f-ui)}
+.wrap{max-width:860px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:16px 48px}
+header{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between}
+h1{margin:0;font:400 1.9rem/1 var(--f-marker);color:var(--fg)}
+h1 small{display:block;font:600 .8rem var(--f-ui);letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-top:6px}
+.who{display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:.95rem;color:var(--muted)}
+button{font:700 .9rem var(--f-ui);letter-spacing:.05em;text-transform:uppercase;border-radius:6px;border:1px solid var(--line);background:var(--panel);color:var(--fg);padding:8px 14px;cursor:pointer;min-height:40px}
+button.primary{background:var(--red-deep);border-color:var(--red-deep);color:#fff}
+button:disabled{opacity:.5;cursor:default}
+:focus-visible{outline:2px dashed var(--blue);outline-offset:2px}
+.notice{margin:14px 0 0;padding:10px 12px;border-radius:6px;background:#2a2116;border:1px solid #5a4625;color:#f3d9a6;font-size:.95rem}
+.notice[hidden]{display:none}
+.bar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:18px 0 10px}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{border-radius:999px;padding:6px 12px;min-height:36px;font-size:.85rem}
+.chip[aria-pressed="true"]{background:var(--fg);color:var(--ink);border-color:var(--fg)}
+.chip .n{display:inline-block;min-width:18px;margin-left:6px;padding:0 5px;border-radius:999px;background:var(--red-deep);color:#fff;font-size:.75rem}
+.chip .n:empty{display:none}
+.live{margin-left:auto;font-size:.85rem;color:var(--muted);display:flex;align-items:center;gap:6px}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--muted)}
+.dot.on{background:var(--green);box-shadow:0 0 0 3px rgba(111,191,126,.2)}
+.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:6px 0 14px}
+.stat{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:10px 12px}
+.stat b{display:block;font:700 1.6rem/1 var(--f-ui);font-variant-numeric:tabular-nums}
+.stat span{font-size:.8rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.feed{display:flex;flex-direction:column;gap:10px}
+.item{background:var(--door);color:var(--ink);border-radius:8px;padding:12px 14px;position:relative;border-left:6px solid transparent}
+.item.fresh{border-left-color:var(--amber)}
+.item.flagged{border-left-color:var(--red-deep)}
+.top{display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:.85rem;color:#46524b}
+.wallname{font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink)}
+.badge{font-weight:700;font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;padding:2px 7px;border-radius:3px}
+.badge.new{background:var(--amber);color:var(--ink)}
+.badge.flag{background:var(--red-deep);color:#fff}
+.text{margin:6px 0 4px;font:1.5rem/1.15 var(--f-hand);overflow-wrap:anywhere}
+.text.f-marker{font-family:var(--f-marker);font-size:1.3rem}.text.f-scrawl{font-family:var(--f-scrawl);font-size:1.7rem;font-weight:700}
+.c-ink{color:#1d2321}.c-red{color:#b3261e}.c-blue{color:#1f4fa3}.c-green{color:#2f6b3a}.c-silver{color:#f4f6f5;text-shadow:0 0 1px rgba(0,0,0,.7)}
+.drawing{display:block;max-width:100%;max-height:240px;margin:6px 0 4px}
+.replies{display:flex;flex-direction:column;gap:4px;margin:4px 0 0 8px}
+.reply{display:flex;gap:8px;align-items:center;justify-content:space-between;font:700 1.2rem/1.1 var(--f-scrawl)}
+.reply span{min-width:0;overflow-wrap:anywhere}
+.reply button{min-height:32px;padding:4px 10px;font-size:.75rem;background:transparent;color:#46524b;border-color:#8b958f}
+.actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:8px}
+.actions .meta{font-size:.85rem;color:#46524b;margin-right:auto}
+.del{background:transparent;color:#b3261e;border-color:#b3261e}
+.del.confirm{background:#b3261e;color:#fff}
+.empty{padding:32px 0;text-align:center;font:1.5rem var(--f-hand);color:var(--muted)}
+@media (max-width:420px){.stats{grid-template-columns:repeat(3,minmax(0,1fr))}.stat b{font-size:1.3rem}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Klo-Wand<small>Admin · alle Wände live</small></h1>
+    <div class="who">
+      <span id="who">Nicht angemeldet</span>
+      <button id="login" class="primary" type="button">Mit Google anmelden</button>
+      <button id="logout" type="button" hidden>Abmelden</button>
+    </div>
+  </header>
+  <p class="notice" id="notice" hidden></p>
+
+  <div class="bar">
+    <button id="alerts" type="button">Ton &amp; Hinweise an</button>
+    <span class="live"><span class="dot" id="dot"></span><span id="liveText">Verbinde …</span></span>
+  </div>
+  <div class="chips" id="chips" role="group" aria-label="Wand auswählen"></div>
+
+  <div class="stats" style="margin-top:12px">
+    <div class="stat"><b id="stToday">0</b><span>Heute neu</span></div>
+    <div class="stat"><b id="stFlag">0</b><span>Gemeldet</span></div>
+    <div class="stat"><b id="stAll">0</b><span>Letzte 7 Tage</span></div>
+  </div>
+
+  <div class="feed" id="feed"><p class="empty">Wände werden geladen …</p></div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="config.js"></script>
+<script>
+const ADMIN_EMAIL = "kaytrut426@gmail.com";
+const DAY = 864e5, WEEK = 7 * DAY;
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"]/g, m => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[m]));
+const ms = d => (d && d.ts && d.ts.toMillis) ? d.ts.toMillis() : Date.now();
+const ago = ts => { const m = Math.round((Date.now() - ts) / 6e4); if (m < 1) return "gerade eben"; if (m < 60) return `vor ${m} Min.`; const h = Math.floor(m / 60); if (h < 24) return `vor ${h} Std.`; const d = Math.floor(h / 24); return d === 1 ? "gestern" : `vor ${d} Tagen`; };
+const isDrawing = s => typeof s === "string" && s.startsWith("data:image/png;base64,");
+const wallName = w => (WAENDE[w] && WAENDE[w].name) || w;
+
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth(), fs = firebase.firestore();
+if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});
+
+let isAdmin = false, filter = "all", alertsOn = false, confirmId = null, audio = null;
+const state = {};            // wall -> { posts:{}, replies:{}, likes:{}, reports:{} }
+const seen = new Set();      // Beiträge, die beim Laden schon da waren oder angesehen wurden
+const fresh = new Set();     // neu seit dem Öffnen
+let ready = 0;
+
+/* ---------- Anmeldung ---------- */
+function notice(t) { $("notice").textContent = t; $("notice").hidden = !t; }
+$("login").onclick = async () => {
+  const provider = new firebase.auth.GoogleAuthProvider();
+  provider.setCustomParameters({ prompt: "select_account" });
+  try { await auth.signInWithPopup(provider); }
+  catch (e) {
+    if (e.code === "auth/popup-blocked" || e.code === "auth/operation-not-supported-in-this-environment") auth.signInWithRedirect(provider);
+    else if (e.code === "auth/unauthorized-domain") notice("Diese Adresse ist in Firebase noch nicht freigegeben. Trag sie unter Authentication → Einstellungen → Autorisierte Domains ein.");
+    else if (e.code === "auth/operation-not-allowed" || e.code === "auth/configuration-not-found") notice("Die Google-Anmeldung ist in Firebase noch nicht eingeschaltet. Authentication → Anmeldemethode → Google aktivieren.");
+    else if (e.code !== "auth/popup-closed-by-user" && e.code !== "auth/cancelled-popup-request") notice("Anmeldung hat nicht geklappt: " + (e.message || e.code));
+  }
+};
+$("logout").onclick = () => auth.signOut();
+auth.getRedirectResult().catch(e => notice("Anmeldung hat nicht geklappt: " + (e.message || e.code)));
+auth.onAuthStateChanged(u => {
+  isAdmin = !!(u && u.email && u.email.toLowerCase() === ADMIN_EMAIL && u.emailVerified);
+  $("who").textContent = u ? (isAdmin ? "Admin: " + u.email : u.email + " (kein Admin)") : "Nicht angemeldet";
+  $("login").hidden = !!u; $("logout").hidden = !u;
+  if (u && !isAdmin) notice("Mit diesem Konto kannst du mitlesen, aber nichts löschen. Melde dich mit " + ADMIN_EMAIL + " an.");
+  else if (!u) notice("Mitlesen geht ohne Anmeldung. Zum Löschen mit " + ADMIN_EMAIL + " anmelden.");
+  else notice("");
+  render();
+});
+
+/* ---------- Ton & Benachrichtigungen ---------- */
+$("alerts").onclick = async () => {
+  alertsOn = !alertsOn;
+  $("alerts").textContent = alertsOn ? "Ton & Hinweise aus" : "Ton & Hinweise an";
+  if (alertsOn) {
+    try { audio = audio || new (window.AudioContext || window.webkitAudioContext)(); await audio.resume(); beep(); } catch (e) {}
+    if ("Notification" in window && Notification.permission === "default") { try { await Notification.requestPermission(); } catch (e) {} }
+  }
+};
+function beep() {
+  if (!audio) return;
+  const o = audio.createOscillator(), g = audio.createGain(), t = audio.currentTime;
+  o.type = "triangle"; o.frequency.setValueAtTime(880, t); o.frequency.setValueAtTime(1320, t + .12);
+  g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(.25, t + .02); g.gain.exponentialRampToValueAtTime(.0001, t + .35);
+  o.connect(g).connect(audio.destination); o.start(t); o.stop(t + .4);
+}
+function alertNew(wall, text) {
+  updateTitle();
+  if (!alertsOn) return;
+  beep(); if (navigator.vibrate) navigator.vibrate([120, 60, 120]);
+  if ("Notification" in window && Notification.permission === "granted") {
+    const body = text.length > 80 ? text.slice(0, 77) + "…" : text, title = "Neu an der Wand: " + wallName(wall);
+    if (navigator.serviceWorker && navigator.serviceWorker.controller) navigator.serviceWorker.ready.then(r => r.showNotification(title, { body, icon: "icon-192.png", tag: "klowand-" + wall })).catch(() => {});
+    else { try { new Notification(title, { body, icon: "icon-192.png" }); } catch (e) {} }
+  }
+}
+function updateTitle() { document.title = (fresh.size ? `(${fresh.size}) ` : "") + "Klo-Wand Admin"; }
+document.addEventListener("visibilitychange", () => { if (!document.hidden) setTimeout(() => { fresh.clear(); updateTitle(); render(); }, 8000); });
+
+/* ---------- Wände live laden ---------- */
+const WALLS = Object.keys(WAENDE);
+const since = firebase.firestore.Timestamp.fromMillis(Date.now() - WEEK);
+WALLS.forEach(w => {
+  const s = state[w] = { posts: {}, replies: {}, likes: {}, reports: {}, loaded: false };
+  const base = fs.collection("walls").doc(w);
+  base.collection("posts").where("ts", ">", since).orderBy("ts", "desc").limit(300).onSnapshot(snap => {
+    snap.docChanges().forEach(ch => {
+      const key = w + "/" + ch.doc.id;
+      if (ch.type === "removed") { delete s.posts[ch.doc.id]; fresh.delete(key); return; }
+      const x = ch.doc.data();
+      s.posts[ch.doc.id] = { id: ch.doc.id, wall: w, t: typeof x.t === "string" ? x.t : "", img: isDrawing(x.img) ? x.img : null, color: x.color, font: x.font, ts: ms(x) };
+      if (ch.type === "added") {
+        if (s.loaded && !seen.has(key)) { fresh.add(key); alertNew(w, x.img ? "Neue Zeichnung" : String(x.t || "")); }
+        seen.add(key);
+      }
+    });
+    if (!s.loaded) { s.loaded = true; ready++; }
+    setLive(true); render();
+  }, () => setLive(false));
+  base.collection("replies").limit(2000).onSnapshot(snap => {
+    s.replies = {};
+    snap.docs.forEach(d => { const r = d.data(); if (typeof r.t === "string") (s.replies[r.p] ||= []).push({ id: d.id, t: r.t, ts: ms(r) }); });
+    snap.docChanges().forEach(ch => { if (ch.type === "added" && s.loaded && !seen.has("r/" + ch.doc.id)) alertNew(w, "Antwort: " + (ch.doc.data().t || "")); seen.add("r/" + ch.doc.id); });
+    render();
+  });
+  base.collection("likes").limit(5000).onSnapshot(snap => { s.likes = {}; snap.docs.forEach(d => { const p = d.data().p; s.likes[p] = (s.likes[p] || 0) + 1; }); render(); });
+  base.collection("reports").limit(5000).onSnapshot(snap => { s.reports = {}; snap.docs.forEach(d => { const p = d.data().p; s.reports[p] = (s.reports[p] || 0) + 1; }); render(); });
+});
+function setLive(ok) { $("dot").classList.toggle("on", ok); $("liveText").textContent = ok ? "Live" : "Keine Verbindung"; }
+
+/* ---------- Anzeige ---------- */
+function chips() {
+  const counts = { all: 0 }; fresh.forEach(k => { const w = k.split("/")[0]; counts[w] = (counts[w] || 0) + 1; counts.all++; });
+  const opts = [["all", "Alle Wände"], ...WALLS.map(w => [w, wallName(w)])];
+  $("chips").innerHTML = opts.map(([k, l]) => `<button type="button" class="chip" data-w="${k}" aria-pressed="${filter === k}">${esc(l)}<span class="n">${counts[k] || ""}</span></button>`).join("");
+}
+$("chips").addEventListener("click", e => { const b = e.target.closest("[data-w]"); if (b) { filter = b.dataset.w; render(); } });
+
+function render() {
+  chips();
+  if (ready < WALLS.length) return;
+  const all = [];
+  WALLS.forEach(w => Object.values(state[w].posts).forEach(p => all.push(p)));
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  $("stToday").textContent = all.filter(p => p.ts >= today.getTime()).length;
+  $("stFlag").textContent = all.filter(p => (state[p.wall].reports[p.id] || 0) > 0).length;
+  $("stAll").textContent = all.length;
+  const list = all.filter(p => filter === "all" || p.wall === filter).sort((a, b) => b.ts - a.ts);
+  if (!list.length) { $("feed").innerHTML = '<p class="empty">Hier ist es noch ruhig.</p>'; return; }
+  $("feed").innerHTML = list.map(p => {
+    const s = state[p.wall], key = p.wall + "/" + p.id, rep = s.reports[p.id] || 0, n = s.likes[p.id] || 0, rs = (s.replies[p.id] || []).slice().sort((a, b) => a.ts - b.ts);
+    const body = p.img ? `<img class="drawing" src="${p.img}" alt="Zeichnung">` : `<div class="text f-${esc(p.font || "hand")} c-${esc(p.color || "ink")}">${esc(p.t)}</div>`;
+    const confirming = confirmId === key;
+    return `<article class="item${fresh.has(key) ? " fresh" : ""}${rep ? " flagged" : ""}">
+      <div class="top"><span class="wallname">${esc(wallName(p.wall))}</span><span>${ago(p.ts)}</span>
+        ${fresh.has(key) ? '<span class="badge new">Neu</span>' : ""}${rep ? `<span class="badge flag">${rep}× gemeldet${rep >= 3 ? " · ausgeblendet" : ""}</span>` : ""}</div>
+      ${body}
+      ${rs.length ? `<div class="replies">${rs.map(r => `<div class="reply"><span>↳ ${esc(r.t)}</span>${isAdmin ? `<button type="button" data-del-reply="${p.wall}/${r.id}">Löschen</button>` : ""}</div>`).join("")}</div>` : ""}
+      <div class="actions"><span class="meta">${n} ${n === 1 ? "Strich" : "Striche"}</span>
+        ${isAdmin ? `<button type="button" class="del${confirming ? " confirm" : ""}" data-del="${key}">${confirming ? "Wirklich löschen?" : "Löschen"}</button>` : ""}</div>
+    </article>`;
+  }).join("");
+}
+
+/* ---------- Löschen ---------- */
+$("feed").addEventListener("click", async e => {
+  const b = e.target.closest("[data-del]"), r = e.target.closest("[data-del-reply]");
+  if (b) {
+    const key = b.dataset.del;
+    if (confirmId !== key) { confirmId = key; render(); setTimeout(() => { if (confirmId === key) { confirmId = null; render(); } }, 4000); return; }
+    confirmId = null; const [w, id] = key.split("/"); b.disabled = true;
+    try {
+      const base = fs.collection("walls").doc(w);
+      await base.collection("posts").doc(id).delete();
+      (state[w].replies[id] || []).forEach(x => base.collection("replies").doc(x.id).delete().catch(() => {}));
+      fresh.delete(key); updateTitle(); notice("");
+    } catch (err) { notice(err.code === "permission-denied" ? "Löschen abgelehnt. Sind die neuen Schutzregeln in Firebase veröffentlicht?" : "Löschen hat nicht geklappt. Versuch es nochmal."); render(); }
+  }
+  if (r) {
+    const [w, id] = r.dataset.delReply.split("/"); r.disabled = true;
+    try { await fs.collection("walls").doc(w).collection("replies").doc(id).delete(); }
+    catch (err) { notice(err.code === "permission-denied" ? "Löschen abgelehnt. Sind die neuen Schutzregeln in Firebase veröffentlicht?" : "Löschen hat nicht geklappt."); r.disabled = false; }
+  }
+});
+setInterval(render, 60000);
+render();
+</script>
+</body>
+</html>

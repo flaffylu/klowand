@@ -1,0 +1,62 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isAdmin() {
+      return request.auth != null
+        && request.auth.token.email == 'kaytrut426@gmail.com'
+        && request.auth.token.email_verified == true;
+    }
+
+    function okText(t, max) {
+      return t is string && t.size() >= 3 && t.size() <= max
+        && !t.matches('(?s).*[0-9][0-9 /-]{6,}[0-9].*')
+        && !t.lower().matches('(?s).*(https?://|www[.]|@).*')
+        && !t.lower().matches('(?s).*(hure|fotze|schwuchtel|spast|missgeburt|nazi|hurensohn|umbringen).*');
+    }
+
+    function textPost(d) {
+      return d.keys().hasOnly(['t', 'color', 'font', 'rot', 'ts'])
+        && okText(d.t, 120)
+        && d.color in ['ink', 'red', 'blue', 'green', 'silver']
+        && d.font in ['hand', 'marker', 'scrawl'];
+    }
+
+    function drawPost(d) {
+      return d.keys().hasOnly(['img', 'rot', 'ts'])
+        && d.img is string && d.img.size() <= 150000
+        && d.img.matches('data:image/png;base64,[A-Za-z0-9+/=]+');
+    }
+
+    match /walls/{wall}/posts/{id} {
+      allow read: if true;
+      allow create: if (textPost(request.resource.data) || drawPost(request.resource.data))
+        && request.resource.data.rot is number
+        && request.resource.data.ts == request.time;
+      allow delete: if isAdmin();
+    }
+
+    match /walls/{wall}/replies/{id} {
+      allow read: if true;
+      allow create: if request.resource.data.keys().hasOnly(['p', 't', 'ts'])
+        && request.resource.data.p is string
+        && okText(request.resource.data.t, 60)
+        && request.resource.data.ts == request.time;
+      allow delete: if isAdmin();
+    }
+
+    match /walls/{wall}/likes/{id} {
+      allow read: if true;
+      allow create: if request.resource.data.keys().hasOnly(['p'])
+        && id.matches(request.resource.data.p + '_[a-zA-Z0-9]{8,40}');
+      allow delete: if isAdmin();
+    }
+
+    match /walls/{wall}/reports/{id} {
+      allow read: if true;
+      allow create: if request.resource.data.keys().hasOnly(['p'])
+        && id.matches(request.resource.data.p + '_[a-zA-Z0-9]{8,40}');
+      allow delete: if isAdmin();
+    }
+  }
+}

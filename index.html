@@ -73,7 +73,7 @@ body{
 
 .bar{position:fixed;left:0;right:0;bottom:0;background:var(--bar);color:var(--bar-fg);
   padding-left:max(14px,env(safe-area-inset-left,0px));padding-right:max(14px,env(safe-area-inset-right,0px));
-  padding-top:10px;padding-bottom:calc(72px + env(safe-area-inset-bottom,0px));box-shadow:0 -4px 16px rgba(0,0,0,.25);z-index:5}
+  padding-top:10px;padding-bottom:calc(10px + env(safe-area-inset-bottom,0px));box-shadow:0 -4px 16px rgba(0,0,0,.25);z-index:5}
 .bar .inner{max-width:900px;margin:0 auto;display:flex;flex-direction:column;gap:8px}
 .bar textarea{width:100%;box-sizing:border-box;resize:none;height:58px;border:none;border-radius:4px;padding:8px 10px;
   background:var(--door);color:var(--ink);font:1.35rem/1.1 var(--f-hand)}
@@ -92,6 +92,25 @@ body{
 .empty{column-span:all;font:1.6rem/1.2 var(--f-hand);color:var(--muted);text-align:center;padding:40px 0;margin:0}
 .send:disabled{opacity:.6}
 body{margin:0}
+[hidden]{display:none!important}
+.modes{display:flex;gap:4px;align-self:flex-start}
+.modes button{font:700 .85rem var(--f-ui);letter-spacing:.06em;text-transform:uppercase;background:transparent;color:var(--bar-fg);border:1px solid #4b5652;border-radius:999px;padding:3px 12px;cursor:pointer}
+.modes button[aria-pressed="true"]{background:var(--bar-fg);color:var(--bar)}
+.pad{position:relative;width:100%;height:170px;border-radius:4px;background:var(--door);overflow:hidden;touch-action:none}
+.pad canvas{display:block;width:100%;height:100%;cursor:crosshair}
+.pad .clear{position:absolute;top:6px;right:6px;font:700 .75rem var(--f-ui);letter-spacing:.06em;text-transform:uppercase;background:rgba(29,35,33,.8);color:#fff;border:none;border-radius:4px;padding:4px 8px;cursor:pointer}
+.pad .hint{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font:1.3rem var(--f-hand);color:var(--muted);pointer-events:none}
+.sizes{display:flex;gap:6px;align-items:center}
+.sizes button{width:30px;height:30px;border-radius:50%;background:transparent;border:1px solid #4b5652;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0}
+.sizes button span{display:block;border-radius:50%;background:var(--bar-fg)}
+.sizes button[aria-pressed="true"]{border-color:var(--bar-fg);background:#2f3835}
+.post .drawing{display:block;width:100%;height:auto;max-height:260px;object-fit:contain}
+.champ{column-span:all;display:block;margin:6px 0 18px;padding:14px 16px 12px;background:var(--plate);border:2px solid var(--ink);border-radius:6px;position:relative;box-shadow:0 3px 0 rgba(0,0,0,.18)}
+.champ .crown{display:inline-block;font:700 .8rem var(--f-ui);letter-spacing:.1em;text-transform:uppercase;background:var(--red);color:#fff;padding:3px 8px;border-radius:3px;margin-bottom:8px}
+.champ .post{margin:0;transform:none!important;opacity:1!important}
+.champ .post .txt{font-size:1.9rem}
+.champ .post.f-marker .txt{font-size:1.6rem}
+.champ .post.f-scrawl .txt{font-size:2.2rem}
 @media (prefers-reduced-motion:reduce){.post{transition:none}}
 </style>
 </head>
@@ -115,8 +134,17 @@ body{margin:0}
 
 <form class="bar" id="composer" autocomplete="off">
   <div class="inner">
+    <div class="modes" role="group" aria-label="Was willst du machen?">
+      <button type="button" data-m="text" aria-pressed="true">Schreiben</button>
+      <button type="button" data-m="draw" aria-pressed="false">Malen</button>
+    </div>
     <label for="msg" class="mod" id="mod">Schreib was an die Wand. Keine Namen, keine Nummern.</label>
     <textarea id="msg" maxlength="120" placeholder="Hier saß ich und dachte …"></textarea>
+    <div class="pad" id="pad" hidden>
+      <canvas id="canvas" aria-label="Zeichenfläche: mit dem Finger malen"></canvas>
+      <span class="hint" id="padHint">Mal mit dem Finger …</span>
+      <button type="button" class="clear" id="clearPad">Wegwischen</button>
+    </div>
     <div class="tools">
       <div class="pens" role="group" aria-label="Stiftfarbe">
         <button type="button" class="pen p-ink" data-c="ink" aria-label="Schwarz" aria-pressed="true"></button>
@@ -125,10 +153,15 @@ body{margin:0}
         <button type="button" class="pen p-green" data-c="green" aria-label="Grün" aria-pressed="false"></button>
         <button type="button" class="pen p-silver" data-c="silver" aria-label="Silber" aria-pressed="false"></button>
       </div>
-      <div class="fonts" role="group" aria-label="Schrift">
+      <div class="fonts" id="fonts" role="group" aria-label="Schrift">
         <button type="button" data-f="hand" style="font-family:var(--f-hand)" aria-pressed="true">Kuli</button>
         <button type="button" data-f="marker" style="font-family:var(--f-marker)" aria-pressed="false">Edding</button>
         <button type="button" data-f="scrawl" style="font-family:var(--f-scrawl)" aria-pressed="false">Krakel</button>
+      </div>
+      <div class="sizes" id="sizes" role="group" aria-label="Strichstärke" hidden>
+        <button type="button" data-s="3" aria-label="Dünn" aria-pressed="false"><span style="width:4px;height:4px"></span></button>
+        <button type="button" data-s="6" aria-label="Mittel" aria-pressed="true"><span style="width:8px;height:8px"></span></button>
+        <button type="button" data-s="12" aria-label="Dick" aria-pressed="false"><span style="width:14px;height:14px"></span></button>
       </div>
       <span class="count" id="count">0/120</span>
       <button class="send" type="submit">Kritzeln</button>
@@ -138,26 +171,8 @@ body{margin:0}
 
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="config.js"></script>
 <script>
-/* ======== HIER DEINE FIREBASE-DATEN EINFÜGEN (Anleitung, Schritt 3) ======== */
-const firebaseConfig = {
-  apiKey: "AIzaSyCCMP4WrNrB-tYXs1ldH0AdmAuLbTB3SzU",
-  authDomain: "klowand-4a570.firebaseapp.com",
-  projectId: "klowand-4a570",
-  storageBucket: "klowand-4a570.firebasestorage.app",
-  messagingSenderId: "186204143946",
-  appId: "1:186204143946:web:816a1b0b4f1bc312e201b3"
-};
-
-/* Deine Wände: der Teil nach ?wand= in der Adresse.
-   Beispiel: deine-seite.netlify.app/?wand=goldener-hahn               */
-const WAENDE = {
-  "goldener-hahn": { name: "Zum Goldenen Hahn", sub: "Herren · Kabine 2" },
-  "zuhause": { name: "Zuhause", sub: "Das Familienklo" },
-  "prestigio": { name: "Prestigio", sub: "Ristorante Italiano" },
-};
-/* ========================================================================== */
-
 const params = new URLSearchParams(location.search);
 let lastWall = null; try { lastWall = localStorage.getItem("klowand-last"); } catch (e) {}
 const WALL = (params.get("wand") || lastWall || Object.keys(WAENDE)[0]).toLowerCase().replace(/[^a-z0-9-]/g, "").slice(0, 60) || "wand";
@@ -169,7 +184,8 @@ document.getElementById("venueSub").textContent = info.sub + " · Sprüche verbl
 document.title = info.name + " · Klo-Wand";
 
 const DAY = 864e5;
-let sort = "new", pen = "ink", font = "hand", openReply = null;
+const INK = { ink: "#1d2321", red: "#b3261e", blue: "#1f4fa3", green: "#2f6b3a", silver: "#eef1ef" };
+let sort = "new", pen = "ink", font = "hand", mode = "text", size = 6, openReply = null;
 let posts = [], likes = {}, reports = {}, replies = {}, loaded = false;
 
 let device = null;
@@ -178,49 +194,61 @@ try {
   if (!device) { device = crypto.randomUUID().replace(/-/g, ""); localStorage.setItem("klowand-device", device); }
 } catch (e) { device = device || ("d" + Math.random().toString(36).slice(2, 14)); }
 
-const wall = document.getElementById("wall"), mod = document.getElementById("mod"),
-      msg = document.getElementById("msg"), composer = document.getElementById("composer"),
-      status = document.getElementById("status");
+const $ = id => document.getElementById(id);
+const wall = $("wall"), mod = $("mod"), msg = $("msg"), composer = $("composer"), status = $("status");
 const esc = s => String(s).replace(/[&<>"]/g, m => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[m]));
 const ago = ts => { const h = (Date.now() - ts) / 36e5; if (h < 1) return "gerade eben"; if (h < 24) return `vor ${Math.floor(h)} Std.`; const d = Math.floor(h / 24); return d === 1 ? "gestern" : `vor ${d} Tagen`; };
 const tally = n => { const m = Math.min(n, 20); return "卌 ".repeat(Math.floor(m / 5)) + "|".repeat(m % 5) + (n > 20 ? ` +${n - 20}` : ""); };
 const say = (t, ok) => { mod.className = ok ? "mod ok" : "mod"; mod.textContent = t; };
 const ms = d => (d && d.ts && d.ts.toMillis) ? d.ts.toMillis() : Date.now();
+const isDrawing = s => typeof s === "string" && s.startsWith("data:image/png;base64,");
 
-if (firebaseConfig.apiKey.includes("DEIN-")) {
-  wall.innerHTML = '<p class="empty">Fast fertig!<br>Füg oben im Code deine Firebase-Daten ein (Anleitung, Schritt 3).</p>';
-  composer.hidden = true;
-  throw new Error("Firebase nicht eingerichtet");
-}
 firebase.initializeApp(firebaseConfig);
 const fs = firebase.firestore();
 const base = fs.collection("walls").doc(WALL);
 const now = () => firebase.firestore.FieldValue.serverTimestamp();
 
-function render() {
-  if (!loaded) { wall.innerHTML = '<p class="empty">Wand wird geladen …</p>'; return; }
-  const list = posts.filter(p => (reports[p.id] || 0) < 3).map(p => ({ ...p, n: (likes[p.id] || new Set()).size }));
-  list.sort((a, b) => sort === "new" ? b.ts - a.ts : b.n - a.n);
-  if (!list.length) { wall.innerHTML = '<p class="empty">Die Wand ist noch sauber.<br>Schreib unten den ersten Spruch drauf.</p>'; return; }
-  wall.innerHTML = list.map(p => {
-    const carved = p.n >= 50, age = (Date.now() - p.ts) / DAY, op = carved ? 1 : Math.max(.35, 1 - age / 21 * .65);
-    const mine = likes[p.id] && likes[p.id].has(device);
-    const rs = (replies[p.id] || []).slice().sort((a, b) => a.ts - b.ts);
-    return `<div class="post f-${p.font} c-${p.color}${carved ? " carved" : ""}" style="transform:rotate(${p.rot}deg);opacity:${op}">
+/* ---------- Spruch des Abends: der Spruch von gestern mit den meisten Strichen ---------- */
+function startOfDay(t) { const d = new Date(t); d.setHours(0, 0, 0, 0); return d.getTime(); }
+function champion(list) {
+  const today = startOfDay(Date.now()), yesterday = today - DAY;
+  let best = null;
+  list.forEach(p => { if (p.ts >= yesterday && p.ts < today && p.n > 0 && (!best || p.n > best.n || (p.n === best.n && p.ts < best.ts))) best = p; });
+  return best;
+}
+/* Um Mitternacht neu küren */
+(function atMidnight() { const wait = startOfDay(Date.now()) + DAY - Date.now() + 2000; setTimeout(() => { render(); atMidnight(); }, wait); })();
+
+function postHtml(p, inChamp) {
+  const carved = p.n >= 50 && !p.img, age = (Date.now() - p.ts) / DAY, op = carved ? 1 : Math.max(.35, 1 - age / 21 * .65);
+  const mine = likes[p.id] && likes[p.id].has(device);
+  const rs = (replies[p.id] || []).slice().sort((a, b) => a.ts - b.ts);
+  const body = p.img ? `<img class="drawing" src="${p.img}" alt="Kritzelei">` : `<div class="txt">${esc(p.t)}</div>`;
+  return `<div class="post f-${p.font || "hand"} c-${p.color || "ink"}${carved ? " carved" : ""}" style="transform:rotate(${p.rot}deg);opacity:${op}">
       ${carved ? '<span class="carvedtag">Eingeritzt</span>' : ""}
-      <div class="txt">${esc(p.t)}</div>
+      ${body}
       ${rs.length ? `<div class="replies">${rs.map(r => `<div class="reply c-ink">${esc(r.t)}</div>`).join("")}</div>` : ""}
       <div class="meta">
         <span class="tally" aria-label="${p.n} Striche">${p.n ? tally(p.n) : ""}</span>
-        <button data-a="like" data-id="${p.id}" class="${mine ? "on" : ""}" ${mine ? "disabled" : ""}>${mine ? "Strich gesetzt" : "Strich +1"}</button>
-        <button data-a="reply" data-id="${p.id}">Antworten</button>
-        <button data-a="report" data-id="${p.id}">Melden</button>
+        <button type="button" data-a="like" data-id="${p.id}" class="${mine ? "on" : ""}" ${mine ? "disabled" : ""}>${mine ? "Strich gesetzt" : "Strich +1"}</button>
+        <button type="button" data-a="reply" data-id="${p.id}">Antworten</button>
+        <button type="button" data-a="report" data-id="${p.id}">Melden</button>
         <span>${ago(p.ts)}</span>
       </div>
       ${openReply === p.id ? `<form class="rform" data-id="${p.id}"><input id="r-${p.id}" maxlength="60" placeholder="Drunterkritzeln …" aria-label="Antwort"><button>OK</button></form>` : ""}
     </div>`;
-  }).join("");
-  if (openReply) { const i = document.getElementById("r-" + openReply); i && i.focus(); }
+}
+
+function render() {
+  if (!loaded) { wall.innerHTML = '<p class="empty">Wand wird geladen …</p>'; return; }
+  let list = posts.filter(p => (reports[p.id] || 0) < 3).map(p => ({ ...p, n: (likes[p.id] || new Set()).size }));
+  const champ = champion(list);
+  if (champ) list = list.filter(p => p.id !== champ.id);
+  list.sort((a, b) => sort === "new" ? b.ts - a.ts : b.n - a.n);
+  if (!list.length && !champ) { wall.innerHTML = '<p class="empty">Die Wand ist noch sauber.<br>Schreib oder mal unten das Erste drauf.</p>'; return; }
+  wall.innerHTML = (champ ? `<div class="champ"><span class="crown">Spruch des Abends · gestern</span>${postHtml(champ, true)}</div>` : "")
+    + list.map(p => postHtml(p)).join("");
+  if (openReply) { const i = $("r-" + openReply); i && i.focus(); }
 }
 
 /* Schneller Vorab-Check im Browser. Die Regeln in Firebase prüfen nochmal. */
@@ -234,13 +262,14 @@ function check(t) {
   if (/\b(ist|sind)\s+(fett|hässlich|dumm|scheiße)\b/i.test(t)) return "Klingt nach Lästern über jemanden. Lass das.";
   return null;
 }
-const fail = () => say("Hat nicht geklappt. Versuch es gleich nochmal.");
+const fail = e => say(e && e.code === "permission-denied" ? "Die Wand hat das abgelehnt. Prüf deinen Text oder versuch es gleich nochmal." : "Hat nicht geklappt. Versuch es gleich nochmal.");
 
-/* Live-Daten */
+/* ---------- Live-Daten ---------- */
 const since = firebase.firestore.Timestamp.fromMillis(Date.now() - 60 * DAY);
 const offline = () => { status.textContent = "Offline"; say("Die Wand ist gerade nicht erreichbar. Lade die Seite neu."); };
 base.collection("posts").where("ts", ">", since).orderBy("ts", "desc").limit(300).onSnapshot(s => {
-  posts = s.docs.map(d => { const x = d.data(); return { id: d.id, t: x.t, color: x.color, font: x.font, rot: x.rot || 0, ts: ms(x) }; });
+  posts = s.docs.map(d => { const x = d.data(); return { id: d.id, t: x.t, img: isDrawing(x.img) ? x.img : null, color: x.color, font: x.font, rot: x.rot || 0, ts: ms(x) }; })
+    .filter(p => p.img || typeof p.t === "string");
   loaded = true; status.textContent = "Live"; render();
 }, offline);
 base.collection("likes").limit(5000).onSnapshot(s => {
@@ -250,10 +279,10 @@ base.collection("reports").limit(5000).onSnapshot(s => {
   reports = {}; s.docs.forEach(d => { const p = d.data().p; reports[p] = (reports[p] || 0) + 1; }); render();
 }, () => {});
 base.collection("replies").limit(2000).onSnapshot(s => {
-  replies = {}; s.docs.forEach(d => { const r = d.data(); (replies[r.p] ||= []).push({ t: r.t, ts: ms(r) }); }); render();
+  replies = {}; s.docs.forEach(d => { const r = d.data(); if (typeof r.t === "string") (replies[r.p] ||= []).push({ t: r.t, ts: ms(r) }); }); render();
 }, () => {});
 
-/* Interaktion */
+/* ---------- Interaktion an der Wand ---------- */
 wall.addEventListener("click", e => {
   const b = e.target.closest("button[data-a]"); if (!b) return;
   const id = b.dataset.id;
@@ -270,21 +299,88 @@ wall.addEventListener("submit", e => {
   openReply = null; render();
 });
 
-msg.addEventListener("input", () => document.getElementById("count").textContent = msg.value.length + "/120");
+/* ---------- Freihand-Kritzeln ---------- */
+const pad = $("pad"), canvas = $("canvas"), ctx = canvas.getContext("2d"), padHint = $("padHint");
+let drawing = false, dirty = false, last = null;
+function sizeCanvas() {
+  const r = canvas.getBoundingClientRect(); if (!r.width) return;
+  const keep = dirty ? canvas.toDataURL() : null, dpr = Math.min(window.devicePixelRatio || 1, 2);
+  canvas.width = Math.round(r.width * dpr); canvas.height = Math.round(r.height * dpr);
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.lineCap = "round"; ctx.lineJoin = "round";
+  if (keep) { const im = new Image(); im.onload = () => ctx.drawImage(im, 0, 0, r.width, r.height); im.src = keep; }
+}
+function clearPad() { ctx.clearRect(0, 0, canvas.width, canvas.height); dirty = false; padHint.hidden = false; }
+const pt = e => { const r = canvas.getBoundingClientRect(); return { x: e.clientX - r.left, y: e.clientY - r.top }; };
+canvas.addEventListener("pointerdown", e => {
+  drawing = true; last = pt(e); canvas.setPointerCapture(e.pointerId); padHint.hidden = true;
+  ctx.strokeStyle = INK[pen]; ctx.fillStyle = INK[pen]; ctx.lineWidth = size;
+  ctx.beginPath(); ctx.arc(last.x, last.y, size / 2, 0, Math.PI * 2); ctx.fill(); dirty = true;
+});
+canvas.addEventListener("pointermove", e => {
+  if (!drawing) return; const p = pt(e);
+  ctx.beginPath(); ctx.moveTo(last.x, last.y); ctx.lineTo(p.x, p.y); ctx.stroke(); last = p;
+});
+["pointerup", "pointercancel", "pointerleave"].forEach(t => canvas.addEventListener(t, () => drawing = false));
+$("clearPad").onclick = clearPad;
+window.addEventListener("resize", () => { if (mode === "draw") sizeCanvas(); });
+
+/* Zeichnung zuschneiden und klein als PNG speichern */
+function exportDrawing() {
+  const w = canvas.width, h = canvas.height, data = ctx.getImageData(0, 0, w, h).data;
+  let x0 = w, y0 = h, x1 = -1, y1 = -1;
+  for (let y = 0; y < h; y += 2) for (let x = 0; x < w; x += 2) if (data[(y * w + x) * 4 + 3] > 10) { if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; }
+  if (x1 < 0) return null;
+  const m = 12; x0 = Math.max(0, x0 - m); y0 = Math.max(0, y0 - m); x1 = Math.min(w, x1 + m); y1 = Math.min(h, y1 + m);
+  const cw = x1 - x0, ch = y1 - y0, scale = Math.min(1, 520 / cw, 300 / ch);
+  const out = document.createElement("canvas"); out.width = Math.max(1, Math.round(cw * scale)); out.height = Math.max(1, Math.round(ch * scale));
+  out.getContext("2d").drawImage(canvas, x0, y0, cw, ch, 0, 0, out.width, out.height);
+  return out.toDataURL("image/png");
+}
+
+/* ---------- Schreiben oder Malen ---------- */
+function setMode(m) {
+  mode = m;
+  document.querySelectorAll(".modes button").forEach(b => b.setAttribute("aria-pressed", b.dataset.m === m));
+  const draw = m === "draw";
+  msg.hidden = draw; pad.hidden = !draw; $("fonts").hidden = draw; $("sizes").hidden = !draw; $("count").hidden = draw;
+  say(draw ? "Mal was an die Wand. Nichts Gemeines, keine Namen." : "Schreib was an die Wand. Keine Namen, keine Nummern.", false);
+  mod.className = "mod";
+  if (draw) requestAnimationFrame(sizeCanvas);
+  fitWall();
+}
+document.querySelectorAll(".modes button").forEach(b => b.onclick = () => setMode(b.dataset.m));
+document.querySelectorAll("#sizes button").forEach(b => b.onclick = () => { size = Number(b.dataset.s); document.querySelectorAll("#sizes button").forEach(x => x.setAttribute("aria-pressed", x === b)); });
+
+msg.addEventListener("input", () => $("count").textContent = msg.value.length + "/120");
 document.querySelectorAll(".pen").forEach(b => b.onclick = () => { pen = b.dataset.c; document.querySelectorAll(".pen").forEach(x => x.setAttribute("aria-pressed", x === b)); });
-document.querySelectorAll(".fonts button").forEach(b => b.onclick = () => { font = b.dataset.f; document.querySelectorAll(".fonts button").forEach(x => x.setAttribute("aria-pressed", x === b)); });
+document.querySelectorAll("#fonts button").forEach(b => b.onclick = () => { font = b.dataset.f; document.querySelectorAll("#fonts button").forEach(x => x.setAttribute("aria-pressed", x === b)); });
+
 composer.addEventListener("submit", e => {
   e.preventDefault();
-  const t = msg.value.trim(), err = check(t);
-  if (err) { say(err); return; }
-  base.collection("posts").add({ t, color: pen, font, rot: Number((Math.random() * 6 - 3).toFixed(1)), ts: now() })
-    .then(() => say("Hängt jetzt an der Wand.", true)).catch(fail);
-  msg.value = ""; document.getElementById("count").textContent = "0/120";
+  const rot = Number((Math.random() * 6 - 3).toFixed(1));
+  if (mode === "draw") {
+    if (!dirty) { say("Mal erst was, dann kritzeln."); return; }
+    const img = exportDrawing();
+    if (!img) { say("Mal erst was, dann kritzeln."); return; }
+    if (img.length > 150000) { say("Die Zeichnung ist zu groß. Mal etwas einfacher."); return; }
+    base.collection("posts").add({ img, rot, ts: now() }).then(() => say("Hängt jetzt an der Wand.", true)).catch(fail);
+    clearPad();
+  } else {
+    const t = msg.value.trim(), err = check(t);
+    if (err) { say(err); return; }
+    base.collection("posts").add({ t, color: pen, font, rot, ts: now() }).then(() => say("Hängt jetzt an der Wand.", true)).catch(fail);
+    msg.value = ""; $("count").textContent = "0/120";
+  }
   sort = "new"; setTabs(); window.scrollTo({ top: 0, behavior: "smooth" });
 });
-function setTabs() { document.getElementById("sNew").setAttribute("aria-pressed", sort === "new"); document.getElementById("sTop").setAttribute("aria-pressed", sort === "top"); }
-document.getElementById("sNew").onclick = () => { sort = "new"; setTabs(); render(); };
-document.getElementById("sTop").onclick = () => { sort = "top"; setTabs(); render(); };
+function setTabs() { $("sNew").setAttribute("aria-pressed", sort === "new"); $("sTop").setAttribute("aria-pressed", sort === "top"); }
+$("sNew").onclick = () => { sort = "new"; setTabs(); render(); };
+$("sTop").onclick = () => { sort = "top"; setTabs(); render(); };
+
+/* Platz unter der Wand an die Höhe der Schreibleiste anpassen */
+function fitWall() { document.querySelector(".wrap").style.paddingBottom = (composer.offsetHeight + 24) + "px"; }
+if ("ResizeObserver" in window) new ResizeObserver(fitWall).observe(composer); else window.addEventListener("resize", fitWall);
+fitWall();
 render();
 </script>
 </body>
