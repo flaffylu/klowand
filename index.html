@@ -1,0 +1,290 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Klo-Wand</title>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#1d2321">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Permanent+Marker&family=Caveat:wght@500;700&family=Gochi+Hand&family=Rock+Salt&family=Barlow+Condensed:wght@500;700&display=swap">
+<style>
+/* Layout: eine lackierte Klokabinentür als Wand, Sprüche frei gestreut, Edding-Leiste unten fixiert */
+:root{
+  --door:#b9c7bf; --door-dark:#a7b6ad; --screw:#8b958f; --ink:#1d2321;
+  --red:#b3261e; --blue:#1f4fa3; --silver:#eef1ef; --green:#2f6b3a;
+  --bar:#1d2321; --bar-fg:#e9ece9; --muted:#5d6a63; --plate:#d8ded9;
+  --f-hand:"Gochi Hand","Comic Sans MS",cursive;
+  --f-marker:"Permanent Marker","Gochi Hand",cursive;
+  --f-scrawl:"Caveat","Gochi Hand",cursive;
+  --f-scratch:"Rock Salt","Gochi Hand",cursive;
+  --f-ui:"Barlow Condensed","Arial Narrow",system-ui,sans-serif;
+  color-scheme:light;
+}
+html,body{background:var(--door);color:var(--ink)}
+body{
+  font-family:var(--f-ui);
+  background-color:var(--door);
+  background-image:
+    radial-gradient(circle at 20% 30%,rgba(255,255,255,.18),transparent 40%),
+    radial-gradient(circle at 80% 70%,rgba(0,0,0,.06),transparent 45%),
+    repeating-linear-gradient(90deg,rgba(0,0,0,.015) 0 2px,transparent 2px 7px);
+  min-height:100vh;
+}
+.wrap{max-width:900px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:14px 300px}
+.plate{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;
+  background:var(--plate);border:1px solid var(--screw);border-radius:4px;padding:10px 14px;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.7),0 1px 2px rgba(0,0,0,.15);position:relative}
+.plate::before,.plate::after{content:"";position:absolute;top:50%;width:7px;height:7px;margin-top:-3.5px;border-radius:50%;
+  background:radial-gradient(circle at 35% 35%,#fff,var(--screw) 70%)}
+.plate::before{left:4px}.plate::after{right:4px}
+.plate h1{margin:0;font:700 1.35rem/1 var(--f-ui);letter-spacing:.06em;text-transform:uppercase}
+.plate small{display:block;font:500 .85rem/1.2 var(--f-ui);color:var(--muted);letter-spacing:.04em;margin-top:3px}
+.occ{font:700 .8rem var(--f-ui);letter-spacing:.08em;text-transform:uppercase;padding:4px 8px;border-radius:3px;background:var(--red);color:#fff}
+.tabs{display:flex;gap:6px;margin:14px 0 6px;flex-wrap:wrap;align-items:center}
+.tabs button{font:600 .95rem var(--f-ui);letter-spacing:.05em;text-transform:uppercase;background:transparent;border:1.5px solid var(--ink);color:var(--ink);border-radius:999px;padding:4px 12px;cursor:pointer}
+.tabs button[aria-pressed="true"]{background:var(--ink);color:var(--door)}
+.tabs .hint{margin-left:auto;font:500 .85rem var(--f-ui);color:var(--muted)}
+.wall{columns:2 150px;column-gap:18px;padding-top:8px}
+@media(min-width:640px){.wall{columns:3 180px}}
+.post{break-inside:avoid;display:inline-block;width:100%;margin:14px 0 10px;transition:opacity .4s}
+.post .txt{font-size:1.5rem;line-height:1.1;word-wrap:break-word;overflow-wrap:anywhere}
+.post.f-hand .txt{font-family:var(--f-hand)}
+.post.f-marker .txt{font-family:var(--f-marker);font-size:1.3rem}
+.post.f-scrawl .txt{font-family:var(--f-scrawl);font-size:1.75rem;font-weight:700}
+.c-ink{color:var(--ink)}.c-red{color:var(--red)}.c-blue{color:var(--blue)}.c-green{color:var(--green)}
+.c-silver{color:var(--silver);text-shadow:0 0 1px rgba(0,0,0,.6),1px 1px 0 rgba(0,0,0,.25)}
+.post.carved .txt{font-family:var(--f-scratch);font-size:1.05rem;line-height:1.5;color:transparent;
+  text-shadow:1px 1px 0 rgba(255,255,255,.75),-1px -1px 0 rgba(0,0,0,.45);background:none}
+.carvedtag{display:inline-block;font:700 .7rem var(--f-ui);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:3px}
+.meta{display:flex;gap:10px;align-items:center;margin-top:5px;font:500 .8rem var(--f-ui);color:var(--muted);flex-wrap:wrap}
+.meta button{font:600 .8rem var(--f-ui);letter-spacing:.04em;background:none;border:none;color:var(--muted);padding:2px 0;cursor:pointer;text-decoration:underline;text-underline-offset:2px}
+.meta button.on{color:var(--ink)}
+.tally{font-family:var(--f-scrawl);font-size:1.15rem;font-weight:700;color:var(--ink);letter-spacing:-.02em}
+.replies{margin:4px 0 0 10px;display:flex;flex-direction:column;gap:2px}
+.reply{font-family:var(--f-scrawl);font-size:1.25rem;line-height:1.05}
+.reply::before{content:"↳ ";color:var(--muted)}
+.rform{display:flex;gap:6px;margin-top:6px}
+.rform input{flex:1;min-width:0;font:600 1.1rem var(--f-scrawl);border:none;border-bottom:1.5px dashed var(--ink);background:transparent;color:var(--ink);padding:2px}
+.rform button,.send{font:700 .9rem var(--f-ui);letter-spacing:.06em;text-transform:uppercase;border:none;border-radius:4px;cursor:pointer}
+.rform button{background:var(--ink);color:var(--door);padding:4px 10px}
+:focus-visible{outline:2px dashed var(--blue);outline-offset:3px}
+
+.bar{position:fixed;left:0;right:0;bottom:0;background:var(--bar);color:var(--bar-fg);
+  padding-left:max(14px,env(safe-area-inset-left,0px));padding-right:max(14px,env(safe-area-inset-right,0px));
+  padding-top:10px;padding-bottom:calc(72px + env(safe-area-inset-bottom,0px));box-shadow:0 -4px 16px rgba(0,0,0,.25);z-index:5}
+.bar .inner{max-width:900px;margin:0 auto;display:flex;flex-direction:column;gap:8px}
+.bar textarea{width:100%;box-sizing:border-box;resize:none;height:58px;border:none;border-radius:4px;padding:8px 10px;
+  background:var(--door);color:var(--ink);font:1.35rem/1.1 var(--f-hand)}
+.tools{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.pens{display:flex;gap:7px}
+.pen{width:26px;height:26px;border-radius:50%;border:2px solid transparent;cursor:pointer;padding:0;box-shadow:inset 0 0 0 2px var(--bar)}
+.pen[aria-pressed="true"]{border-color:var(--bar-fg)}
+.p-ink{background:#3a4440}.p-red{background:var(--red)}.p-blue{background:var(--blue)}.p-green{background:var(--green)}.p-silver{background:var(--silver)}
+.fonts{display:flex;gap:4px}
+.fonts button{background:transparent;color:var(--bar-fg);border:1px solid #4b5652;border-radius:4px;padding:2px 8px;cursor:pointer;font-size:1rem}
+.fonts button[aria-pressed="true"]{background:var(--bar-fg);color:var(--bar)}
+.count{font:500 .8rem var(--f-ui);color:#9aa59f;margin-left:auto}
+.send{background:var(--red);color:#fff;padding:7px 16px;font-size:1rem}
+.mod{font:500 .9rem var(--f-ui);min-height:1.1em;color:#f2b8b5}
+.mod.ok{color:#a8d5ae}
+.empty{column-span:all;font:1.6rem/1.2 var(--f-hand);color:var(--muted);text-align:center;padding:40px 0;margin:0}
+.send:disabled{opacity:.6}
+body{margin:0}
+@media (prefers-reduced-motion:reduce){.post{transition:none}}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <div class="plate">
+    <div>
+      <h1 id="venue">Klo-Wand</h1>
+      <small id="venueSub"></small>
+    </div>
+    <span class="occ">Besetzt</span>
+  </div>
+  <div class="tabs" role="group" aria-label="Sortierung">
+    <button id="sNew" aria-pressed="true">Neu</button>
+    <button id="sTop" aria-pressed="false">Beliebt</button>
+    <span class="hint" id="status">Verbinde …</span>
+  </div>
+  <div class="wall" id="wall"></div>
+</div>
+
+<form class="bar" id="composer" autocomplete="off">
+  <div class="inner">
+    <label for="msg" class="mod" id="mod">Schreib was an die Wand. Keine Namen, keine Nummern.</label>
+    <textarea id="msg" maxlength="120" placeholder="Hier saß ich und dachte …"></textarea>
+    <div class="tools">
+      <div class="pens" role="group" aria-label="Stiftfarbe">
+        <button type="button" class="pen p-ink" data-c="ink" aria-label="Schwarz" aria-pressed="true"></button>
+        <button type="button" class="pen p-red" data-c="red" aria-label="Rot" aria-pressed="false"></button>
+        <button type="button" class="pen p-blue" data-c="blue" aria-label="Blau" aria-pressed="false"></button>
+        <button type="button" class="pen p-green" data-c="green" aria-label="Grün" aria-pressed="false"></button>
+        <button type="button" class="pen p-silver" data-c="silver" aria-label="Silber" aria-pressed="false"></button>
+      </div>
+      <div class="fonts" role="group" aria-label="Schrift">
+        <button type="button" data-f="hand" style="font-family:var(--f-hand)" aria-pressed="true">Kuli</button>
+        <button type="button" data-f="marker" style="font-family:var(--f-marker)" aria-pressed="false">Edding</button>
+        <button type="button" data-f="scrawl" style="font-family:var(--f-scrawl)" aria-pressed="false">Krakel</button>
+      </div>
+      <span class="count" id="count">0/120</span>
+      <button class="send" type="submit">Kritzeln</button>
+    </div>
+  </div>
+</form>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script>
+/* ======== HIER DEINE FIREBASE-DATEN EINFÜGEN (Anleitung, Schritt 3) ======== */
+const firebaseConfig = {
+  apiKey: "AIzaSyCCMP4WrNrB-tYXs1ldH0AdmAuLbTB3SzU",
+  authDomain: "klowand-4a570.firebaseapp.com",
+  projectId: "klowand-4a570",
+  storageBucket: "klowand-4a570.firebasestorage.app",
+  messagingSenderId: "186204143946",
+  appId: "1:186204143946:web:816a1b0b4f1bc312e201b3"
+};
+
+/* Deine Wände: der Teil nach ?wand= in der Adresse.
+   Beispiel: deine-seite.netlify.app/?wand=goldener-hahn               */
+const WAENDE = {
+  "goldener-hahn": { name: "Zum Goldenen Hahn", sub: "Herren · Kabine 2" },
+  "zuhause": { name: "Zuhause", sub: "Das Familienklo" },
+};
+/* ========================================================================== */
+
+const params = new URLSearchParams(location.search);
+let lastWall = null; try { lastWall = localStorage.getItem("klowand-last"); } catch (e) {}
+const WALL = (params.get("wand") || lastWall || Object.keys(WAENDE)[0]).toLowerCase().replace(/[^a-z0-9-]/g, "").slice(0, 60) || "wand";
+try { localStorage.setItem("klowand-last", WALL); } catch (e) {}
+if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});
+const info = WAENDE[WALL] || { name: WALL.replace(/-/g, " "), sub: "Kabine" };
+document.getElementById("venue").textContent = info.name;
+document.getElementById("venueSub").textContent = info.sub + " · Sprüche verblassen nach 3 Wochen";
+document.title = info.name + " · Klo-Wand";
+
+const DAY = 864e5;
+let sort = "new", pen = "ink", font = "hand", openReply = null;
+let posts = [], likes = {}, reports = {}, replies = {}, loaded = false;
+
+let device = null;
+try {
+  device = localStorage.getItem("klowand-device");
+  if (!device) { device = crypto.randomUUID().replace(/-/g, ""); localStorage.setItem("klowand-device", device); }
+} catch (e) { device = device || ("d" + Math.random().toString(36).slice(2, 14)); }
+
+const wall = document.getElementById("wall"), mod = document.getElementById("mod"),
+      msg = document.getElementById("msg"), composer = document.getElementById("composer"),
+      status = document.getElementById("status");
+const esc = s => String(s).replace(/[&<>"]/g, m => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[m]));
+const ago = ts => { const h = (Date.now() - ts) / 36e5; if (h < 1) return "gerade eben"; if (h < 24) return `vor ${Math.floor(h)} Std.`; const d = Math.floor(h / 24); return d === 1 ? "gestern" : `vor ${d} Tagen`; };
+const tally = n => { const m = Math.min(n, 20); return "卌 ".repeat(Math.floor(m / 5)) + "|".repeat(m % 5) + (n > 20 ? ` +${n - 20}` : ""); };
+const say = (t, ok) => { mod.className = ok ? "mod ok" : "mod"; mod.textContent = t; };
+const ms = d => (d && d.ts && d.ts.toMillis) ? d.ts.toMillis() : Date.now();
+
+if (firebaseConfig.apiKey.includes("DEIN-")) {
+  wall.innerHTML = '<p class="empty">Fast fertig!<br>Füg oben im Code deine Firebase-Daten ein (Anleitung, Schritt 3).</p>';
+  composer.hidden = true;
+  throw new Error("Firebase nicht eingerichtet");
+}
+firebase.initializeApp(firebaseConfig);
+const fs = firebase.firestore();
+const base = fs.collection("walls").doc(WALL);
+const now = () => firebase.firestore.FieldValue.serverTimestamp();
+
+function render() {
+  if (!loaded) { wall.innerHTML = '<p class="empty">Wand wird geladen …</p>'; return; }
+  const list = posts.filter(p => (reports[p.id] || 0) < 3).map(p => ({ ...p, n: (likes[p.id] || new Set()).size }));
+  list.sort((a, b) => sort === "new" ? b.ts - a.ts : b.n - a.n);
+  if (!list.length) { wall.innerHTML = '<p class="empty">Die Wand ist noch sauber.<br>Schreib unten den ersten Spruch drauf.</p>'; return; }
+  wall.innerHTML = list.map(p => {
+    const carved = p.n >= 50, age = (Date.now() - p.ts) / DAY, op = carved ? 1 : Math.max(.35, 1 - age / 21 * .65);
+    const mine = likes[p.id] && likes[p.id].has(device);
+    const rs = (replies[p.id] || []).slice().sort((a, b) => a.ts - b.ts);
+    return `<div class="post f-${p.font} c-${p.color}${carved ? " carved" : ""}" style="transform:rotate(${p.rot}deg);opacity:${op}">
+      ${carved ? '<span class="carvedtag">Eingeritzt</span>' : ""}
+      <div class="txt">${esc(p.t)}</div>
+      ${rs.length ? `<div class="replies">${rs.map(r => `<div class="reply c-ink">${esc(r.t)}</div>`).join("")}</div>` : ""}
+      <div class="meta">
+        <span class="tally" aria-label="${p.n} Striche">${p.n ? tally(p.n) : ""}</span>
+        <button data-a="like" data-id="${p.id}" class="${mine ? "on" : ""}" ${mine ? "disabled" : ""}>${mine ? "Strich gesetzt" : "Strich +1"}</button>
+        <button data-a="reply" data-id="${p.id}">Antworten</button>
+        <button data-a="report" data-id="${p.id}">Melden</button>
+        <span>${ago(p.ts)}</span>
+      </div>
+      ${openReply === p.id ? `<form class="rform" data-id="${p.id}"><input id="r-${p.id}" maxlength="60" placeholder="Drunterkritzeln …" aria-label="Antwort"><button>OK</button></form>` : ""}
+    </div>`;
+  }).join("");
+  if (openReply) { const i = document.getElementById("r-" + openReply); i && i.focus(); }
+}
+
+/* Schneller Vorab-Check im Browser. Die Regeln in Firebase prüfen nochmal. */
+function check(t) {
+  if (t.trim().length < 3) return "Bisschen mehr als das, bitte.";
+  if (/(\+?\d[\d\s\-\/]{6,}\d)/.test(t)) return "Keine Telefonnummern an der Wand.";
+  if (/\S+@\S+\.\S+/.test(t) || /@\w+/.test(t)) return "Keine Mails oder @Namen. Hier bleibt jeder anonym.";
+  if (/(https?:\/\/|www\.)/i.test(t)) return "Links sind hier nicht erlaubt.";
+  const bad = ["hure", "fotze", "schwuchtel", "spast", "missgeburt", "nazi", "hurensohn", "umbringen"];
+  if (bad.some(w => t.toLowerCase().includes(w))) return "Das kommt nicht an die Wand. Witzig ja, gemein nein.";
+  if (/\b(ist|sind)\s+(fett|hässlich|dumm|scheiße)\b/i.test(t)) return "Klingt nach Lästern über jemanden. Lass das.";
+  return null;
+}
+const fail = () => say("Hat nicht geklappt. Versuch es gleich nochmal.");
+
+/* Live-Daten */
+const since = firebase.firestore.Timestamp.fromMillis(Date.now() - 60 * DAY);
+const offline = () => { status.textContent = "Offline"; say("Die Wand ist gerade nicht erreichbar. Lade die Seite neu."); };
+base.collection("posts").where("ts", ">", since).orderBy("ts", "desc").limit(300).onSnapshot(s => {
+  posts = s.docs.map(d => { const x = d.data(); return { id: d.id, t: x.t, color: x.color, font: x.font, rot: x.rot || 0, ts: ms(x) }; });
+  loaded = true; status.textContent = "Live"; render();
+}, offline);
+base.collection("likes").limit(5000).onSnapshot(s => {
+  likes = {}; s.docs.forEach(d => { const p = d.data().p; (likes[p] ||= new Set()).add(d.id.slice(p.length + 1)); }); render();
+}, () => {});
+base.collection("reports").limit(5000).onSnapshot(s => {
+  reports = {}; s.docs.forEach(d => { const p = d.data().p; reports[p] = (reports[p] || 0) + 1; }); render();
+}, () => {});
+base.collection("replies").limit(2000).onSnapshot(s => {
+  replies = {}; s.docs.forEach(d => { const r = d.data(); (replies[r.p] ||= []).push({ t: r.t, ts: ms(r) }); }); render();
+}, () => {});
+
+/* Interaktion */
+wall.addEventListener("click", e => {
+  const b = e.target.closest("button[data-a]"); if (!b) return;
+  const id = b.dataset.id;
+  if (b.dataset.a === "like") base.collection("likes").doc(id + "_" + device).set({ p: id }).catch(fail);
+  if (b.dataset.a === "reply") { openReply = openReply === id ? null : id; render(); }
+  if (b.dataset.a === "report") base.collection("reports").doc(id + "_" + device).set({ p: id })
+    .then(() => say("Gemeldet. Nach 3 Meldungen wird der Spruch übermalt.", true)).catch(fail);
+});
+wall.addEventListener("submit", e => {
+  e.preventDefault();
+  const f = e.target, v = f.querySelector("input").value.trim(), err = check(v);
+  if (err) { say(err); return; }
+  base.collection("replies").add({ p: f.dataset.id, t: v, ts: now() }).catch(fail);
+  openReply = null; render();
+});
+
+msg.addEventListener("input", () => document.getElementById("count").textContent = msg.value.length + "/120");
+document.querySelectorAll(".pen").forEach(b => b.onclick = () => { pen = b.dataset.c; document.querySelectorAll(".pen").forEach(x => x.setAttribute("aria-pressed", x === b)); });
+document.querySelectorAll(".fonts button").forEach(b => b.onclick = () => { font = b.dataset.f; document.querySelectorAll(".fonts button").forEach(x => x.setAttribute("aria-pressed", x === b)); });
+composer.addEventListener("submit", e => {
+  e.preventDefault();
+  const t = msg.value.trim(), err = check(t);
+  if (err) { say(err); return; }
+  base.collection("posts").add({ t, color: pen, font, rot: Number((Math.random() * 6 - 3).toFixed(1)), ts: now() })
+    .then(() => say("Hängt jetzt an der Wand.", true)).catch(fail);
+  msg.value = ""; document.getElementById("count").textContent = "0/120";
+  sort = "new"; setTabs(); window.scrollTo({ top: 0, behavior: "smooth" });
+});
+function setTabs() { document.getElementById("sNew").setAttribute("aria-pressed", sort === "new"); document.getElementById("sTop").setAttribute("aria-pressed", sort === "top"); }
+document.getElementById("sNew").onclick = () => { sort = "new"; setTabs(); render(); };
+document.getElementById("sTop").onclick = () => { sort = "top"; setTabs(); render(); };
+render();
+</script>
+</body>
+</html>
