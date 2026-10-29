@@ -1,0 +1,245 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Klo-Wand für Bars</title>
+<meta name="description" content="Die anonyme Klo-Wand für deine Bar: QR-Code an die Kabinentür, Gäste kritzeln, du bewirbst deine Aktionen.">
+<meta name="theme-color" content="#1d2321">
+<meta property="og:title" content="Klo-Wand für deine Bar">
+<meta property="og:description" content="QR-Code an die Kabinentür. Gäste kritzeln anonym, du pinnst deine Aktionen an.">
+<meta property="og:image" content="assets/poster.jpg">
+<link rel="icon" href="icon-192.png">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Permanent+Marker&family=Caveat:wght@600;700&family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&display=swap">
+<style>
+/* Layout: Kabinentür-Grün als Grund, harte Edding-Headlines, eine dunkle "Theke" für Preis und Kontakt.
+   Einspaltig am Handy, zweispaltig ab Tablet. */
+:root{
+  --door:#b9c7bf; --door-2:#aebdb4; --plate:#dde3df; --ink:#1d2321; --muted:#46524b;
+  --red:#b3261e; --blue:#1f4fa3; --green:#2f6b3a; --night:#1d2321; --night-fg:#e9ece9; --night-muted:#a7b1ab;
+  --f-marker:"Permanent Marker","Comic Sans MS",cursive; --f-scrawl:"Caveat",cursive;
+  --f-head:"Barlow Condensed","Arial Narrow",sans-serif; --f-body:"Barlow",system-ui,sans-serif;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html,body{background:var(--door);color:var(--ink)}
+body{margin:0;font:400 1.05rem/1.55 var(--f-body);
+  background-image:repeating-linear-gradient(90deg,rgba(0,0,0,.018) 0 2px,transparent 2px 7px)}
+img,video{max-width:100%;display:block}
+a{color:var(--blue)}
+:focus-visible{outline:3px dashed var(--blue);outline-offset:3px}
+.in{max-width:1040px;margin:0 auto;padding-left:max(18px,env(safe-area-inset-left,0px));padding-right:max(18px,env(safe-area-inset-right,0px))}
+section{padding-block:56px}
+h1,h2,h3{text-wrap:balance}
+h2{font:400 clamp(2rem,6vw,3rem)/1.05 var(--f-marker);margin:0 0 10px}
+.kicker{font:700 .85rem var(--f-head);letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+.lead{font-size:1.15rem;max-width:60ch;color:var(--muted);margin:0}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:48px;padding:10px 20px;border-radius:6px;
+  font:700 1rem var(--f-head);letter-spacing:.08em;text-transform:uppercase;text-decoration:none;cursor:pointer;border:2px solid var(--ink)}
+.btn.red{background:var(--red);border-color:var(--red);color:#fff}
+.btn.ghost{background:transparent;color:var(--ink)}
+
+/* Kopf */
+.top{display:flex;align-items:center;justify-content:space-between;gap:12px;padding-block:16px}
+.logo{font:400 1.5rem var(--f-marker);color:var(--ink);text-decoration:none}
+.logo span{color:var(--red)}
+.top .btn{min-height:40px;padding:6px 14px;font-size:.85rem}
+
+/* Hero */
+.hero{display:grid;gap:36px;align-items:center;padding-block:24px 56px}
+@media(min-width:820px){.hero{grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr)}}
+.hero h1{margin:8px 0 14px;font:400 clamp(2.6rem,9vw,4.6rem)/.98 var(--f-marker)}
+.hero h1 em{font-style:normal;color:var(--red)}
+.hero .scrawl{font:700 1.7rem/1.1 var(--f-scrawl);color:var(--blue);margin:0 0 18px;transform:rotate(-1.5deg);display:inline-block}
+.ctas{display:flex;gap:10px;flex-wrap:wrap;margin-top:22px}
+.phone{justify-self:center;width:min(300px,78vw);border-radius:34px;background:var(--ink);padding:10px;box-shadow:0 18px 40px rgba(29,35,33,.35);transform:rotate(2deg)}
+.phone img{border-radius:26px}
+.sticker-note{display:block;text-align:center;margin-top:14px;font:700 1.3rem var(--f-scrawl);color:var(--muted)}
+
+/* Schritte */
+.steps{display:grid;gap:14px;margin-top:26px}
+@media(min-width:720px){.steps{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.step{background:var(--plate);border:1px solid #8b958f;border-radius:6px;padding:18px 18px 16px;position:relative}
+.step b{display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:50%;background:var(--ink);color:var(--night-fg);font:700 1.1rem var(--f-head);margin-bottom:10px}
+.step h3{margin:0 0 4px;font:700 1.35rem var(--f-head);letter-spacing:.02em}
+.step p{margin:0;color:var(--muted)}
+
+/* Vorteile */
+.split{display:grid;gap:36px;align-items:start}
+@media(min-width:820px){.split{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}}
+.perks{list-style:none;margin:22px 0 0;padding:0;display:grid;gap:16px}
+.perks li{display:grid;grid-template-columns:34px minmax(0,1fr);gap:12px;align-items:start}
+.perks .mark{font:700 1.7rem/1 var(--f-scrawl);color:var(--red);text-align:center}
+.perks h3{margin:0;font:700 1.25rem var(--f-head)}
+.perks p{margin:2px 0 0;color:var(--muted)}
+.shot{border-radius:14px;overflow:hidden;border:6px solid var(--ink);box-shadow:0 10px 26px rgba(29,35,33,.28);max-width:340px;justify-self:center}
+.caption{font:700 1.25rem var(--f-scrawl);color:var(--muted);text-align:center;margin-top:10px}
+
+/* Clip */
+.clip{display:grid;gap:28px;align-items:center}
+@media(min-width:820px){.clip{grid-template-columns:minmax(0,.8fr) minmax(0,1.2fr)}}
+.clip video{width:min(320px,80vw);aspect-ratio:9/16;border-radius:18px;background:var(--ink);justify-self:center;box-shadow:0 12px 30px rgba(29,35,33,.3)}
+
+/* Theke: Preis + Kontakt */
+.night{background:var(--night);color:var(--night-fg)}
+.night .kicker{color:var(--night-muted)}
+.night .lead{color:var(--night-muted)}
+.price{display:grid;gap:18px;margin-top:26px}
+@media(min-width:820px){.price{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}}
+.card{border:1px solid #3a4642;border-radius:8px;padding:22px;background:#242b28}
+.card.hot{border-color:var(--red);box-shadow:0 0 0 1px var(--red) inset}
+.card h3{margin:0;font:700 1.3rem var(--f-head);letter-spacing:.04em;text-transform:uppercase}
+.amount{font:700 3rem/1 var(--f-head);margin:10px 0 2px;font-variant-numeric:tabular-nums}
+.amount small{font-size:1rem;font-weight:500;color:var(--night-muted)}
+.card ul{margin:14px 0 0;padding-left:20px;color:var(--night-muted)}
+.card li{margin:4px 0}
+.card .btn{margin-top:18px;width:100%}
+.night .btn.ghost{color:var(--night-fg);border-color:var(--night-fg)}
+.contact{margin-top:30px;display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.contact .addr{font:600 1.15rem var(--f-body);user-select:all;background:#2b3330;border-radius:6px;padding:10px 14px}
+
+/* FAQ */
+details{background:var(--plate);border:1px solid #8b958f;border-radius:6px;padding:0 16px;margin-top:10px}
+summary{cursor:pointer;list-style:none;padding:14px 0;font:700 1.2rem var(--f-head);display:flex;justify-content:space-between;gap:12px}
+summary::-webkit-details-marker{display:none}
+summary::after{content:"+";font:700 1.5rem/1 var(--f-head);color:var(--red)}
+details[open] summary::after{content:"–"}
+details p{margin:0 0 14px;color:var(--muted)}
+
+footer{padding-block:30px 40px;font-size:.9rem;color:var(--muted);text-align:center}
+footer .scrawl{display:block;font:700 1.5rem var(--f-scrawl);color:var(--ink);margin-bottom:6px}
+[hidden]{display:none!important}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+
+<div class="in top">
+  <a class="logo" href="#">Klo<span>-</span>Wand</a>
+  <a class="btn red" href="#preis">1 Monat gratis</a>
+</div>
+
+<header class="in hero">
+  <div>
+    <span class="kicker">Für Bars, Kneipen &amp; Clubs</span>
+    <h1>Die Klo-Wand für <em>deine Bar</em>.</h1>
+    <p class="scrawl">Wie Sprüche an der Kabinentür. Nur ohne Edding-Flecken.</p>
+    <p class="lead">Ein QR-Code an der Tür, und deine Gäste kritzeln anonym Sprüche und Zeichnungen auf eine digitale Wand, die nur in deinem Laden lebt. Du hängst deine Aktionen oben dran und siehst live, was los ist.</p>
+    <div class="ctas">
+      <a class="btn red" href="./?wand=demo" target="_blank" rel="noopener">Live ausprobieren</a>
+      <a class="btn ghost" href="#so-gehts">So funktioniert’s</a>
+    </div>
+  </div>
+  <div>
+    <div class="phone"><img src="assets/wand.jpg" alt="Die Klo-Wand vom Goldenen Hahn auf dem Handy" width="540" height="927"></div>
+    <span class="sticker-note">Echte Wand, echte Sprüche.</span>
+  </div>
+</header>
+
+<section id="so-gehts">
+  <div class="in">
+    <span class="kicker">In 10 Minuten startklar</span>
+    <h2>So geht’s</h2>
+    <div class="steps">
+      <div class="step"><b>1</b><h3>Sticker an die Tür</h3><p>Du bekommst einen QR-Sticker im Kabinen-Look mit dem Namen deiner Bar. Ausdrucken, aufkleben, fertig.</p></div>
+      <div class="step"><b>2</b><h3>Gäste scannen</h3><p>Kein App-Download, kein Konto. Handy-Kamera drauf, schon ist man an der Wand deiner Kabine.</p></div>
+      <div class="step"><b>3</b><h3>Es wird gekritzelt</h3><p>Sprüche, Zeichnungen, Striche verteilen, drunterkritzeln. Was in deiner Bar steht, bleibt in deiner Bar.</p></div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="in split">
+    <div>
+      <span class="kicker">Was du davon hast</span>
+      <h2>Mehr Gesprächsstoff. Mehr Umsatz.</h2>
+      <ul class="perks">
+        <li><span class="mark">✓</span><div><h3>Deine Aktionen, oben angepinnt</h3><p>„Zeig diesen Spruch an der Theke, Shot aufs Haus.“ Die Wand wird zu deinem Werbekanal auf dem Klo.</p></div></li>
+        <li><span class="mark">✓</span><div><h3>Spruch des Abends</h3><p>Um Mitternacht wird der beliebteste Spruch gekürt und bleibt einen Tag oben. Gäste kommen wieder, um nachzusehen.</p></div></li>
+        <li><span class="mark">✓</span><div><h3>Du behältst die Kontrolle</h3><p>Telefonnummern, Links, Namen und Beleidigungen werden automatisch abgelehnt. Gäste können melden, du löschst mit einem Tipp.</p></div></li>
+        <li><span class="mark">✓</span><div><h3>Alle Läden auf einem Bildschirm</h3><p>Mehrere Bars? Die Admin-Seite zeigt alle Wände live und meldet sich, sobald etwas Neues dazukommt.</p></div></li>
+        <li><span class="mark">✓</span><div><h3>Anonym und datensparsam</h3><p>Keine Namen, keine Konten, keine IP-Adressen an der Wand. Server in Frankfurt.</p></div></li>
+      </ul>
+    </div>
+    <div>
+      <div class="shot"><img src="assets/admin.jpg" alt="Admin-Ansicht mit allen Wänden, Meldungen und Löschen-Knöpfen" width="540" height="1169" loading="lazy"></div>
+      <p class="caption">Deine Admin-Ansicht</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="in clip">
+    <video src="assets/klowand-clip.mp4" poster="assets/poster.jpg" controls playsinline preload="none" aria-label="Werbeclip der Klo-Wand"></video>
+    <div>
+      <span class="kicker">In 20 Sekunden erklärt</span>
+      <h2>Einmal ansehen, sofort verstanden.</h2>
+      <p class="lead">Den Clip bekommst du für deine Bar mit deinem Namen und deinem QR-Code. Perfekt für Instagram, TikTok und den WhatsApp-Status.</p>
+    </div>
+  </div>
+</section>
+
+<section class="night" id="preis">
+  <div class="in">
+    <span class="kicker">Preis</span>
+    <h2>Fair und ohne Vertrag.</h2>
+    <p class="lead">Erst testen, dann entscheiden. Monatlich kündbar.</p>
+    <div class="price">
+      <div class="card">
+        <h3>Probemonat</h3>
+        <div class="amount">0 € <small>für 1 Monat</small></div>
+        <ul><li>Eigene Wand mit deinem Barnamen</li><li>QR-Sticker zum Ausdrucken</li><li>Admin-Seite zum Mitlesen und Löschen</li></ul>
+        <a class="btn ghost" href="./?wand=demo" target="_blank" rel="noopener">Demo ansehen</a>
+      </div>
+      <div class="card hot">
+        <h3>Pro Bar</h3>
+        <div class="amount">29 € <small>im Monat</small></div>
+        <ul><li>Alles aus dem Probemonat</li><li>Angepinnte Aktionen und Gutscheine</li><li>Werbeclip mit deinem QR-Code</li><li>Jede weitere Kabine inklusive</li></ul>
+        <a class="btn red" href="#kontakt">Jetzt anfragen</a>
+      </div>
+    </div>
+
+    <div id="kontakt" class="contact">
+      <span class="kicker" style="width:100%">Kontakt</span>
+      <span id="kontaktLeer" style="color:var(--night-muted)">Sprich mich einfach an der Theke an oder schreib mir dort, wo du diesen Link bekommen hast.</span>
+      <span class="addr" id="mail" hidden></span>
+      <button class="btn red" type="button" id="copyMail" hidden>Adresse kopieren</button>
+      <span class="addr" id="tel" hidden></span>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="in">
+    <span class="kicker">Fragen</span>
+    <h2>Gut zu wissen</h2>
+    <details><summary>Müssen meine Gäste eine App installieren?</summary><p>Nein. Die Wand öffnet sich direkt im Browser, wenn man den QR-Code scannt. Wer will, kann sie trotzdem auf den Startbildschirm legen.</p></details>
+    <details><summary>Was ist, wenn jemand etwas Gemeines schreibt?</summary><p>Telefonnummern, Links, @Namen und grobe Beleidigungen werden schon beim Absenden abgelehnt. Alles andere können Gäste melden. Nach 3 Meldungen ist ein Spruch automatisch weg, und du kannst über die Admin-Seite jederzeit selbst löschen.</p></details>
+    <details><summary>Kann ich mehrere Kabinen oder Läden haben?</summary><p>Ja. Jede Bar und jede Kabine kann ihre eigene Wand bekommen, alle siehst du zusammen auf einer Admin-Seite.</p></details>
+    <details><summary>Brauche ich Technik oder WLAN?</summary><p>Nein. Die Gäste nutzen ihr eigenes Handy-Netz. Du brauchst nur einen Drucker für den Sticker.</p></details>
+    <details><summary>Was passiert mit den Daten?</summary><p>An der Wand werden keine Namen und keine Konten gespeichert. Die Daten liegen bei Google Firebase in Frankfurt. Alte Sprüche verblassen und verschwinden nach einiger Zeit von der Wand.</p></details>
+  </div>
+</section>
+
+<footer class="in">
+  <span class="scrawl">Bitte nicht runterspülen.</span>
+  Klo-Wand · <a href="./?wand=demo">Demo</a> · <a href="admin.html">Admin</a>
+</footer>
+
+<script src="config.js"></script>
+<script>
+try {
+  const k = (typeof KONTAKT !== "undefined" && KONTAKT) || {};
+  if (k.email || k.telefon) document.getElementById("kontaktLeer").hidden = true;
+  if (k.email) {
+    const m = document.getElementById("mail"), b = document.getElementById("copyMail");
+    m.textContent = k.email; m.hidden = false; b.hidden = false;
+    b.onclick = () => navigator.clipboard.writeText(k.email).then(() => b.textContent = "Kopiert", () => {
+      const r = document.createRange(); r.selectNodeContents(m); const s = getSelection(); s.removeAllRanges(); s.addRange(r);
+    });
+  }
+  if (k.telefon) { const t = document.getElementById("tel"); t.textContent = k.telefon; t.hidden = false; }
+} catch (e) {}
+</script>
+</body>
+</html>

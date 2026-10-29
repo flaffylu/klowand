@@ -18,4 +18,8 @@ const WAENDE = {
   "prestigio":     { name: "Prestigio",         sub: "Ristorante Italiano" },
   "goldener-hahn": { name: "Zum Goldenen Hahn", sub: "Herren · Kabine 2" },
   "zuhause":       { name: "Zuhause",           sub: "Das Familienklo" },
+  "demo":          { name: "Demo-Bar",          sub: "Zum Ausprobieren" },
 };
+
+/* Kontakt für die Infoseite (wirte.html). Leer lassen = Kontaktbereich ausblenden. */
+const KONTAKT = { email: "", telefon: "" };
