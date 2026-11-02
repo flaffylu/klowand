@@ -21,5 +21,25 @@ const WAENDE = {
   "demo":          { name: "Demo-Bar",          sub: "Zum Ausprobieren" },
 };
 
+/* Wochen-Challenges: jede Kalenderwoche ist die nächste dran, danach geht es von vorne los.
+   art: "text" = schreiben, "draw" = malen, "beides" = egal.                                  */
+const CHALLENGES = [
+  { text: "Mal den Barkeeper.", art: "draw" },
+  { text: "Bester Reim auf „Klo“.", art: "text" },
+  { text: "Dein schlechtester Anmachspruch.", art: "text" },
+  { text: "Mal dein Lieblingsgetränk.", art: "draw" },
+  { text: "Was denkt die Klopapierrolle gerade?", art: "text" },
+  { text: "Mal ein Monster, das im Spülkasten wohnt.", art: "draw" },
+  { text: "Beschreib deinen Abend in genau drei Wörtern.", art: "text" },
+  { text: "Mal die Kabine, wenn sie ein Haustier wäre.", art: "draw" },
+  { text: "Erfinde einen neuen Cocktail und gib ihm einen Namen.", art: "text" },
+  { text: "Klo-Weisheit des Tages.", art: "beides" },
+  { text: "Mal dich als Superheld.", art: "draw" },
+  { text: "Was würdest du der Kloschüssel gern mal sagen?", art: "text" },
+];
+
+/* Angaben für Impressum und Datenschutz. Leer = Platzhalter in eckigen Klammern. */
+const IMPRESSUM = { name: "", strasse: "", ort: "", email: "", telefon: "" };
+
 /* Kontakt für die Infoseite (wirte.html). Leer lassen = Kontaktbereich ausblenden. */
 const KONTAKT = { email: "", telefon: "" };

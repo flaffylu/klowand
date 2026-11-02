@@ -8,7 +8,7 @@
 <meta name="theme-color" content="#1d2321">
 <link rel="icon" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Permanent+Marker&family=Caveat:wght@500;700&family=Gochi+Hand&family=Rock+Salt&family=Barlow+Condensed:wght@500;700&display=swap">
+<link rel="stylesheet" href="fonts.css">
 <style>
 /* Layout: eine lackierte Klokabinentür als Wand, Sprüche frei gestreut, Edding-Leiste unten fixiert */
 :root{
@@ -111,6 +111,17 @@ body{margin:0}
 .champ .post .txt{font-size:1.9rem}
 .champ .post.f-marker .txt{font-size:1.6rem}
 .champ .post.f-scrawl .txt{font-size:2.2rem}
+.chcard{column-span:all;display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin:6px 0 14px;padding:12px 14px;
+  background:var(--ink);color:var(--door);border-radius:6px}
+.chcard .k{display:block;font:700 .75rem var(--f-ui);letter-spacing:.12em;text-transform:uppercase;color:#f2c34d}
+.chcard .q{display:block;font:400 1.35rem/1.15 var(--f-marker);margin-top:3px}
+.chcard .m{font:600 .85rem var(--f-ui);color:#a7b1ab;margin-top:3px;display:block}
+.chcard button{font:700 .9rem var(--f-ui);letter-spacing:.06em;text-transform:uppercase;background:#f2c34d;color:var(--ink);border:none;border-radius:6px;padding:8px 14px;min-height:40px;cursor:pointer}
+.champ.chw{border-color:#c48a12}
+.champ.chw .crown{background:#c48a12}
+.chtag{display:inline-block;font:700 .68rem var(--f-ui);letter-spacing:.1em;text-transform:uppercase;background:var(--ink);color:#f2c34d;border-radius:3px;padding:2px 6px;margin-bottom:4px}
+.modes .chjoin{margin-left:auto;border-color:#f2c34d;color:#f2c34d}
+.modes .chjoin[aria-pressed="true"]{background:#f2c34d;color:var(--bar)}
 @media (prefers-reduced-motion:reduce){.post{transition:none}}
 </style>
 </head>
@@ -137,6 +148,7 @@ body{margin:0}
     <div class="modes" role="group" aria-label="Was willst du machen?">
       <button type="button" data-m="text" aria-pressed="true">Schreiben</button>
       <button type="button" data-m="draw" aria-pressed="false">Malen</button>
+      <button type="button" id="chJoin" class="chjoin" aria-pressed="false" hidden>Für die Challenge</button>
     </div>
     <label for="msg" class="mod" id="mod">Schreib was an die Wand. Keine Namen, keine Nummern.</label>
     <textarea id="msg" maxlength="120" placeholder="Hier saß ich und dachte …"></textarea>
@@ -172,6 +184,7 @@ body{margin:0}
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script src="config.js"></script>
+<script src="filter.js"></script>
 <script>
 const params = new URLSearchParams(location.search);
 let lastWall = null; try { lastWall = localStorage.getItem("klowand-last"); } catch (e) {}
@@ -225,7 +238,7 @@ function postHtml(p, inChamp) {
   const rs = (replies[p.id] || []).slice().sort((a, b) => a.ts - b.ts);
   const body = p.img ? `<img class="drawing" src="${p.img}" alt="Kritzelei">` : `<div class="txt">${esc(p.t)}</div>`;
   return `<div class="post f-${p.font || "hand"} c-${p.color || "ink"}${carved ? " carved" : ""}" style="transform:rotate(${p.rot}deg);opacity:${op}">
-      ${carved ? '<span class="carvedtag">Eingeritzt</span>' : ""}
+      ${carved ? '<span class="carvedtag">Eingeritzt</span>' : ""}${p.ch === THIS_WEEK && !inChamp ? '<span class="chtag">Challenge</span><br>' : ""}
       ${body}
       ${rs.length ? `<div class="replies">${rs.map(r => `<div class="reply c-ink">${esc(r.t)}</div>`).join("")}</div>` : ""}
       <div class="meta">
@@ -239,15 +252,45 @@ function postHtml(p, inChamp) {
     </div>`;
 }
 
+/* ---------- Wochen-Challenge ---------- */
+function weekKey(t) {
+  const d = new Date(t); d.setHours(0, 0, 0, 0); d.setDate(d.getDate() + 3 - ((d.getDay() + 6) % 7));
+  const w1 = new Date(d.getFullYear(), 0, 4);
+  const n = 1 + Math.round(((d - w1) / DAY - 3 + ((w1.getDay() + 6) % 7)) / 7);
+  return d.getFullYear() + "-W" + String(n).padStart(2, "0");
+}
+const LIST = (typeof CHALLENGES !== "undefined" && CHALLENGES.length) ? CHALLENGES : [];
+const THIS_WEEK = weekKey(Date.now()), LAST_WEEK = weekKey(Date.now() - 7 * DAY);
+const weekNo = k => Number(k.split("-W")[1]);
+const challengeFor = k => LIST.length ? LIST[(Number(k.slice(0, 4)) * 53 + weekNo(k)) % LIST.length] : null;
+const CH_NOW = challengeFor(THIS_WEEK), CH_LAST = challengeFor(LAST_WEEK);
+let chJoin = false;
+function chWinner(list) {
+  let best = null;
+  list.forEach(p => { if (p.ch === LAST_WEEK && p.n > 0 && (!best || p.n > best.n || (p.n === best.n && p.ts < best.ts))) best = p; });
+  return best;
+}
+function chCard() {
+  if (!CH_NOW) return "";
+  const kind = CH_NOW.art === "draw" ? "Malen" : CH_NOW.art === "text" ? "Schreiben" : "Schreiben oder malen";
+  return `<div class="chcard"><div><span class="k">Challenge der Woche · KW ${weekNo(THIS_WEEK)}</span><span class="q">${esc(CH_NOW.text)}</span>
+    <span class="m">${kind} · Der Beitrag mit den meisten Strichen wird nächste Woche oben angepinnt.</span></div>
+    <button type="button" data-a="chgo">Mitmachen</button></div>`;
+}
+
 function render() {
   if (!loaded) { wall.innerHTML = '<p class="empty">Wand wird geladen …</p>'; return; }
   let list = posts.filter(p => (reports[p.id] || 0) < 3).map(p => ({ ...p, n: (likes[p.id] || new Set()).size }));
   const champ = champion(list);
   if (champ) list = list.filter(p => p.id !== champ.id);
+  const chw = chWinner(list);
+  if (chw) list = list.filter(p => p.id !== chw.id);
   list.sort((a, b) => sort === "new" ? b.ts - a.ts : b.n - a.n);
-  if (!list.length && !champ) { wall.innerHTML = '<p class="empty">Die Wand ist noch sauber.<br>Schreib oder mal unten das Erste drauf.</p>'; return; }
-  wall.innerHTML = (champ ? `<div class="champ"><span class="crown">Spruch des Abends · gestern</span>${postHtml(champ, true)}</div>` : "")
-    + list.map(p => postHtml(p)).join("");
+  const top = chCard()
+    + (chw ? `<div class="champ chw"><span class="crown">Challenge-Sieger · ${esc(CH_LAST ? CH_LAST.text : "letzte Woche")}</span>${postHtml(chw, true)}</div>` : "")
+    + (champ ? `<div class="champ"><span class="crown">Spruch des Abends · gestern</span>${postHtml(champ, true)}</div>` : "");
+  if (!list.length) { wall.innerHTML = top + '<p class="empty">Die Wand ist noch sauber.<br>Schreib oder mal unten das Erste drauf.</p>'; return; }
+  wall.innerHTML = top + list.map(p => postHtml(p)).join("");
   if (openReply) { const i = $("r-" + openReply); i && i.focus(); }
 }
 
@@ -257,8 +300,7 @@ function check(t) {
   if (/(\+?\d[\d\s\-\/]{6,}\d)/.test(t)) return "Keine Telefonnummern an der Wand.";
   if (/\S+@\S+\.\S+/.test(t) || /@\w+/.test(t)) return "Keine Mails oder @Namen. Hier bleibt jeder anonym.";
   if (/(https?:\/\/|www\.)/i.test(t)) return "Links sind hier nicht erlaubt.";
-  const bad = ["hure", "fotze", "schwuchtel", "spast", "missgeburt", "nazi", "hurensohn", "umbringen"];
-  if (bad.some(w => t.toLowerCase().includes(w))) return "Das kommt nicht an die Wand. Witzig ja, gemein nein.";
+  if (KloFilter.bad(t)) return "Das kommt nicht an die Wand. Witzig ja, schweinisch oder gemein nein.";
   if (/\b(ist|sind)\s+(fett|hässlich|dumm|scheiße)\b/i.test(t)) return "Klingt nach Lästern über jemanden. Lass das.";
   return null;
 }
@@ -268,7 +310,7 @@ const fail = e => say(e && e.code === "permission-denied" ? "Die Wand hat das ab
 const since = firebase.firestore.Timestamp.fromMillis(Date.now() - 60 * DAY);
 const offline = () => { status.textContent = "Offline"; say("Die Wand ist gerade nicht erreichbar. Lade die Seite neu."); };
 base.collection("posts").where("ts", ">", since).orderBy("ts", "desc").limit(300).onSnapshot(s => {
-  posts = s.docs.map(d => { const x = d.data(); return { id: d.id, t: x.t, img: isDrawing(x.img) ? x.img : null, color: x.color, font: x.font, rot: x.rot || 0, ts: ms(x) }; })
+  posts = s.docs.map(d => { const x = d.data(); return { id: d.id, t: x.t, img: isDrawing(x.img) ? x.img : null, color: x.color, font: x.font, rot: x.rot || 0, ch: typeof x.ch === "string" ? x.ch : null, ts: ms(x) }; })
     .filter(p => p.img || typeof p.t === "string");
   loaded = true; status.textContent = "Live"; render();
 }, offline);
@@ -286,6 +328,7 @@ base.collection("replies").limit(2000).onSnapshot(s => {
 wall.addEventListener("click", e => {
   const b = e.target.closest("button[data-a]"); if (!b) return;
   const id = b.dataset.id;
+  if (b.dataset.a === "chgo") { setChJoin(true); setMode(CH_NOW && CH_NOW.art === "draw" ? "draw" : "text"); if (mode === "text") msg.focus(); return; }
   if (b.dataset.a === "like") base.collection("likes").doc(id + "_" + device).set({ p: id }).catch(fail);
   if (b.dataset.a === "reply") { openReply = openReply === id ? null : id; render(); }
   if (b.dataset.a === "report") base.collection("reports").doc(id + "_" + device).set({ p: id })
@@ -355,6 +398,9 @@ msg.addEventListener("input", () => $("count").textContent = msg.value.length + 
 document.querySelectorAll(".pen").forEach(b => b.onclick = () => { pen = b.dataset.c; document.querySelectorAll(".pen").forEach(x => x.setAttribute("aria-pressed", x === b)); });
 document.querySelectorAll("#fonts button").forEach(b => b.onclick = () => { font = b.dataset.f; document.querySelectorAll("#fonts button").forEach(x => x.setAttribute("aria-pressed", x === b)); });
 
+function setChJoin(on) { chJoin = !!on && !!CH_NOW; const b = $("chJoin"); b.setAttribute("aria-pressed", chJoin); b.textContent = chJoin ? "Challenge ✓" : "Für die Challenge"; }
+if (CH_NOW) { $("chJoin").hidden = false; $("chJoin").onclick = () => setChJoin(!chJoin); }
+
 composer.addEventListener("submit", e => {
   e.preventDefault();
   const rot = Number((Math.random() * 6 - 3).toFixed(1));
@@ -363,14 +409,15 @@ composer.addEventListener("submit", e => {
     const img = exportDrawing();
     if (!img) { say("Mal erst was, dann kritzeln."); return; }
     if (img.length > 150000) { say("Die Zeichnung ist zu groß. Mal etwas einfacher."); return; }
-    base.collection("posts").add({ img, rot, ts: now() }).then(() => say("Hängt jetzt an der Wand.", true)).catch(fail);
+    base.collection("posts").add(Object.assign({ img, rot, ts: now() }, chJoin ? { ch: THIS_WEEK } : {})).then(() => say("Hängt jetzt an der Wand.", true)).catch(fail);
     clearPad();
   } else {
     const t = msg.value.trim(), err = check(t);
     if (err) { say(err); return; }
-    base.collection("posts").add({ t, color: pen, font, rot, ts: now() }).then(() => say("Hängt jetzt an der Wand.", true)).catch(fail);
+    base.collection("posts").add(Object.assign({ t, color: pen, font, rot, ts: now() }, chJoin ? { ch: THIS_WEEK } : {})).then(() => say("Hängt jetzt an der Wand.", true)).catch(fail);
     msg.value = ""; $("count").textContent = "0/120";
   }
+  setChJoin(false);
   sort = "new"; setTabs(); window.scrollTo({ top: 0, behavior: "smooth" });
 });
 function setTabs() { $("sNew").setAttribute("aria-pressed", sort === "new"); $("sTop").setAttribute("aria-pressed", sort === "top"); }
@@ -385,5 +432,6 @@ render();
 </script>
 <script src="music.js"></script>
 <script src="games.js"></script>
+<script src="features.js"></script>
 </body>
 </html>

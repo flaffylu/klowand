@@ -4,8 +4,8 @@
   const GAMES = {
     fang:   { title: "Klorollen-Fang", short: "Fang", desc: "30 Sekunden Rollen fangen. Gold zählt 5, der Pümpel kostet 3.", unit: "Rollen", better: "desc" },
     reflex: { title: "Spül-Reflex",    short: "Reflex", desc: "Tipp, sobald die Kabine frei wird. 3 Runden, der Schnitt zählt.", unit: "ms", better: "asc" },
+    stapel: { title: "Klopapier-Stapeln", short: "Stapeln", desc: "Tippen lässt die Rolle fallen. Was übersteht, fällt ab. Wie hoch wird dein Turm?", unit: "Rollen", better: "desc" },
   };
-  const BAD = ["hure", "fotze", "schwuchtel", "spast", "missgeburt", "nazi", "hurensohn", "nutte", "wichser", "fick"];
   const C = { door: "#b9c7bf", ink: "#1d2321", red: "#b3261e", gold: "#e0a92e", paper: "#fbfbf7", core: "#c9cfc9", green: "#2f6b3a", wood: "#8a5a2b", muted: "#46524b" };
   const $ = id => document.getElementById(id);
   const today = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`; };
@@ -107,7 +107,7 @@
     const b = e.target.closest("[data-go]"); if (!b) return;
     const [what, g, tab] = b.dataset.go.split(":");
     if (what === "menu") menu();
-    if (what === "play") g === "fang" ? playFang() : playReflex();
+    if (what === "play") ({ fang: playFang, reflex: playReflex, stapel: playStapel })[g]();
     if (what === "board") board(g, tab || "heute");
   });
 
@@ -206,6 +206,98 @@
     raf = requestAnimationFrame(loop);
   }
 
+  /* ---------- Spiel 3: Klopapier-Stapeln ---------- */
+  function playStapel() {
+    view(`<canvas id="kgCanvas" aria-label="Spielfeld: Antippen lässt die Rolle fallen"></canvas>
+      <p class="hint">Tippen lässt die Rolle fallen. Was übersteht, fällt ab.</p><button type="button" class="ghost" data-go="menu">Abbrechen</button>`);
+    const cv = $("kgCanvas"), W = 360, H = 520, dpr = Math.min(window.devicePixelRatio || 1, 2);
+    cv.width = W * dpr; cv.height = H * dpr;
+    const c = cv.getContext("2d"); c.scale(dpr, dpr);
+    if (!c.roundRect) c.roundRect = function (x, y, w, h) { this.rect(x, y, w, h); };
+    const RH = 30, BASE_Y = H - 70, BASE_W = 130;
+    let stack = [{ x: (W - BASE_W) / 2, w: BASE_W }];   // Turm, unten zuerst
+    let mover = null, bits = [], pops = [], cam = 0, camTo = 0, running = true, started = false, over = false, last = performance.now(), raf = 0, perfect = 0;
+    const score = () => stack.length - 1;
+    const yOf = i => BASE_Y - (i + 1) * RH;              // Oberkante der Rolle i (0 = Sockel)
+    function spawn() {
+      const top = stack[stack.length - 1], fromLeft = stack.length % 2 === 0;
+      mover = { x: fromLeft ? 0 : W - top.w, w: top.w, dir: fromLeft ? 1 : -1, v: Math.min(330, 130 + score() * 9) };
+    }
+    function drop() {
+      if (!running || over) return;
+      if (!started) { started = true; spawn(); return; }
+      if (!mover) return;
+      const top = stack[stack.length - 1];
+      const a = Math.max(mover.x, top.x), b = Math.min(mover.x + mover.w, top.x + top.w), overlap = b - a;
+      if (overlap <= 3) { bits.push({ x: mover.x, w: mover.w, y: yOf(stack.length) - cam, vy: 0, rot: 0, vr: (Math.random() - 0.5) * 4 }); mover = null; end(); return; }
+      let nx = a, nw = overlap;
+      if (Math.abs(mover.x - top.x) <= 4) { nx = top.x; nw = top.w; perfect++; KloMusik.blip("gold"); pops.push({ x: nx + nw / 2, y: yOf(stack.length) - 10, txt: "Perfekt!", t: 0.9 }); }
+      else {
+        perfect = 0; KloMusik.blip("good");
+        const cutX = mover.x < top.x ? mover.x : b, cutW = mover.w - overlap;
+        if (cutW > 0) bits.push({ x: cutX, w: cutW, y: yOf(stack.length) - cam, vy: 0, rot: 0, vr: (mover.x < top.x ? -1 : 1) * 2.5 });
+      }
+      stack.push({ x: nx, w: nw });
+      camTo = Math.max(0, (stack.length - 6) * RH);
+      spawn();
+    }
+    function end() {
+      over = true; KloMusik.blip("flush");
+      setTimeout(() => { if (running) { running = false; stopGame(); result("stapel", Math.min(500, score())); } }, 1100);
+    }
+    cv.addEventListener("pointerdown", e => { e.preventDefault(); drop(); });
+    const onKey = e => { if (e.code === "Space" || e.key === "Enter") { e.preventDefault(); drop(); } };
+    document.addEventListener("keydown", onKey);
+    stopGame = () => { running = false; cancelAnimationFrame(raf); document.removeEventListener("keydown", onKey); };
+
+    function roll(x, y, w, alpha = 1) {
+      c.save(); c.globalAlpha = alpha; c.strokeStyle = C.ink; c.lineWidth = 2;
+      c.fillStyle = C.paper; c.fillRect(x, y, w, RH - 2); c.strokeRect(x, y, w, RH - 2);
+      c.strokeStyle = "rgba(29,35,33,.18)"; c.lineWidth = 1;
+      for (let lx = x + 14; lx < x + w - 6; lx += 9) { c.beginPath(); c.moveTo(lx, y + 4); c.lineTo(lx, y + RH - 6); c.stroke(); }
+      c.strokeStyle = C.ink; c.lineWidth = 2; c.fillStyle = C.paper;
+      c.beginPath(); c.ellipse(x, y + (RH - 2) / 2, 7, (RH - 2) / 2, 0, 0, Math.PI * 2); c.fill(); c.stroke();
+      c.fillStyle = C.core; c.beginPath(); c.ellipse(x, y + (RH - 2) / 2, 3, 5, 0, 0, Math.PI * 2); c.fill();
+      c.restore();
+    }
+    function draw() {
+      c.fillStyle = C.door; c.fillRect(0, 0, W, H);
+      c.fillStyle = "rgba(0,0,0,.035)"; for (let x = 0; x < W; x += 7) c.fillRect(x, 0, 2, H);
+      // Klo als Sockel
+      const by = BASE_Y - RH + cam, bx = stack[0].x;
+      c.fillStyle = "#f4f6f5"; c.strokeStyle = C.ink; c.lineWidth = 3;
+      c.beginPath(); c.roundRect(bx - 6, by, BASE_W + 12, RH, 10); c.fill(); c.stroke();
+      c.beginPath(); c.moveTo(bx + 20, by + RH); c.lineTo(bx + 34, by + RH + 60); c.lineTo(bx + BASE_W - 34, by + RH + 60); c.lineTo(bx + BASE_W - 20, by + RH); c.fill(); c.stroke();
+      c.fillStyle = "#3a4440"; c.fillRect(0, by + RH + 60, W, 400);
+      for (let i = 1; i < stack.length; i++) roll(stack[i].x, yOf(i) + cam, stack[i].w);
+      if (mover && started && !over) roll(mover.x, yOf(stack.length) + cam, mover.w);
+      bits.forEach(b => { c.save(); c.translate(b.x + b.w / 2, b.y + cam + RH / 2); c.rotate(b.rot); roll(-b.w / 2, -RH / 2, b.w, 0.9); c.restore(); });
+      pops.forEach(p => { c.globalAlpha = Math.max(0, p.t / 0.9); c.fillStyle = C.green; c.font = "400 24px 'Permanent Marker', cursive"; c.textAlign = "center"; c.fillText(p.txt, p.x, p.y + cam); c.globalAlpha = 1; });
+      c.fillStyle = C.ink; c.font = "700 26px 'Barlow Condensed', sans-serif"; c.textAlign = "left";
+      c.fillText(`${score()} ${score() === 1 ? "Rolle" : "Rollen"}`, 14, 34);
+      if (perfect > 1) { c.textAlign = "right"; c.fillStyle = C.green; c.fillText(`${perfect}× perfekt`, W - 14, 34); }
+      if (!started) {
+        c.fillStyle = "rgba(29,35,33,.82)"; c.fillRect(30, 150, W - 60, 150);
+        c.fillStyle = "#fff"; c.textAlign = "center"; c.font = "400 30px 'Permanent Marker', cursive"; c.fillText("Antippen zum Start", W / 2, 210);
+        c.font = "600 18px 'Barlow Condensed', sans-serif"; c.fillText("Genau drauf = Rolle bleibt so breit", W / 2, 250);
+      }
+    }
+    function loop(now) {
+      if (!running) return;
+      const dt = Math.min(0.05, (now - last) / 1000); last = now;
+      if (mover && !over) {
+        mover.x += mover.dir * mover.v * dt;
+        if (mover.x < -mover.w * 0.3) { mover.x = -mover.w * 0.3; mover.dir = 1; }
+        if (mover.x > W - mover.w * 0.7) { mover.x = W - mover.w * 0.7; mover.dir = -1; }
+      }
+      cam += (camTo - cam) * Math.min(1, dt * 6);
+      bits.forEach(b => { b.vy += 900 * dt; b.y += b.vy * dt; b.rot += b.vr * dt; }); bits = bits.filter(b => b.y < H + 200);
+      pops.forEach(p => { p.t -= dt; p.y -= 30 * dt; }); pops = pops.filter(p => p.t > 0);
+      draw(); raf = requestAnimationFrame(loop);
+    }
+    raf = requestAnimationFrame(loop);
+  }
+
   /* ---------- Spiel 2: Spül-Reflex ---------- */
   function playReflex() {
     view(`<button type="button" class="pad" id="kgPad"><big id="kgBig">Bereit?</big><small id="kgSmall">Tippen zum Starten</small></button>
@@ -239,12 +331,12 @@
     if (n.length < 2) return "Mindestens 2 Zeichen, bitte.";
     if (n.length > 12) return "Höchstens 12 Zeichen.";
     if (!/^[A-Za-zÄÖÜäöüß0-9 ._-]+$/.test(n)) return "Nur Buchstaben, Zahlen, Leerzeichen, Punkt und Strich.";
-    if (BAD.some(w => n.toLowerCase().includes(w))) return "Such dir einen netteren Namen aus.";
+    if (KloFilter.bad(n)) return "Such dir einen netteren Namen aus.";
     return null;
   }
   function result(g, score) {
     view(`<div class="score"><span>${GAMES[g].title}</span><big>${fmt(g, score)}</big>
-        <span>${g === "reflex" ? "Schnitt aus 3 Runden" : "gefangen"}</span></div>
+        <span>${g === "reflex" ? "Schnitt aus 3 Runden" : g === "stapel" ? "gestapelt" : "gefangen"}</span></div>
       <form id="kgForm" autocomplete="off">
         <label for="kgName">Dein Name für die Rangliste</label>
         <input id="kgName" maxlength="12" placeholder="z. B. Klokönig" value="${esc(myName)}">
