@@ -162,7 +162,19 @@
       speechSynthesis.speak(u);
     } catch (e) {}
   }
-  document.getElementById("halloGo").onclick = () => { try { KloMusik.blip("gold"); } catch (e) {} setTimeout(() => speak(line), 250); close(); };
+  // Echte Sprachaufnahme aus dem Ordner „stimme“, sonst die Sprachausgabe des Handys
+  const file = h < 5 || h >= 22 ? "nacht" : h < 11 ? "morgen" : h < 17 ? "hallo" : "abend";
+  function sayIt() {
+    let done = false;
+    const fallback = () => { if (!done) { done = true; speak(line); } };
+    try {
+      const a = new Audio(`stimme/${file}.mp3`);
+      a.onerror = fallback;
+      a.onplaying = () => { done = true; };
+      const p = a.play(); if (p && p.catch) p.catch(fallback);
+    } catch (e) { fallback(); }
+  }
+  document.getElementById("halloGo").onclick = () => { sayIt(); close(); };
   document.getElementById("halloQuiet").onclick = close;
   el.addEventListener("click", e => { if (e.target === el) close(); });
   document.getElementById("halloGo").focus();
