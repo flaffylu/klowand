@@ -122,6 +122,20 @@ body{margin:0}
 .chtag{display:inline-block;font:700 .68rem var(--f-ui);letter-spacing:.1em;text-transform:uppercase;background:var(--ink);color:#f2c34d;border-radius:3px;padding:2px 6px;margin-bottom:4px}
 .modes .chjoin{margin-left:auto;border-color:#f2c34d;color:#f2c34d}
 .modes .chjoin[aria-pressed="true"]{background:#f2c34d;color:var(--bar)}
+/* Hintergrundbild: Sprüche werden zu angepinnten Zetteln, damit sie lesbar bleiben */
+html.bg-photo{background:#2a3330}
+html.bg-photo body{background:transparent}
+html.bg-photo body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--bg-url) center/cover no-repeat}
+html.bg-photo .post{position:relative;box-sizing:border-box;background:rgba(250,250,246,.86);border-radius:4px;padding:16px 12px 8px;box-shadow:0 3px 10px rgba(0,0,0,.28);
+  -webkit-backdrop-filter:blur(2px);backdrop-filter:blur(2px)}
+html.bg-photo .post::before{content:"";position:absolute;top:5px;left:50%;width:11px;height:11px;margin-left:-5px;border-radius:50%;
+  background:radial-gradient(circle at 35% 35%,#f19a92,#b3261e 60%);box-shadow:0 1px 2px rgba(0,0,0,.4)}
+html.bg-photo .post.c-silver .txt{color:#5d6a63;text-shadow:none}
+html.bg-photo .tabs .hint{color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.7)}
+html.bg-photo .tabs button{background:rgba(250,250,246,.86)}
+html.bg-photo .tabs button[aria-pressed="true"]{background:var(--ink)}
+html.bg-photo .empty{background:rgba(250,250,246,.86);border-radius:6px;padding:24px 12px}
+html.bg-photo .legal a{color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.7)}
 @media (prefers-reduced-motion:reduce){.post{transition:none}}
 </style>
 </head>
@@ -186,6 +200,10 @@ body{margin:0}
 <script src="config.js"></script>
 <script src="filter.js"></script>
 <script>
+if (typeof HINTERGRUND !== "undefined" && HINTERGRUND) {
+  document.documentElement.classList.add("bg-photo");
+  document.documentElement.style.setProperty("--bg-url", `url("${HINTERGRUND.replace(/["\\]/g, "")}")`);
+}
 const params = new URLSearchParams(location.search);
 let lastWall = null; try { lastWall = localStorage.getItem("klowand-last"); } catch (e) {}
 const WALL = (params.get("wand") || lastWall || Object.keys(WAENDE)[0]).toLowerCase().replace(/[^a-z0-9-]/g, "").slice(0, 60) || "wand";
