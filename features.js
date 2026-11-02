@@ -119,7 +119,7 @@
   const h = new Date().getHours();
   const zeit = h < 5 ? "Na, du Nachteule" : h < 11 ? "Guten Morgen" : h < 17 ? "Hallo" : h < 22 ? "Guten Abend" : "Na, du Nachtschwärmer";
   const LINES = [
-    `Achtung, Achtung! Ein neuer Gast auf dem Thron. ${zeit} und herzlich willkommen im ${bar}!`,
+    `Achtung, Achtung! Ein neuer Gast auf dem Thron. ${zeit} und herzlich willkommen!`,
   ];
   const line = LINES[Math.floor(Math.random() * LINES.length)];
 
@@ -143,7 +143,7 @@
   const el = document.createElement("div");
   el.className = "hallo"; el.setAttribute("role", "dialog"); el.setAttribute("aria-label", "Begrüßung");
   el.innerHTML = `<div class="box"><span class="sign">Besetzt · von dir</span>
-    <h2>Willkommen im ${bar.replace(/[<>&"]/g, "")}!</h2>
+    <h2>Herzlich willkommen!</h2>
     <p id="halloLine"></p>
     <div class="row"><button type="button" class="go" id="halloGo">Hallo!</button><button type="button" id="halloQuiet">Leise rein</button></div></div>`;
   document.body.appendChild(el);
