@@ -109,3 +109,67 @@
   const gw = document.querySelector(".kg .gw");
   if (gw) { const f = document.createElement("nav"); f.className = "legal"; f.setAttribute("aria-label", "Rechtliches"); f.innerHTML = legal; gw.appendChild(f); }
 })();
+
+/* Begrüßung beim Öffnen der Wand: lustiger Spruch, auf Tipp laut vorgelesen (Sprachausgabe des Handys). */
+(function () {
+  const ONCE_KEY = "klowand-hallo";
+  try { if (sessionStorage.getItem(ONCE_KEY)) return; } catch (e) {}
+  if (!document.querySelector(".wrap") || !document.getElementById("composer")) return;
+  const bar = (typeof info !== "undefined" && info.name) || "Klo-Wand";
+  const h = new Date().getHours();
+  const zeit = h < 5 ? "Na, du Nachteule" : h < 11 ? "Guten Morgen" : h < 17 ? "Hallo" : h < 22 ? "Guten Abend" : "Na, du Nachtschwärmer";
+  const LINES = [
+    `${zeit}! Willkommen auf dem Klo vom ${bar}. Hier darfst du alles sagen. Außer Schweinkram.`,
+    `${zeit}! Schön, dass du da bist. Lies ruhig mit, schreib was Lustiges, und vergiss das Händewaschen nicht.`,
+    `Achtung, Achtung! Ein neuer Gast auf dem Thron. ${zeit} und herzlich willkommen im ${bar}!`,
+    `${zeit}! Du sitzt gerade an der berühmtesten Klowand der Stadt. Benimm dich, die Wand merkt sich alles.`,
+    `Oh, Besuch! ${zeit}. Mach es dir bequem, hier hört dich keiner. Außer mir.`,
+    `${zeit}! Kleiner Tipp vom Klo: Die beste Idee des Abends kommt immer hier drin.`,
+    `Willkommen, willkommen! ${zeit}. Heute schon einen Rekord beim Klopapier-Stapeln aufgestellt?`,
+  ];
+  const line = LINES[Math.floor(Math.random() * LINES.length)];
+
+  const css = document.createElement("style");
+  css.textContent = `
+  .hallo{position:fixed;inset:0;z-index:40;background:rgba(20,24,22,.82);display:flex;align-items:center;justify-content:center;
+    padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px}
+  .hallo .box{width:min(420px,100%);background:var(--plate);border:3px solid var(--ink);border-radius:14px;padding:22px 20px 18px;text-align:center;
+    box-shadow:0 18px 40px rgba(0,0,0,.45);animation:halloIn .5s cubic-bezier(.2,1.4,.4,1)}
+  @keyframes halloIn{from{transform:scale(.8) rotate(-4deg);opacity:0}to{transform:none;opacity:1}}
+  .hallo .sign{display:inline-block;background:var(--red);color:#fff;font:700 .85rem var(--f-ui);letter-spacing:.14em;text-transform:uppercase;padding:4px 10px;border-radius:3px}
+  .hallo h2{margin:12px 0 6px;font:400 2rem/1.05 var(--f-marker);color:var(--ink);text-wrap:balance}
+  .hallo p{margin:0;font:700 1.45rem/1.2 var(--f-scrawl);color:var(--blue)}
+  .hallo .row{display:flex;gap:8px;justify-content:center;margin-top:18px;flex-wrap:wrap}
+  .hallo button{font:700 1rem var(--f-ui);letter-spacing:.06em;text-transform:uppercase;border-radius:6px;padding:12px 20px;min-height:48px;cursor:pointer;border:1.5px solid var(--ink);background:transparent;color:var(--ink)}
+  .hallo button.go{background:var(--red);border-color:var(--red);color:#fff;font-size:1.1rem}
+  @media (prefers-reduced-motion:reduce){.hallo .box{animation:none}}
+  `;
+  document.head.appendChild(css);
+
+  const el = document.createElement("div");
+  el.className = "hallo"; el.setAttribute("role", "dialog"); el.setAttribute("aria-label", "Begrüßung");
+  el.innerHTML = `<div class="box"><span class="sign">Besetzt · von dir</span>
+    <h2>Willkommen im ${bar.replace(/[<>&"]/g, "")}!</h2>
+    <p id="halloLine"></p>
+    <div class="row"><button type="button" class="go" id="halloGo">Hallo!</button><button type="button" id="halloQuiet">Leise rein</button></div></div>`;
+  document.body.appendChild(el);
+  document.getElementById("halloLine").textContent = line;
+
+  function close() { el.remove(); try { sessionStorage.setItem(ONCE_KEY, "1"); } catch (e) {} }
+  function speak(text) {
+    if (!("speechSynthesis" in window)) return;
+    try {
+      speechSynthesis.cancel();
+      const u = new SpeechSynthesisUtterance(text);
+      u.lang = "de-DE"; u.rate = 1.02; u.pitch = 1.15; u.volume = 1;
+      const voices = speechSynthesis.getVoices();
+      const v = voices.find(x => /^de/i.test(x.lang) && /google/i.test(x.name)) || voices.find(x => /^de/i.test(x.lang));
+      if (v) u.voice = v;
+      speechSynthesis.speak(u);
+    } catch (e) {}
+  }
+  document.getElementById("halloGo").onclick = () => { try { KloMusik.blip("gold"); } catch (e) {} setTimeout(() => speak(line), 250); close(); };
+  document.getElementById("halloQuiet").onclick = close;
+  el.addEventListener("click", e => { if (e.target === el) close(); });
+  document.getElementById("halloGo").focus();
+})();
