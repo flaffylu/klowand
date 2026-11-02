@@ -119,13 +119,7 @@
   const h = new Date().getHours();
   const zeit = h < 5 ? "Na, du Nachteule" : h < 11 ? "Guten Morgen" : h < 17 ? "Hallo" : h < 22 ? "Guten Abend" : "Na, du Nachtschwärmer";
   const LINES = [
-    `${zeit}! Willkommen auf dem Klo vom ${bar}. Hier darfst du alles sagen. Außer Schweinkram.`,
-    `${zeit}! Schön, dass du da bist. Lies ruhig mit, schreib was Lustiges, und vergiss das Händewaschen nicht.`,
     `Achtung, Achtung! Ein neuer Gast auf dem Thron. ${zeit} und herzlich willkommen im ${bar}!`,
-    `${zeit}! Du sitzt gerade an der berühmtesten Klowand der Stadt. Benimm dich, die Wand merkt sich alles.`,
-    `Oh, Besuch! ${zeit}. Mach es dir bequem, hier hört dich keiner. Außer mir.`,
-    `${zeit}! Kleiner Tipp vom Klo: Die beste Idee des Abends kommt immer hier drin.`,
-    `Willkommen, willkommen! ${zeit}. Heute schon einen Rekord beim Klopapier-Stapeln aufgestellt?`,
   ];
   const line = LINES[Math.floor(Math.random() * LINES.length)];
 
