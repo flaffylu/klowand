@@ -38,6 +38,13 @@ const CHALLENGES = [
   { text: "Was würdest du der Kloschüssel gern mal sagen?", art: "text" },
 ];
 
+/* Musik zum Umschalten. src: null = der Lo-Fi-Beat, der im Browser entsteht.
+   Eigene Lieder als MP3 in den Ordner „musik“ legen und hier eintragen. */
+const MUSIK = [
+  { name: "Lo-Fi", src: null },
+  { name: "Ruhig", src: "musik/ruhig.mp3" },
+];
+
 /* Angaben für Impressum und Datenschutz. Leer = Platzhalter in eckigen Klammern. */
 const IMPRESSUM = { name: "", strasse: "", ort: "", email: "", telefon: "" };
 

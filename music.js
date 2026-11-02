@@ -1,7 +1,10 @@
-/* Klo-Wand: gemütliche Lo-Fi-Musik, live im Browser erzeugt (keine Audiodateien, keine Rechte Dritter).
+/* Klo-Wand: Musik. „Lo-Fi“ wird live im Browser erzeugt, weitere Lieder kommen aus MUSIK in config.js.
    Startet nur nach einem Tipp, weil Browser Ton erst nach einer Berührung erlauben. */
 const KloMusik = (() => {
-  let ctx = null, master = null, noiseBuf = null, crackleGain = null, timer = null, on = false;
+  let ctx = null, master = null, noiseBuf = null, crackleGain = null, timer = null, on = false, lofi = false;
+  let song = null, songGain = null; const songBuf = {};
+  const TRACKS = (typeof MUSIK !== "undefined" && MUSIK.length) ? MUSIK : [{ name: "Lo-Fi", src: null }];
+  let idx = 0; try { idx = Math.max(0, Math.min(TRACKS.length - 1, Number(localStorage.getItem("klowand-track")) || 0)); } catch (e) {}
   let step = 0, nextT = 0, chordIdx = 0;
   const BPM = 74, EIGHTH = 60 / BPM / 2;
   // Fmaj7 – Em7 – Dm7 – Cmaj7, darunter weiche Septakkorde
@@ -68,25 +71,53 @@ const KloMusik = (() => {
       if (step % 8 === 0) chordIdx = (chordIdx + 1) % CHORDS.length;
     }
   }
-  async function start() {
+  async function startLofi() {
     if (!ctx) init();
     await ctx.resume();
-    if (on) return;
-    on = true; nextT = ctx.currentTime + 0.1;
+    if (lofi) return;
+    lofi = true; nextT = ctx.currentTime + 0.1;
     master.gain.cancelScheduledValues(ctx.currentTime);
     master.gain.setValueAtTime(master.gain.value, ctx.currentTime);
     master.gain.linearRampToValueAtTime(0.7, ctx.currentTime + 2.5);
     crackleGain.gain.setValueAtTime(0.05, ctx.currentTime);
     timer = setInterval(schedule, 60); schedule();
   }
-  function stop() {
-    if (!ctx || !on) return;
-    on = false;
+  function stopLofi() {
+    if (!ctx || !lofi) return;
+    lofi = false; clearInterval(timer);
     master.gain.cancelScheduledValues(ctx.currentTime);
     master.gain.setValueAtTime(master.gain.value, ctx.currentTime);
     master.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.8);
     crackleGain.gain.setValueAtTime(0, ctx.currentTime + 0.8);
-    setTimeout(() => { if (!on) { clearInterval(timer); ctx.suspend(); } }, 900);
+  }
+  // Ein Lied aus einer Datei, nahtlos in Dauerschleife
+  async function startSong(src) {
+    if (!ctx) init();
+    await ctx.resume();
+    if (!songBuf[src]) { const r = await fetch(src); songBuf[src] = await ctx.decodeAudioData(await r.arrayBuffer()); }
+    if (!on || song || TRACKS[idx].src !== src) return;   // inzwischen ausgeschaltet oder gewechselt
+    song = ctx.createBufferSource(); song.buffer = songBuf[src]; song.loop = true;
+    songGain = ctx.createGain(); songGain.gain.setValueAtTime(0, ctx.currentTime); songGain.gain.linearRampToValueAtTime(0.9, ctx.currentTime + 1.5);
+    song.connect(songGain).connect(ctx.destination); song.start();
+  }
+  function stopSong() {
+    if (!song) return;
+    const s = song, g = songGain; song = null;
+    g.gain.cancelScheduledValues(ctx.currentTime); g.gain.setValueAtTime(g.gain.value, ctx.currentTime); g.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.8);
+    setTimeout(() => { try { s.stop(); } catch (e) {} }, 900);
+  }
+  const play = () => TRACKS[idx].src ? startSong(TRACKS[idx].src) : startLofi();
+  async function start() { if (on) return; on = true; await play(); }
+  function stop() {
+    if (!on) return;
+    on = false; stopLofi(); stopSong();
+    setTimeout(() => { if (!on && ctx) ctx.suspend(); }, 950);
+  }
+  async function next() {
+    idx = (idx + 1) % TRACKS.length;
+    try { localStorage.setItem("klowand-track", idx); } catch (e) {}
+    if (on) { stopLofi(); stopSong(); await play(); }
+    return TRACKS[idx].name;
   }
   // Effekt-Töne für die Spiele, laufen auch ohne Musik
   async function blip(kind) {
@@ -94,12 +125,12 @@ const KloMusik = (() => {
       if (!ctx) init();
       if (ctx.state !== "running") await ctx.resume();
       const t = ctx.currentTime;
-      if (!on) master.gain.setValueAtTime(0.7, t);
+      if (!lofi) master.gain.setValueAtTime(0.7, t);
       if (kind === "good") { tone(t, 880, "triangle", 0.12, 0.005, 0.12); tone(t + 0.07, 1320, "triangle", 0.1, 0.005, 0.15); }
       else if (kind === "gold") [880, 1108, 1320, 1760].forEach((f, i) => tone(t + i * 0.06, f, "triangle", 0.1, 0.005, 0.18));
       else if (kind === "bad") { tone(t, 180, "sawtooth", 0.08, 0.005, 0.25); }
       else if (kind === "flush") noise(t, "lowpass", 900, 0.25, 1.1);
     } catch (e) {}
   }
-  return { start, stop, toggle: () => (on ? stop() : start()), isOn: () => on, blip };
+  return { start, stop, toggle: () => (on ? stop() : start()), isOn: () => on, blip, next, trackName: () => TRACKS[idx].name, trackCount: TRACKS.length };
 })();

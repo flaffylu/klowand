@@ -79,7 +79,8 @@
   const extras = document.createElement("div");
   extras.className = "extras";
   extras.innerHTML = `<button type="button" class="games" id="kgOpen">Klo-Spiele &amp; Rangliste</button>
-    <button type="button" id="kgMusic" aria-pressed="false"><span class="eq" aria-hidden="true"><i></i><i></i><i></i></span><span id="kgMusicTxt">Musik an</span></button>`;
+    <button type="button" id="kgMusic" aria-pressed="false"><span class="eq" aria-hidden="true"><i></i><i></i><i></i></span><span id="kgMusicTxt">Musik an</span></button>
+    <button type="button" id="kgTrack" title="Lied wechseln">Lied: <span id="kgTrackTxt"></span></button>`;
   document.querySelector(".tabs").before(extras);
   $("kgMusic").onclick = async () => {
     await KloMusik.toggle();
@@ -87,6 +88,9 @@
     $("kgMusic").setAttribute("aria-pressed", on);
     $("kgMusicTxt").textContent = on ? "Musik aus" : "Musik an";
   };
+  $("kgTrackTxt").textContent = KloMusik.trackName();
+  $("kgTrack").hidden = !(KloMusik.trackCount > 1);
+  $("kgTrack").onclick = async () => { $("kgTrackTxt").textContent = await KloMusik.next(); };
 
   /* ---------- Spiele-Fenster ---------- */
   const kg = document.createElement("div");
