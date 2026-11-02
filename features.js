@@ -119,7 +119,7 @@
   const h = new Date().getHours();
   const zeit = h < 5 ? "Na, du Nachteule" : h < 11 ? "Guten Morgen" : h < 17 ? "Hallo" : h < 22 ? "Guten Abend" : "Na, du Nachtschwärmer";
   const LINES = [
-    `Achtung, Achtung! Ein neuer Gast auf dem Thron. ${zeit} und herzlich willkommen!`,
+    `Achtung, Achtung! Ein neuer Gast auf dem Thron. Guten Abend und herzlich willkommen!`,
   ];
   const line = LINES[Math.floor(Math.random() * LINES.length)];
 
@@ -163,7 +163,7 @@
     } catch (e) {}
   }
   // Echte Sprachaufnahme aus dem Ordner „stimme“, sonst die Sprachausgabe des Handys
-  const file = h < 5 || h >= 22 ? "nacht" : h < 11 ? "morgen" : h < 17 ? "hallo" : "abend";
+  const file = "abend";   // weitere Aufnahmen: "morgen", "hallo", "nacht" in den Ordner „stimme“ legen und hier nach Uhrzeit wählen
   function sayIt() {
     let done = false;
     const fallback = () => { if (!done) { done = true; speak(line); } };
