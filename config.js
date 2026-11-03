@@ -11,7 +11,10 @@ const firebaseConfig = {
   appId: "1:186204143946:web:816a1b0b4f1bc312e201b3"
 };
 
-/* Deine Wände: der Teil nach ?wand= in der Adresse.
+/* Deine eigenen, festen Wände. Gekaufte Wände kommen automatisch über „Meine Wand“ dazu.
+   WICHTIG: Fügst du hier eine Wand hinzu, muss ihr Name auch in firestore.rules
+   bei fixedWall(...) stehen, sonst kann dort niemand schreiben.
+   Der Teil nach ?wand= in der Adresse.
    Beispiel: flaffylu.github.io/klowand/?wand=prestigio
    Nur Kleinbuchstaben, Zahlen und Bindestriche.              */
 const WAENDE = {

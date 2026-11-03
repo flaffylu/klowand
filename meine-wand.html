@@ -1,0 +1,347 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Meine Klo-Wand</title>
+<meta name="description" content="Code einlösen und die eigene Klo-Wand für deine Bar einrichten.">
+<meta name="theme-color" content="#1d2321">
+<link rel="icon" href="icon-192.png">
+<link rel="stylesheet" href="fonts.css">
+<style>
+/* Käufer-Seite: hell und ruhig wie ein Türschild. Oben Anmeldung, dann die eigenen Wände als Karten, darunter Code einlösen */
+:root{
+  --bg:#dfe6e1; --card:#f7f9f7; --line:#c3cec7; --ink:#1d2321; --muted:#56635c;
+  --red:#b3261e; --gold:#f2c14e; --dark:#1d2321;
+  --f-marker:"Permanent Marker","Gochi Hand",cursive; --f-hand:"Gochi Hand","Comic Sans MS",cursive;
+  --f-ui:"Barlow Condensed","Arial Narrow",system-ui,sans-serif; --f-body:"Barlow",system-ui,sans-serif;
+}
+html,body{background:var(--bg);color:var(--ink)}
+body{margin:0;font:500 1rem/1.45 var(--f-body)}
+[hidden]{display:none!important}
+.wrap{max-width:640px;margin:0 auto;padding:0 max(16px,env(safe-area-inset-left,0px)) 48px}
+.top{background:var(--dark);color:#fff;margin:0 calc(-1 * max(16px,env(safe-area-inset-left,0px)));padding:18px max(16px,env(safe-area-inset-left,0px)) 20px}
+.top h1{margin:0;font:400 2rem/1 var(--f-marker)}
+.top p{margin:6px 0 0;color:#c9d3ce;font:600 .85rem var(--f-ui);letter-spacing:.12em;text-transform:uppercase}
+.who{display:flex;gap:8px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin:14px 0 0;font:600 .95rem var(--f-ui);color:var(--muted)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px;margin-top:16px;box-shadow:0 2px 0 rgba(0,0,0,.04)}
+h2{margin:0 0 4px;font:700 1.45rem/1.15 var(--f-ui);letter-spacing:.01em}
+h3{margin:14px 0 6px;font:700 1.05rem var(--f-ui);letter-spacing:.04em;text-transform:uppercase}
+.sub{margin:0;color:var(--muted)}
+.steps{margin:10px 0 0;padding-left:22px}.steps li{margin:4px 0}
+button,.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;font:700 .95rem var(--f-ui);letter-spacing:.05em;text-transform:uppercase;border-radius:7px;border:1.5px solid var(--ink);background:transparent;color:var(--ink);padding:9px 14px;min-height:44px;cursor:pointer;text-decoration:none;box-sizing:border-box}
+button.primary,.btn.primary{background:var(--red);border-color:var(--red);color:#fff}
+button.dark{background:var(--ink);color:#fff}
+button:disabled{opacity:.5;cursor:default}
+:focus-visible{outline:2px dashed #1f4fa3;outline-offset:2px}
+.row{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+label{display:block;margin-top:12px;font:700 .85rem var(--f-ui);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+input{display:block;width:100%;box-sizing:border-box;margin-top:4px;font:600 1.1rem var(--f-body);padding:10px 12px;border:1.5px solid var(--line);border-radius:7px;background:#fff;color:var(--ink);min-height:46px}
+input:focus{border-color:var(--ink);outline:none}
+input.code{font:700 1.25rem ui-monospace,Menlo,monospace;letter-spacing:.08em;text-transform:uppercase}
+.hint{font-size:.88rem;color:var(--muted);margin:6px 0 0}
+.msg{margin:10px 0 0;padding:9px 12px;border-radius:7px;font-weight:600}
+.msg.err{background:#fbe5e3;color:#8a1c16}
+.msg.ok{background:#e1f2e4;color:#1f5a2c}
+.msg:empty{display:none}
+.wallhead{display:flex;gap:14px;align-items:flex-start}
+.wallhead .info{flex:1;min-width:0}
+.qr{flex:none;width:112px;height:112px;background:#fff;border:1px solid var(--line);border-radius:6px;padding:6px;box-sizing:border-box;image-rendering:pixelated}
+.link{display:block;margin-top:6px;font:600 .9rem ui-monospace,Menlo,monospace;color:#1f4fa3;overflow-wrap:anywhere}
+details{margin-top:12px;border-top:1px dashed var(--line);padding-top:10px}
+summary{cursor:pointer;font:700 1rem var(--f-ui);letter-spacing:.04em;text-transform:uppercase}
+.feed{display:flex;flex-direction:column;gap:8px;margin-top:10px}
+.item{background:#b9c7bf;border-radius:8px;padding:10px 12px;border-left:6px solid transparent}
+.item.flag{border-left-color:var(--red)}
+.item .t{font:1.35rem/1.15 var(--f-hand);overflow-wrap:anywhere}
+.item img{display:block;max-width:100%;max-height:200px}
+.item .m{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:6px;font:600 .85rem var(--f-ui);color:#46524b}
+.item .m .sp{margin-right:auto}
+.item .r{display:flex;gap:8px;align-items:center;justify-content:space-between;font:700 1.15rem/1.1 "Caveat",var(--f-hand);margin:4px 0 0 8px}
+.item button{min-height:36px;padding:4px 10px;font-size:.8rem}
+.del{color:var(--red);border-color:var(--red)}
+.del.confirm{background:var(--red);color:#fff}
+.empty{text-align:center;color:var(--muted);font:1.3rem var(--f-hand);padding:18px 0}
+.legal{margin-top:28px;text-align:center;font-size:.9rem;color:var(--muted)}.legal a{color:var(--muted)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <h1>Meine Klo-Wand</h1>
+    <p>Einrichten · QR-Code · Beiträge verwalten</p>
+  </div>
+
+  <!-- Nicht angemeldet -->
+  <section class="card" id="out" hidden>
+    <h2>Deine eigene Klo-Wand</h2>
+    <p class="sub">In zwei Minuten fertig, ganz ohne Technik:</p>
+    <ol class="steps">
+      <li>Mit deinem Google-Konto anmelden.</li>
+      <li>Den <b>Code aus deiner Kauf-E-Mail</b> und den Namen deiner Bar eintragen.</li>
+      <li>QR-Code ausdrucken und innen an die Kabinentür kleben. Fertig!</li>
+    </ol>
+    <div class="row"><button type="button" class="primary" id="login">Mit Google anmelden</button></div>
+    <p class="hint">Mit diesem Konto verwaltest du später deine Wand und kannst Beiträge löschen.</p>
+  </section>
+
+  <!-- Angemeldet -->
+  <div id="in" hidden>
+    <div class="who"><span id="who"></span><button type="button" id="logout">Abmelden</button></div>
+    <div id="walls"></div>
+
+    <section class="card" id="redeem">
+      <h2 id="redeemTitle">Code einlösen</h2>
+      <p class="sub" id="redeemSub">Trag den Code aus deiner Kauf-E-Mail ein. Danach ist deine Wand sofort fertig.</p>
+      <form id="redeemForm" autocomplete="off">
+        <label for="code">Dein Code</label>
+        <input id="code" class="code" maxlength="20" placeholder="KLO-XXXX-XXXX" autocapitalize="characters" spellcheck="false" required>
+        <label for="name">Name der Bar</label>
+        <input id="name" maxlength="30" placeholder="z. B. Zum Anker" required>
+        <label for="sub">Unterzeile (freiwillig)</label>
+        <input id="sub" maxlength="40" placeholder="z. B. Herren · Kabine 1">
+        <p class="hint">Steht oben auf dem Türschild der Wand. Kannst du später ändern.</p>
+        <div class="row"><button type="submit" class="primary" id="redeemBtn">Wand einrichten</button></div>
+        <p class="msg" id="redeemMsg"></p>
+      </form>
+    </section>
+  </div>
+
+  <p class="msg err" id="notice"></p>
+  <nav class="legal"><a href="impressum.html">Impressum</a> · <a href="datenschutz.html">Datenschutz</a></nav>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="config.js"></script>
+<script src="filter.js"></script>
+<script src="qrcode.js"></script>
+<script>
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"]/g, m => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[m]));
+const DAY = 864e5;
+const ms = d => (d && d.ts && d.ts.toMillis) ? d.ts.toMillis() : Date.now();
+const ago = ts => { const m = Math.round((Date.now() - ts) / 6e4); if (m < 1) return "gerade eben"; if (m < 60) return `vor ${m} Min.`; const h = Math.floor(m / 60); if (h < 24) return `vor ${h} Std.`; const d = Math.floor(h / 24); return d === 1 ? "gestern" : `vor ${d} Tagen`; };
+const isDrawing = s => typeof s === "string" && s.startsWith("data:image/png;base64,");
+const wallUrl = id => new URL("./?wand=" + encodeURIComponent(id), location.href).href;
+
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth(), fs = firebase.firestore();
+const now = () => firebase.firestore.FieldValue.serverTimestamp();
+let user = null, walls = [], unsubWalls = null, openMod = null, modUnsubs = [], mod = null, confirmKey = null, editing = null;
+
+function notice(t) { $("notice").textContent = t || ""; }
+
+/* ---------- Anmeldung ---------- */
+$("login").onclick = async () => {
+  const provider = new firebase.auth.GoogleAuthProvider();
+  provider.setCustomParameters({ prompt: "select_account" });
+  try { await auth.signInWithPopup(provider); }
+  catch (e) {
+    if (e.code === "auth/popup-blocked" || e.code === "auth/operation-not-supported-in-this-environment") auth.signInWithRedirect(provider);
+    else if (e.code !== "auth/popup-closed-by-user" && e.code !== "auth/cancelled-popup-request") notice("Anmeldung hat nicht geklappt. Versuch es nochmal.");
+  }
+};
+$("logout").onclick = () => auth.signOut();
+auth.getRedirectResult().catch(() => notice("Anmeldung hat nicht geklappt. Versuch es nochmal."));
+auth.onAuthStateChanged(u => {
+  user = u; notice("");
+  $("out").hidden = !!u; $("in").hidden = !u;
+  if (unsubWalls) { unsubWalls(); unsubWalls = null; }
+  closeMod();
+  if (!u) { walls = []; return; }
+  $("who").textContent = "Angemeldet: " + (u.email || "Google-Konto");
+  unsubWalls = fs.collection("walls").where("owner", "==", u.uid).onSnapshot(s => {
+    walls = s.docs.map(d => ({ id: d.id, ...d.data() })).sort((a, b) => ms(a) - ms(b));
+    renderWalls();
+  }, () => notice("Deine Wände konnten nicht geladen werden. Lade die Seite neu."));
+});
+
+/* ---------- QR-Code ---------- */
+function qrMatrix(text) { const q = qrcode(0, "M"); q.addData(text); q.make(); return q; }
+function drawQr(canvas, text, size) {
+  const q = qrMatrix(text), n = q.getModuleCount(), quiet = 2, cell = Math.floor(size / (n + quiet * 2));
+  const dim = cell * (n + quiet * 2); canvas.width = canvas.height = dim;
+  const c = canvas.getContext("2d"); c.fillStyle = "#fff"; c.fillRect(0, 0, dim, dim); c.fillStyle = "#1d2321";
+  for (let r = 0; r < n; r++) for (let k = 0; k < n; k++) if (q.isDark(r, k)) c.fillRect((k + quiet) * cell, (r + quiet) * cell, cell, cell);
+  return canvas;
+}
+function download(canvas, name) {
+  const a = document.createElement("a"); a.href = canvas.toDataURL("image/png"); a.download = name; document.body.appendChild(a); a.click(); a.remove();
+}
+/* Sticker zum Ausdrucken: Titel, Bar-Name, großer QR-Code, Aufforderung */
+async function sticker(w) {
+  try { await Promise.all(['400 80px "Permanent Marker"', '700 40px "Barlow Condensed"', '400 40px "Gochi Hand"'].map(f => document.fonts.load(f))); } catch (e) {}
+  const W = 1200, H = 1700, cv = document.createElement("canvas"); cv.width = W; cv.height = H;
+  const c = cv.getContext("2d");
+  c.fillStyle = "#1d2321"; c.fillRect(0, 0, W, H);
+  c.fillStyle = "#b9c7bf"; roundRect(c, 50, 50, W - 100, H - 100, 40); c.fill();
+  c.fillStyle = "#1d2321"; c.textAlign = "center";
+  c.font = '400 150px "Permanent Marker", cursive'; c.fillText("Klo-Wand", W / 2, 260);
+  c.font = '700 64px "Barlow Condensed", sans-serif'; c.fillText(fit(c, w.name.toUpperCase(), W - 220), W / 2, 360);
+  const q = drawQr(document.createElement("canvas"), wallUrl(w.id), 760);
+  c.fillStyle = "#fff"; roundRect(c, (W - 820) / 2, 420, 820, 820, 30); c.fill();
+  c.imageSmoothingEnabled = false; c.drawImage(q, (W - 760) / 2, 450, 760, 760);
+  c.fillStyle = "#b3261e"; c.font = '400 92px "Gochi Hand", cursive'; c.fillText("Scan mich & schreib", W / 2, 1380); c.fillText("an die Wand!", W / 2, 1480);
+  c.fillStyle = "#46524b"; c.font = '700 44px "Barlow Condensed", sans-serif'; c.fillText("ANONYM · OHNE APP · OHNE ANMELDUNG", W / 2, 1580);
+  download(cv, "klowand-sticker-" + w.id + ".png");
+}
+function fit(c, t, max) { while (c.measureText(t).width > max && t.length > 4) t = t.slice(0, -2) + "…"; return t; }
+function roundRect(c, x, y, w, h, r) { c.beginPath(); c.moveTo(x + r, y); c.arcTo(x + w, y, x + w, y + h, r); c.arcTo(x + w, y + h, x, y + h, r); c.arcTo(x, y + h, x, y, r); c.arcTo(x, y, x + w, y, r); c.closePath(); }
+
+/* ---------- Eigene Wände ---------- */
+function renderWalls() {
+  const has = walls.length > 0;
+  $("redeemTitle").textContent = has ? "Weitere Wand einrichten" : "Code einlösen";
+  $("redeemSub").textContent = has ? "Für jede weitere Wand, z. B. Damen- und Herrenklo, brauchst du einen eigenen Code." : "Trag den Code aus deiner Kauf-E-Mail ein. Danach ist deine Wand sofort fertig.";
+  $("walls").innerHTML = walls.map(w => {
+    const url = wallUrl(w.id), ed = editing === w.id;
+    return `<section class="card" data-wall="${esc(w.id)}">
+      <div class="wallhead">
+        <div class="info"><h2>${esc(w.name)}</h2><p class="sub">${esc(w.sub || "")}</p><a class="link" href="${esc(url)}" target="_blank" rel="noopener">${esc(url)}</a></div>
+        <canvas class="qr" data-qr="${esc(w.id)}" aria-label="QR-Code für ${esc(w.name)}"></canvas>
+      </div>
+      <div class="row">
+        <a class="btn primary" href="${esc(url)}" target="_blank" rel="noopener">Wand öffnen</a>
+        <button type="button" data-act="sticker">Sticker speichern</button>
+        <button type="button" data-act="qr">Nur QR-Code</button>
+        <button type="button" data-act="copy">Link kopieren</button>
+      </div>
+      ${ed ? `<form class="editForm" data-id="${esc(w.id)}" autocomplete="off">
+          <label>Name der Bar<input name="name" maxlength="30" value="${esc(w.name)}" required></label>
+          <label>Unterzeile<input name="sub" maxlength="40" value="${esc(w.sub || "")}"></label>
+          <div class="row"><button type="submit" class="dark">Speichern</button><button type="button" data-act="cancel">Abbrechen</button></div>
+        </form>` : `<div class="row"><button type="button" data-act="edit">Name ändern</button>
+          <button type="button" data-act="mod" aria-expanded="${openMod === w.id}">${openMod === w.id ? "Beiträge schließen" : "Beiträge verwalten"}</button></div>`}
+      ${openMod === w.id ? `<div class="feed" id="modFeed"><p class="empty">Beiträge werden geladen …</p></div>` : ""}
+      <details><summary>Als App aufs Handy legen</summary>
+        <ol class="steps"><li>Tippe auf <b>„Wand öffnen“</b>.</li><li>Im Chrome-Menü <b>⋮</b> auf <b>„Zum Startbildschirm hinzufügen“</b> tippen. Beim iPhone: Teilen-Symbol, dann „Zum Home-Bildschirm“.</li>
+        <li>Fertig: Die Klo-Wand liegt jetzt wie eine App auf deinem Handy.</li></ol>
+        <p class="hint">Diese Verwaltungsseite kannst du genauso als App ablegen.</p></details>
+    </section>`;
+  }).join("");
+  document.querySelectorAll("[data-qr]").forEach(cv => drawQr(cv, wallUrl(cv.dataset.qr), 220));
+  if (openMod) renderMod();
+}
+
+$("walls").addEventListener("click", async e => {
+  const b = e.target.closest("[data-act]"), card = e.target.closest("[data-wall]");
+  if (b && card) {
+    const w = walls.find(x => x.id === card.dataset.wall); if (!w) return;
+    const act = b.dataset.act;
+    if (act === "sticker") sticker(w);
+    if (act === "qr") download(drawQr(document.createElement("canvas"), wallUrl(w.id), 1000), "klowand-qr-" + w.id + ".png");
+    if (act === "copy") { try { await navigator.clipboard.writeText(wallUrl(w.id)); b.textContent = "Kopiert ✓"; } catch (err) { b.textContent = "Bitte Link oben markieren"; } setTimeout(() => b.textContent = "Link kopieren", 2000); }
+    if (act === "edit") { editing = w.id; renderWalls(); }
+    if (act === "cancel") { editing = null; renderWalls(); }
+    if (act === "mod") { if (openMod === w.id) closeMod(); else startMod(w.id); renderWalls(); }
+    return;
+  }
+  const d = e.target.closest("[data-del]");
+  if (d) del(d);
+});
+$("walls").addEventListener("submit", async e => {
+  e.preventDefault();
+  const f = e.target; if (!f.classList.contains("editForm")) return;
+  const name = f.name.value.trim(), sub = f.sub.value.trim(), err = labelError(name, sub);
+  if (err) { notice(err); return; }
+  try { await fs.collection("walls").doc(f.dataset.id).update({ name, sub }); editing = null; notice(""); renderWalls(); }
+  catch (x) { notice("Speichern hat nicht geklappt. Prüf den Namen und versuch es nochmal."); }
+});
+
+function labelError(name, sub) {
+  if (name.length < 2) return "Der Name ist zu kurz.";
+  if (/(https?:\/\/|www\.|@|<|>)/i.test(name + sub)) return "Bitte keine Links, Mails oder Sonderzeichen wie < >.";
+  if (KloFilter.bad(name) || (sub && KloFilter.bad(sub))) return "Bitte einen anderen Namen wählen.";
+  return null;
+}
+
+/* ---------- Code einlösen ---------- */
+function normCode(v) {
+  let c = v.toUpperCase().replace(/[^A-Z0-9]/g, "");
+  if (c.startsWith("KLO")) c = c.slice(3);
+  return c.length === 8 ? `KLO-${c.slice(0, 4)}-${c.slice(4)}` : v.trim().toUpperCase();
+}
+function slug(name) {
+  const s = name.toLowerCase().replace(/ä/g, "ae").replace(/ö/g, "oe").replace(/ü/g, "ue").replace(/ß/g, "ss")
+    .normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 30).replace(/-+$/g, "");
+  return s.length >= 2 ? s : "bar";
+}
+function redeemMsg(t, ok) { const m = $("redeemMsg"); m.textContent = t || ""; m.className = "msg " + (ok ? "ok" : "err"); }
+$("redeemForm").addEventListener("submit", async e => {
+  e.preventDefault();
+  if (!user) return;
+  const code = normCode($("code").value), name = $("name").value.trim(), sub = $("sub").value.trim();
+  $("code").value = code;
+  const err = labelError(name, sub); if (err) { redeemMsg(err); return; }
+  $("redeemBtn").disabled = true; redeemMsg("Einen Moment …", true);
+  try {
+    const cref = fs.collection("codes").doc(code), c = await cref.get();
+    if (!c.exists) { redeemMsg("Diesen Code gibt es nicht. Prüf ihn nochmal in deiner Kauf-E-Mail."); return; }
+    if (c.data().used) { redeemMsg("Dieser Code wurde schon eingelöst."); return; }
+    let id = null;
+    for (let i = 0; i < 6 && !id; i++) {
+      const cand = slug(name) + "-" + String(Math.floor(1000 + Math.random() * 9000));
+      if (!(await fs.collection("walls").doc(cand).get()).exists) id = cand;
+    }
+    if (!id) { redeemMsg("Hat nicht geklappt. Versuch es nochmal."); return; }
+    const batch = fs.batch();
+    batch.set(fs.collection("walls").doc(id), { name, sub, owner: user.uid, code, ts: now() });
+    batch.update(cref, { used: true, wall: id, by: user.uid, at: now() });
+    await batch.commit();
+    $("redeemForm").reset();
+    redeemMsg("Fertig! Deine Wand ist eingerichtet. Speichere jetzt den Sticker und kleb ihn an die Kabinentür.", true);
+    setTimeout(() => { const el = document.querySelector(`[data-wall="${id}"]`); if (el) el.scrollIntoView({ behavior: "smooth", block: "start" }); }, 600);
+  } catch (x) {
+    redeemMsg(x && x.code === "permission-denied" ? "Der Code konnte nicht eingelöst werden. Ist er schon benutzt? Sonst schreib uns." : "Hat nicht geklappt. Prüf deine Verbindung und versuch es nochmal.");
+  } finally { $("redeemBtn").disabled = false; }
+});
+
+/* ---------- Beiträge verwalten ---------- */
+function closeMod() { modUnsubs.forEach(u => u()); modUnsubs = []; openMod = null; mod = null; confirmKey = null; }
+function startMod(id) {
+  closeMod(); openMod = id; mod = { posts: [], replies: {}, reports: {}, loaded: false };
+  const base = fs.collection("walls").doc(id), since = firebase.firestore.Timestamp.fromMillis(Date.now() - 60 * DAY);
+  modUnsubs.push(base.collection("posts").where("ts", ">", since).orderBy("ts", "desc").limit(300).onSnapshot(s => {
+    mod.posts = s.docs.map(d => { const x = d.data(); return { id: d.id, t: typeof x.t === "string" ? x.t : "", img: isDrawing(x.img) ? x.img : null, ts: ms(x) }; });
+    mod.loaded = true; renderMod();
+  }, () => { mod.loaded = true; renderMod(); }));
+  modUnsubs.push(base.collection("replies").where("ts", ">", since).limit(2000).onSnapshot(s => {
+    mod.replies = {}; s.docs.forEach(d => { const r = d.data(); if (typeof r.t === "string") (mod.replies[r.p] ||= []).push({ id: d.id, t: r.t, ts: ms(r) }); }); renderMod();
+  }, () => {}));
+  modUnsubs.push(base.collection("reports").where("ts", ">", since).limit(5000).onSnapshot(s => {
+    mod.reports = {}; s.docs.forEach(d => { const p = d.data().p; mod.reports[p] = (mod.reports[p] || 0) + 1; }); renderMod();
+  }, () => {}));
+}
+function renderMod() {
+  const el = $("modFeed"); if (!el || !mod) return;
+  if (!mod.loaded) return;
+  if (!mod.posts.length) { el.innerHTML = '<p class="empty">Noch nichts an der Wand.</p>'; return; }
+  const list = mod.posts.slice().sort((a, b) => (mod.reports[b.id] || 0) - (mod.reports[a.id] || 0) || b.ts - a.ts);
+  el.innerHTML = list.map(p => {
+    const rep = mod.reports[p.id] || 0, k = "p/" + p.id, rs = (mod.replies[p.id] || []).slice().sort((a, b) => a.ts - b.ts);
+    return `<div class="item${rep ? " flag" : ""}">
+      ${p.img ? `<img src="${p.img}" alt="Zeichnung">` : `<div class="t">${esc(p.t)}</div>`}
+      ${rs.map(r => `<div class="r"><span>↳ ${esc(r.t)}</span><button type="button" class="del${confirmKey === "r/" + r.id ? " confirm" : ""}" data-del="r/${r.id}">${confirmKey === "r/" + r.id ? "Wirklich?" : "Löschen"}</button></div>`).join("")}
+      <div class="m"><span class="sp">${ago(p.ts)}${rep ? ` · <b style="color:#b3261e">${rep}× gemeldet</b>` : ""}</span>
+        <button type="button" class="del${confirmKey === k ? " confirm" : ""}" data-del="${k}">${confirmKey === k ? "Wirklich löschen?" : "Löschen"}</button></div>
+    </div>`;
+  }).join("");
+}
+async function del(b) {
+  const key = b.dataset.del;
+  if (confirmKey !== key) { confirmKey = key; renderMod(); setTimeout(() => { if (confirmKey === key) { confirmKey = null; renderMod(); } }, 4000); return; }
+  confirmKey = null; b.disabled = true;
+  const [kind, id] = key.split("/"), base = fs.collection("walls").doc(openMod);
+  try {
+    if (kind === "p") {
+      await base.collection("posts").doc(id).delete();
+      (mod.replies[id] || []).forEach(r => base.collection("replies").doc(r.id).delete().catch(() => {}));
+    } else await base.collection("replies").doc(id).delete();
+    notice("");
+  } catch (x) { notice("Löschen hat nicht geklappt. Versuch es nochmal."); renderMod(); }
+}
+</script>
+</body>
+</html>

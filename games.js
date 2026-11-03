@@ -100,7 +100,7 @@
   $("kgWhere").textContent = "Rangliste " + info.name;
   const body = $("kgBody");
   function view(html) { stopGame(); stopGame = () => {}; body.innerHTML = html; kg.scrollTop = 0; }
-  function open() { kg.hidden = false; document.body.style.overflow = "hidden"; menu(); }
+  function open() { $("kgWhere").textContent = "Rangliste " + info.name; kg.hidden = false; document.body.style.overflow = "hidden"; menu(); }
   function close() { stopGame(); stopGame = () => {}; kg.hidden = true; document.body.style.overflow = ""; }
   $("kgOpen").onclick = open;
   $("kgClose").onclick = close;

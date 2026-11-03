@@ -1,4 +1,4 @@
-/* Admin: Ranglisten ansehen und Einträge löschen. Braucht aus admin.html: fs, isAdmin, WAENDE, esc, wallName, notice. */
+/* Admin: Ranglisten ansehen und Einträge löschen. Braucht aus admin.html: fs, isAdmin, WALLS, esc, wallName, notice. */
 (function () {
   const GAMES = { fang: "Klorollen-Fang", reflex: "Spül-Reflex", stapel: "Klopapier-Stapeln" };
   const $ = id => document.getElementById(id);
@@ -6,17 +6,18 @@
   let wall = Object.keys(WAENDE)[0], game = "fang", confirmId = null, rows = [];
 
   document.querySelectorAll(".views [data-v]").forEach(b => b.onclick = () => {
-    const ranks = b.dataset.v === "ranks";
+    const v = b.dataset.v;
     document.querySelectorAll(".views [data-v]").forEach(x => x.setAttribute("aria-pressed", x === b));
-    $("wallView").hidden = ranks; view.hidden = !ranks;
-    if (ranks) load();
+    $("wallView").hidden = v !== "wall"; view.hidden = v !== "ranks"; $("codesView").hidden = v !== "codes";
+    if (v === "ranks") load();
+    if (v === "codes" && window.KloCodes) KloCodes.show();
   });
 
   const ref = () => fs.collection("walls").doc(wall).collection("games").doc(game).collection("scores");
   const chip = (attr, key, label, on) => `<button type="button" class="chip" ${attr}="${key}" aria-pressed="${on}">${esc(label)}</button>`;
 
   function shell(listHtml) {
-    view.innerHTML = `<div class="chips" style="margin-top:14px">${Object.keys(WAENDE).map(w => chip("data-w2", w, wallName(w), w === wall)).join("")}</div>
+    view.innerHTML = `<div class="chips" style="margin-top:14px">${WALLS.map(w => chip("data-w2", w, wallName(w), w === wall)).join("")}</div>
       <div class="chips" style="margin-top:8px">${Object.entries(GAMES).map(([k, l]) => chip("data-g", k, l, k === game)).join("")}</div>
       <div class="bar" style="margin:12px 0"><span style="color:var(--muted);font-size:.9rem">Die neuesten 100 Einträge, neueste zuerst.${isAdmin ? "" : " Zum Löschen mit dem Admin-Konto anmelden."}</span>
       <button type="button" id="rkReload" style="margin-left:auto">Neu laden</button></div>

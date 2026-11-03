@@ -137,6 +137,9 @@ html.bg-photo .tabs button[aria-pressed="true"]{background:var(--ink)}
 html.bg-photo .empty{background:rgba(250,250,246,.86);border-radius:6px;padding:24px 12px}
 html.bg-photo .legal a{color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.7)}
 @media (prefers-reduced-motion:reduce){.post{transition:none}}
+.nowall{position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;padding:24px;background:rgba(18,24,22,.92);color:#fff;text-align:center;font:500 1.1rem/1.4 var(--f-ui)}
+.nowall b{display:block;font:400 1.8rem/1.1 var(--f-marker);margin-bottom:10px}
+.nowall a{display:inline-block;margin-top:14px;background:var(--red);color:#fff;padding:10px 18px;border-radius:6px;text-decoration:none;font-weight:700;letter-spacing:.05em;text-transform:uppercase}
 </style>
 </head>
 <body>
@@ -209,10 +212,15 @@ let lastWall = null; try { lastWall = localStorage.getItem("klowand-last"); } ca
 const WALL = (params.get("wand") || lastWall || Object.keys(WAENDE)[0]).toLowerCase().replace(/[^a-z0-9-]/g, "").slice(0, 60) || "wand";
 try { localStorage.setItem("klowand-last", WALL); } catch (e) {}
 if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});
-const info = WAENDE[WALL] || { name: WALL.replace(/-/g, " "), sub: "Kabine" };
-document.getElementById("venue").textContent = info.name;
-document.getElementById("venueSub").textContent = info.sub + " · Sprüche verblassen nach 3 Wochen";
-document.title = info.name + " · Klo-Wand";
+const FIXED = !!WAENDE[WALL];
+const info = WAENDE[WALL] ? { ...WAENDE[WALL] } : { name: "Klo-Wand", sub: "" };
+function showInfo() {
+  document.getElementById("venue").textContent = info.name;
+  document.getElementById("venueSub").textContent = (info.sub ? info.sub + " · " : "") + "Sprüche verblassen nach 3 Wochen";
+  document.title = info.name + " · Klo-Wand";
+  const w = document.getElementById("kgWhere"); if (w) w.textContent = "Rangliste " + info.name;
+}
+showInfo();
 
 const DAY = 864e5;
 const INK = { ink: "#1d2321", red: "#b3261e", blue: "#1f4fa3", green: "#2f6b3a", silver: "#eef1ef" };
@@ -238,6 +246,20 @@ firebase.initializeApp(firebaseConfig);
 const fs = firebase.firestore();
 const base = fs.collection("walls").doc(WALL);
 const now = () => firebase.firestore.FieldValue.serverTimestamp();
+/* Gekaufte Wände: Name und Unterzeile kommen aus der Datenbank */
+if (!FIXED) base.get().then(d => {
+  if (!d.exists) { noWall(); return; }
+  const x = d.data();
+  info.name = typeof x.name === "string" && x.name ? x.name : "Klo-Wand";
+  info.sub = typeof x.sub === "string" ? x.sub : "";
+  showInfo();
+}).catch(() => {});
+function noWall() {
+  try { if (localStorage.getItem("klowand-last") === WALL) localStorage.removeItem("klowand-last"); } catch (e) {}
+  document.body.insertAdjacentHTML("afterbegin", `<div class="nowall"><div><b>Diese Wand gibt es nicht.</b>
+    <p>Prüf den QR-Code oder den Link. Du betreibst eine Bar und willst eine eigene Klo-Wand?</p>
+    <a href="meine-wand.html">Eigene Klo-Wand holen</a></div></div>`);
+}
 
 /* ---------- Spruch des Abends: der Spruch von gestern mit den meisten Strichen ---------- */
 function startOfDay(t) { const d = new Date(t); d.setHours(0, 0, 0, 0); return d.getTime(); }
@@ -332,13 +354,16 @@ base.collection("posts").where("ts", ">", since).orderBy("ts", "desc").limit(300
     .filter(p => p.img || typeof p.t === "string");
   loaded = true; status.textContent = "Live"; render();
 }, offline);
-base.collection("likes").limit(5000).onSnapshot(s => {
+/* Striche und Meldungen der letzten Wochen. Alte Wände laden bis Januar noch alles, weil frühere Striche keinen Zeitstempel haben. */
+const LEGACY = FIXED && Date.now() < Date.parse("2027-01-10");
+const recent = c => LEGACY ? base.collection(c).limit(5000) : base.collection(c).where("ts", ">", since).limit(5000);
+recent("likes").onSnapshot(s => {
   likes = {}; s.docs.forEach(d => { const p = d.data().p; (likes[p] ||= new Set()).add(d.id.slice(p.length + 1)); }); render();
 }, () => {});
-base.collection("reports").limit(5000).onSnapshot(s => {
+recent("reports").onSnapshot(s => {
   reports = {}; s.docs.forEach(d => { const p = d.data().p; reports[p] = (reports[p] || 0) + 1; }); render();
 }, () => {});
-base.collection("replies").limit(2000).onSnapshot(s => {
+(LEGACY ? base.collection("replies").limit(2000) : base.collection("replies").where("ts", ">", since).limit(2000)).onSnapshot(s => {
   replies = {}; s.docs.forEach(d => { const r = d.data(); if (typeof r.t === "string") (replies[r.p] ||= []).push({ t: r.t, ts: ms(r) }); }); render();
 }, () => {});
 
@@ -347,9 +372,9 @@ wall.addEventListener("click", e => {
   const b = e.target.closest("button[data-a]"); if (!b) return;
   const id = b.dataset.id;
   if (b.dataset.a === "chgo") { setChJoin(true); setMode(CH_NOW && CH_NOW.art === "draw" ? "draw" : "text"); if (mode === "text") msg.focus(); return; }
-  if (b.dataset.a === "like") base.collection("likes").doc(id + "_" + device).set({ p: id }).catch(fail);
+  if (b.dataset.a === "like") base.collection("likes").doc(id + "_" + device).set({ p: id, ts: now() }).catch(fail);
   if (b.dataset.a === "reply") { openReply = openReply === id ? null : id; render(); }
-  if (b.dataset.a === "report") base.collection("reports").doc(id + "_" + device).set({ p: id })
+  if (b.dataset.a === "report") base.collection("reports").doc(id + "_" + device).set({ p: id, ts: now() })
     .then(() => say("Gemeldet. Nach 3 Meldungen wird der Spruch übermalt.", true)).catch(fail);
 });
 wall.addEventListener("submit", e => {

@@ -90,6 +90,7 @@ button:disabled{opacity:.5;cursor:default}
   <div class="views" role="group" aria-label="Bereich">
     <button type="button" class="chip" data-v="wall" aria-pressed="true">Beiträge</button>
     <button type="button" class="chip" data-v="ranks" aria-pressed="false">Ranglisten</button>
+    <button type="button" class="chip" data-v="codes" aria-pressed="false">Codes &amp; Käufer</button>
   </div>
   <div id="wallView">
 
@@ -108,6 +109,7 @@ button:disabled{opacity:.5;cursor:default}
   <div class="feed" id="feed"><p class="empty">Wände werden geladen …</p></div>
   </div>
   <div id="ranksView" hidden></div>
+  <div id="codesView" hidden></div>
   <nav class="legal"><a href="impressum.html">Impressum</a> · <a href="datenschutz.html">Datenschutz</a> · <a href="./">Zur Wand</a></nav>
 </div>
 
@@ -123,7 +125,8 @@ const esc = s => String(s).replace(/[&<>"]/g, m => ({ "&": "&amp;", "<": "&lt;",
 const ms = d => (d && d.ts && d.ts.toMillis) ? d.ts.toMillis() : Date.now();
 const ago = ts => { const m = Math.round((Date.now() - ts) / 6e4); if (m < 1) return "gerade eben"; if (m < 60) return `vor ${m} Min.`; const h = Math.floor(m / 60); if (h < 24) return `vor ${h} Std.`; const d = Math.floor(h / 24); return d === 1 ? "gestern" : `vor ${d} Tagen`; };
 const isDrawing = s => typeof s === "string" && s.startsWith("data:image/png;base64,");
-const wallName = w => (WAENDE[w] && WAENDE[w].name) || w;
+const DYN = {};               // gekaufte Wände: id -> { name, sub }
+const wallName = w => (WAENDE[w] && WAENDE[w].name) || (DYN[w] && DYN[w].name) || w;
 
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth(), fs = firebase.firestore();
@@ -157,6 +160,7 @@ auth.onAuthStateChanged(u => {
   if (u && !isAdmin) notice("Mit diesem Konto kannst du mitlesen, aber nichts löschen. Melde dich mit " + ADMIN_EMAIL + " an.");
   else if (!u) notice("Mitlesen geht ohne Anmeldung. Zum Löschen mit " + ADMIN_EMAIL + " anmelden.");
   else notice("");
+  watchBought();
   render();
 });
 
@@ -192,7 +196,23 @@ document.addEventListener("visibilitychange", () => { if (!document.hidden) setT
 /* ---------- Wände live laden ---------- */
 const WALLS = Object.keys(WAENDE);
 const since = firebase.firestore.Timestamp.fromMillis(Date.now() - WEEK);
-WALLS.forEach(w => {
+const LEGACY_UNTIL = Date.parse("2027-01-10");
+WALLS.forEach(watch);
+/* Gekaufte Wände kommen dazu, sobald der Admin angemeldet ist */
+let boughtUnsub = null;
+function watchBought() {
+  if (boughtUnsub) { boughtUnsub(); boughtUnsub = null; }
+  if (!isAdmin) return;
+  boughtUnsub = fs.collection("walls").onSnapshot(snap => {
+    snap.docs.forEach(d => {
+      const x = d.data(); if (WAENDE[d.id] || typeof x.owner !== "string") return;
+      DYN[d.id] = { name: typeof x.name === "string" ? x.name : d.id, sub: x.sub || "", ts: ms(x), code: x.code || "" };
+      if (!WALLS.includes(d.id)) { WALLS.push(d.id); watch(d.id); }
+    });
+    render(); if (window.KloCodes) KloCodes.refresh();
+  }, () => {});
+}
+function watch(w) {
   const s = state[w] = { posts: {}, replies: {}, likes: {}, reports: {}, loaded: false };
   const base = fs.collection("walls").doc(w);
   base.collection("posts").where("ts", ">", since).orderBy("ts", "desc").limit(300).onSnapshot(snap => {
@@ -209,15 +229,17 @@ WALLS.forEach(w => {
     if (!s.loaded) { s.loaded = true; ready++; }
     setLive(true); render();
   }, () => setLive(false));
-  base.collection("replies").limit(2000).onSnapshot(snap => {
+  const legacy = !!WAENDE[w] && Date.now() < LEGACY_UNTIL;
+  const recent = (c, n) => legacy ? base.collection(c).limit(n) : base.collection(c).where("ts", ">", since).limit(n);
+  recent("replies", 2000).onSnapshot(snap => {
     s.replies = {};
     snap.docs.forEach(d => { const r = d.data(); if (typeof r.t === "string") (s.replies[r.p] ||= []).push({ id: d.id, t: r.t, ts: ms(r) }); });
     snap.docChanges().forEach(ch => { if (ch.type === "added" && s.loaded && !seen.has("r/" + ch.doc.id)) alertNew(w, "Antwort: " + (ch.doc.data().t || "")); seen.add("r/" + ch.doc.id); });
     render();
   });
-  base.collection("likes").limit(5000).onSnapshot(snap => { s.likes = {}; snap.docs.forEach(d => { const p = d.data().p; s.likes[p] = (s.likes[p] || 0) + 1; }); render(); });
-  base.collection("reports").limit(5000).onSnapshot(snap => { s.reports = {}; snap.docs.forEach(d => { const p = d.data().p; s.reports[p] = (s.reports[p] || 0) + 1; }); render(); });
-});
+  recent("likes", 5000).onSnapshot(snap => { s.likes = {}; snap.docs.forEach(d => { const p = d.data().p; s.likes[p] = (s.likes[p] || 0) + 1; }); render(); });
+  recent("reports", 5000).onSnapshot(snap => { s.reports = {}; snap.docs.forEach(d => { const p = d.data().p; s.reports[p] = (s.reports[p] || 0) + 1; }); render(); });
+}
 function setLive(ok) { $("dot").classList.toggle("on", ok); $("liveText").textContent = ok ? "Live" : "Keine Verbindung"; }
 
 /* ---------- Anzeige ---------- */
@@ -278,5 +300,6 @@ setInterval(render, 60000);
 render();
 </script>
 <script src="admin-ranks.js"></script>
+<script src="admin-codes.js"></script>
 </body>
 </html>
