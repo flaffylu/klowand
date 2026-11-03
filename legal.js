@@ -7,4 +7,7 @@
     el.textContent = v || PH[k] || "";
     if (!v) el.classList.add("ph");
   });
+  // Telefon ist freiwillig, wenn eine E-Mail-Adresse da ist
+  const tel = document.getElementById("telZeile");
+  if (tel && !(data.telefon || "").trim() && (data.email || "").trim()) tel.hidden = true;
 })();
