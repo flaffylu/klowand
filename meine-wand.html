@@ -78,7 +78,7 @@ summary{cursor:pointer;font:700 1rem var(--f-ui);letter-spacing:.04em;text-trans
     <p class="sub">In zwei Minuten fertig, ganz ohne Technik:</p>
     <ol class="steps">
       <li>Mit deinem Google-Konto anmelden.</li>
-      <li>Den <b>Code aus deiner Kauf-E-Mail</b> und den Namen deiner Bar eintragen.</li>
+      <li>Den <b>Code aus deiner Kauf-E-Mail</b> und einen Namen eintragen, z. B. deine Bar oder „Familie Müller“.</li>
       <li>QR-Code ausdrucken und innen an die Kabinentür kleben. Fertig!</li>
     </ol>
     <div class="row"><button type="button" class="primary" id="login">Mit Google anmelden</button></div>
@@ -96,10 +96,10 @@ summary{cursor:pointer;font:700 1rem var(--f-ui);letter-spacing:.04em;text-trans
       <form id="redeemForm" autocomplete="off">
         <label for="code">Dein Code</label>
         <input id="code" class="code" maxlength="20" placeholder="KLO-XXXX-XXXX" autocapitalize="characters" spellcheck="false" required>
-        <label for="name">Name der Bar</label>
-        <input id="name" maxlength="30" placeholder="z. B. Zum Anker" required>
+        <label for="name">Name der Wand</label>
+        <input id="name" maxlength="30" placeholder="z. B. Zum Anker oder Familie Müller" required>
         <label for="sub">Unterzeile (freiwillig)</label>
-        <input id="sub" maxlength="40" placeholder="z. B. Herren · Kabine 1">
+        <input id="sub" maxlength="40" placeholder="z. B. Herren · Kabine 1 oder Gästeklo">
         <p class="hint">Steht oben auf dem Türschild der Wand. Kannst du später ändern.</p>
         <div class="row"><button type="submit" class="primary" id="redeemBtn">Wand einrichten</button></div>
         <p class="msg" id="redeemMsg"></p>
@@ -209,7 +209,7 @@ function renderWalls() {
         <button type="button" data-act="copy">Link kopieren</button>
       </div>
       ${ed ? `<form class="editForm" data-id="${esc(w.id)}" autocomplete="off">
-          <label>Name der Bar<input name="name" maxlength="30" value="${esc(w.name)}" required></label>
+          <label>Name der Wand<input name="name" maxlength="30" value="${esc(w.name)}" required></label>
           <label>Unterzeile<input name="sub" maxlength="40" value="${esc(w.sub || "")}"></label>
           <div class="row"><button type="submit" class="dark">Speichern</button><button type="button" data-act="cancel">Abbrechen</button></div>
         </form>` : `<div class="row"><button type="button" data-act="edit">Name ändern</button>
