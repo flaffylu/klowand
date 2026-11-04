@@ -108,7 +108,7 @@ summary{cursor:pointer;font:700 1rem var(--f-ui);letter-spacing:.04em;text-trans
   </div>
 
   <p class="msg err" id="notice"></p>
-  <nav class="legal"><a href="impressum.html">Impressum</a> · <a href="datenschutz.html">Datenschutz</a></nav>
+  <nav class="legal" id="legalNav"><a href="impressum.html">Impressum</a> · <a href="datenschutz.html">Datenschutz</a></nav>
 </div>
 
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
@@ -120,6 +120,7 @@ summary{cursor:pointer;font:700 1rem var(--f-ui);letter-spacing:.04em;text-trans
 <script src="qrcode.js"></script>
 <script>
 document.title = tr("Meine Klo-Wand", "My Klo-Wand");
+document.getElementById("legalNav").insertAdjacentHTML("beforeend", " · " + langButton());
 translateStatic([
   [".top h1", "text", "My Klo-Wand"], [".top p", "text", "Set up · QR code · Manage posts"],
   ["#out h2", "text", "Your own Klo-Wand"], ["#out .sub", "text", "Ready in two minutes, no tech skills needed:"],

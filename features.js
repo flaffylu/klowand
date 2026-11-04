@@ -146,7 +146,7 @@
   }
 
   /* Impressum und Datenschutz unter der Wand und in den Spielen */
-  const legal = `<a href="impressum.html">${tr("Impressum", "Imprint")}</a><a href="datenschutz.html">${tr("Datenschutz", "Privacy")}</a>`;
+  const legal = `<a href="impressum.html">${tr("Impressum", "Imprint")}</a><a href="datenschutz.html">${tr("Datenschutz", "Privacy")}</a>${langButton()}`;
   const wrap = document.querySelector(".wrap");
   if (wrap) { const f = document.createElement("nav"); f.className = "legal"; f.setAttribute("aria-label", tr("Rechtliches", "Legal")); f.innerHTML = legal; wrap.appendChild(f); }
   const gw = document.querySelector(".kg .gw");
