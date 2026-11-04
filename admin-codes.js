@@ -4,7 +4,7 @@ window.KloCodes = (function () {
   const $ = id => document.getElementById(id);
   const view = $("codesView");
   const ABC = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";   // ohne 0/O und 1/I, damit nichts verwechselt wird
-  let codes = [], loaded = false, fresh = [], busy = false;
+  let codes = [], loaded = false, fresh = [], busy = false, stats = null;
 
   function newCode() {
     const r = new Uint32Array(8); crypto.getRandomValues(r);
@@ -25,6 +25,10 @@ window.KloCodes = (function () {
       codes = snap.docs.map(d => { const x = d.data(); return { id: d.id, used: !!x.used, wall: x.wall || "", created: x.created && x.created.toMillis ? x.created.toMillis() : 0, at: x.at && x.at.toMillis ? x.at.toMillis() : 0 }; });
       loaded = true;
     } catch (e) { loaded = false; notice("Codes konnten nicht geladen werden. Sind die neuen Regeln in Firebase veröffentlicht?"); }
+    try {
+      const snap = await fs.collection("stats").limit(2000).get();
+      stats = snap.docs.map(d => { const [page, day] = d.id.split("_"); return { page, day, n: Number(d.data().n) || 0 }; });
+    } catch (e) { stats = null; }
     draw();
   }
 
@@ -48,7 +52,15 @@ window.KloCodes = (function () {
     if (!isAdmin) { view.innerHTML = '<p class="empty">Melde dich mit dem Admin-Konto an, um Codes zu sehen.</p>'; return; }
     const unused = codes.filter(c => !c.used).sort((a, b) => b.created - a.created);
     const used = codes.filter(c => c.used).sort((a, b) => b.at - a.at);
+    const dayStr = t => { const d = new Date(t); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`; };
+    const today = dayStr(Date.now()), weekAgo = dayStr(Date.now() - 6 * 864e5);
+    const sum = (page, from) => (stats || []).filter(r => r.page === page && (!from || r.day >= from)).reduce((a, r) => a + r.n, 0);
+    const visitRow = (page, label) => `<div class="rk-row"><div><span class="n">${label}</span><span class="m">heute ${sum(page, today)} · 7 Tage ${sum(page, weekAgo)}</span></div><span class="s">${sum(page)}</span><span class="m">gesamt</span></div>`;
     view.innerHTML = `
+      <h3 style="margin:18px 0 8px;font:700 1rem var(--f-ui);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)">Besucher der Infoseiten</h3>
+      ${stats ? `<div class="feed">${visitRow("familie", "Familien-Seite")}${visitRow("wirte", "Bar-Seite")}</div>
+        <p style="margin:6px 0 0;color:var(--muted);font-size:.85rem">Jeder Besuch zählt einmal, egal wie oft die Seite neu geladen wird.</p>`
+        : `<p style="color:var(--muted)">Noch keine Zahlen. Sind die neuen Regeln in Firebase veröffentlicht?</p>`}
       <div class="stats" style="margin-top:14px">
         <div class="stat"><b>${loaded ? unused.length : "–"}</b><span>Codes frei</span></div>
         <div class="stat"><b>${loaded ? used.length : "–"}</b><span>Eingelöst</span></div>

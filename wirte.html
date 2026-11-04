@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="de">
+<html lang="de" data-stat="wirte">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
@@ -228,7 +228,10 @@ footer .scrawl{display:block;font:700 1.5rem var(--f-scrawl);color:var(--ink);ma
   Klo-Wand · <a href="familie.html">Für Familien</a> · <a href="./?wand=demo">Demo</a> · <a href="meine-wand.html">Meine Wand</a> · <a href="impressum.html">Impressum</a> · <a href="datenschutz.html">Datenschutz</a>
 </footer>
 
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script src="config.js"></script>
+<script src="counter.js"></script>
 <script>
 try {
   const k = (typeof KONTAKT !== "undefined" && KONTAKT) || {};
