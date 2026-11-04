@@ -106,7 +106,12 @@
   .orc .row{display:flex;gap:8px;justify-content:center;margin-top:12px;flex-wrap:wrap}
   .orc .row button{font:700 1rem var(--f-ui);letter-spacing:.06em;text-transform:uppercase;border-radius:6px;padding:10px 16px;min-height:44px;cursor:pointer;border:1.5px solid var(--ink);background:transparent;color:var(--ink)}
   .orc .row button.go{background:var(--ink);color:var(--door)}
-  .legal{display:flex;gap:14px;justify-content:center;margin:30px 0 0;font:600 .85rem var(--f-ui);letter-spacing:.06em}
+  .getown{margin:34px auto 0;max-width:420px;background:var(--plate);border:1.5px solid var(--ink);border-radius:10px;padding:12px 14px;text-align:center;font:600 1rem var(--f-ui)}
+  .getown b{display:block;font:400 1.25rem var(--f-marker);margin-bottom:8px}
+  .getown span{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+  .getown a{display:inline-block;background:var(--red);color:#fff;text-decoration:none;font:700 .9rem var(--f-ui);letter-spacing:.06em;text-transform:uppercase;padding:8px 14px;border-radius:6px}
+  .getown a+a{background:var(--ink)}
+  .legal{display:flex;gap:14px;justify-content:center;margin:18px 0 0;font:600 .85rem var(--f-ui);letter-spacing:.06em}
   .legal a{color:var(--muted)}
   @media (prefers-reduced-motion:reduce){.orc .ball.shake{animation:none}}
   `;
@@ -148,7 +153,14 @@
   /* Impressum und Datenschutz unter der Wand und in den Spielen */
   const legal = `<a href="impressum.html">${tr("Impressum", "Imprint")}</a><a href="datenschutz.html">${tr("Datenschutz", "Privacy")}</a>${langButton()}`;
   const wrap = document.querySelector(".wrap");
-  if (wrap) { const f = document.createElement("nav"); f.className = "legal"; f.setAttribute("aria-label", tr("Rechtliches", "Legal")); f.innerHTML = legal; wrap.appendChild(f); }
+  if (wrap) {
+    /* Hinweis für Gäste: eigene Klo-Wand holen */
+    const ad = document.createElement("div"); ad.className = "getown";
+    ad.innerHTML = `<b>${tr("Auch so eine Klo-Wand haben?", "Want a Klo-Wand of your own?")}</b>
+      <span><a href="familie.html">${tr("Für zu Hause", "For your home")}</a><a href="wirte.html">${tr("Für deine Bar", "For your bar")}</a></span>`;
+    wrap.appendChild(ad);
+    const f = document.createElement("nav"); f.className = "legal"; f.setAttribute("aria-label", tr("Rechtliches", "Legal")); f.innerHTML = legal; wrap.appendChild(f);
+  }
   const gw = document.querySelector(".kg .gw");
   if (gw) { const f = document.createElement("nav"); f.className = "legal"; f.setAttribute("aria-label", tr("Rechtliches", "Legal")); f.innerHTML = legal; gw.appendChild(f); }
 })();
