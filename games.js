@@ -10,7 +10,7 @@
   const $ = id => document.getElementById(id);
   const today = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`; };
   const scores = g => fs.collection("walls").doc(WALL).collection("games").doc(g).collection("scores");
-  const rolls = n => `${n} ${n === 1 ? tr("Rolle", "roll") : tr("Rollen", "rolls")}`;
+  const rolls = n => JA ? `${n}個` : `${n} ${n === 1 ? tr("Rolle", "roll") : tr("Rollen", "rolls")}`;
   const fmt = (g, s) => g === "reflex" ? `${s} ms` : rolls(s);
   const sortRows = (g, rows) => rows.sort((a, b) => GAMES[g].better === "desc" ? b.score - a.score : a.score - b.score);
   let myName = ""; try { myName = localStorage.getItem("klowand-name") || ""; } catch (e) {}
@@ -126,7 +126,7 @@
       try {
         const rows = sortRows(g, (await scores(g).where("day", "==", today()).limit(500).get()).docs.map(d => d.data()).filter(r => typeof r.name === "string" && typeof r.score === "number"));
         const el = $("lead-" + g); if (!el) return;
-        el.textContent = rows.length ? tr(`Heute vorne: ${rows[0].name} mit ${fmt(g, rows[0].score)}`, `Leading today: ${rows[0].name} with ${fmt(g, rows[0].score)}`) : tr("Heute noch kein Eintrag. Hol dir Platz 1!", "No entries yet today. Grab first place!");
+        el.textContent = rows.length ? tr(`Heute vorne: ${rows[0].name} mit ${fmt(g, rows[0].score)}`, `Leading today: ${rows[0].name} with ${fmt(g, rows[0].score)}`, `今日のトップ：${rows[0].name}（${fmt(g, rows[0].score)}）`) : tr("Heute noch kein Eintrag. Hol dir Platz 1!", "No entries yet today. Grab first place!");
       } catch (e) { const el = $("lead-" + g); if (el) el.textContent = tr("Rangliste gerade nicht erreichbar.", "Leaderboard unavailable right now."); }
     });
   }
@@ -322,7 +322,7 @@
         const ms = Math.round(ts - tGo);
         if (ms < 100) { state = "early"; KloMusik.blip("bad"); set("early", tr("Zu früh!", "Too early!"), tr("Tippen und nochmal versuchen", "Tap and try again")); return; }
         times.push(Math.min(ms, 3000)); KloMusik.blip("flush"); state = "shown";
-        if (times.length < 3) { set("", `${ms} ms`, tr("Tippen für die nächste Runde", "Tap for the next round")); round.textContent = tr(`Runde ${times.length + 1} von 3`, `Round ${times.length + 1} of 3`); }
+        if (times.length < 3) { set("", `${ms} ms`, tr("Tippen für die nächste Runde", "Tap for the next round")); round.textContent = tr(`Runde ${times.length + 1} von 3`, `Round ${times.length + 1} of 3`, `${times.length + 1} / 3 回目`); }
         else { set("", `${ms} ms`, tr("Geschafft!", "Done!")); state = "done"; const avg = Math.round(times.reduce((a, b) => a + b, 0) / 3); setTimeout(() => alive && result("reflex", avg), 900); }
       }
     }
@@ -370,7 +370,7 @@
     view(`<div class="chips">${Object.entries(GAMES).map(([k, x]) => chip(`board:${k}:${tab}`, x.title, k === g)).join("")}</div>
       <div class="chips">${chip(`board:${g}:heute`, tr("Heute", "Today"), tab === "heute")}${chip(`board:${g}:rekord`, tr("Rekorde", "Records"), tab === "rekord")}</div>
       <div id="kgList"><p class="empty">${tr("Rangliste lädt …", "Loading leaderboard …")}</p></div>
-      <div class="row" style="justify-content:center"><button type="button" class="btn go" data-go="play:${g}">${tr(`${GAMES[g].title} spielen`, `Play ${GAMES[g].title}`)}</button></div>
+      <div class="row" style="justify-content:center"><button type="button" class="btn go" data-go="play:${g}">${tr(`${GAMES[g].title} spielen`, `Play ${GAMES[g].title}`, `${GAMES[g].title}で遊ぶ`)}</button></div>
       <button type="button" class="ghost" data-go="menu">${tr("Zu den Spielen", "Back to games")}</button>`);
     try {
       const q = tab === "heute" ? scores(g).where("day", "==", today()).limit(500) : scores(g).orderBy("score", GAMES[g].better).limit(10);
@@ -381,7 +381,7 @@
       const li = (r, i) => `<li class="${i === 0 ? "top1" : ""}${r.id === lastId ? " me" : ""}"><span class="p">${i + 1}.</span><span class="n">${esc(r.name)}</span><span class="s">${fmt(g, r.score)}</span></li>`;
       let html = rows.slice(0, 10).map(li).join("");
       if (meIdx >= 10) html += `<li class="gap" aria-hidden="true">…</li>` + li(rows[meIdx], meIdx);
-      list.innerHTML = (meIdx >= 0 ? `<p class="hint">${tr(`Du bist auf Platz ${meIdx + 1} von ${rows.length}${tab === "heute" ? " heute" : ""}.`, `You're #${meIdx + 1} of ${rows.length}${tab === "heute" ? " today" : ""}.`)}</p>` : "") + `<ol>${html}</ol>`;
+      list.innerHTML = (meIdx >= 0 ? `<p class="hint">${tr(`Du bist auf Platz ${meIdx + 1} von ${rows.length}${tab === "heute" ? " heute" : ""}.`, `You're #${meIdx + 1} of ${rows.length}${tab === "heute" ? " today" : ""}.`, `${rows.length}人中${meIdx + 1}位${tab === "heute" ? "（今日）" : ""}です。`)}</p>` : "") + `<ol>${html}</ol>`;
     } catch (e) {
       const list = $("kgList"); if (list) list.innerHTML = `<p class="empty">${tr("Rangliste gerade nicht erreichbar.", "Leaderboard unavailable right now.")}</p>`;
     }

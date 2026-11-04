@@ -115,6 +115,7 @@ summary{cursor:pointer;font:700 1rem var(--f-ui);letter-spacing:.04em;text-trans
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="lang-ja.js"></script>
 <script src="lang.js"></script>
 <script src="config.js"></script>
 <script src="filter.js"></script>
@@ -139,7 +140,7 @@ const $ = id => document.getElementById(id);
 const esc = s => String(s).replace(/[&<>"]/g, m => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[m]));
 const DAY = 864e5;
 const ms = d => (d && d.ts && d.ts.toMillis) ? d.ts.toMillis() : Date.now();
-const ago = ts => { const m = Math.round((Date.now() - ts) / 6e4); if (m < 1) return tr("gerade eben", "just now"); if (m < 60) return tr(`vor ${m} Min.`, `${m} min ago`); const h = Math.floor(m / 60); if (h < 24) return tr(`vor ${h} Std.`, `${h} h ago`); const d = Math.floor(h / 24); return d === 1 ? tr("gestern", "yesterday") : tr(`vor ${d} Tagen`, `${d} days ago`); };
+const ago = ts => { const m = Math.round((Date.now() - ts) / 6e4); if (m < 1) return tr("gerade eben", "just now"); if (m < 60) return tr(`vor ${m} Min.`, `${m} min ago`, `${m}分前`); const h = Math.floor(m / 60); if (h < 24) return tr(`vor ${h} Std.`, `${h} h ago`, `${h}時間前`); const d = Math.floor(h / 24); return d === 1 ? tr("gestern", "yesterday") : tr(`vor ${d} Tagen`, `${d} days ago`, `${d}日前`); };
 const isDrawing = s => typeof s === "string" && s.startsWith("data:image/png;base64,");
 const wallUrl = id => new URL("./?wand=" + encodeURIComponent(id), location.href).href;
 
@@ -237,7 +238,9 @@ function renderWalls() {
         <li>Fertig: Die Klo-Wand liegt jetzt wie eine App auf deinem Handy.</li></ol>
         <p class="hint">Diese Verwaltungsseite kannst du genauso als App ablegen.</p>`, `<ol class="steps"><li>Tap <b>“Open wall”</b>.</li><li>In the Chrome menu <b>⋮</b> tap <b>“Add to Home screen”</b>. On iPhone: the Share icon, then “Add to Home Screen”.</li>
         <li>Done: the Klo-Wand now sits on your phone like an app.</li></ol>
-        <p class="hint">You can add this management page as an app the same way.</p>`)}</details>
+        <p class="hint">You can add this management page as an app the same way.</p>`, `<ol class="steps"><li><b>「ウォールを開く」</b>をタップ。</li><li>Chromeのメニュー <b>⋮</b> から<b>「ホーム画面に追加」</b>。iPhoneは共有ボタンから「ホーム画面に追加」。</li>
+        <li>完成：Klo-Wandがアプリのようにスマホに並びます。</li></ol>
+        <p class="hint">この管理ページも同じ方法で追加できます。</p>`)}</details>
     </section>`;
   }).join("");
   document.querySelectorAll("[data-qr]").forEach(cv => drawQr(cv, wallUrl(cv.dataset.qr), 220));

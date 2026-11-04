@@ -16,6 +16,9 @@ const KloFilter = (() => {
     "heilhitler", "bitch", "wichser", "umbringen", "abstechen", "kinderf", "pedo", "paedo",
     // Englisch
     "cunt", "whore", "faggot", "motherf", "asshole", "dickhead", "handjob", "rimjob", "deepthroat", "jerkoff", "killyourself",
+    // Japanisch
+    "死ね", "しね", "殺す", "ころす", "殺せ", "ちんこ", "チンコ", "ちんぽ", "チンポ", "まんこ", "マンコ", "おっぱい", "セックス", "せっくす", "エッチしよ",
+    "レイプ", "強姦", "売春", "援交", "ブス", "きもい", "キモい", "ガイジ", "池沼", "チョン", "クズ",
   ];
   // Kurze Wörter: nur als ganzes Wort, damit „Kanal“, „Titel“ oder „Minute“ nicht hängen bleiben
   const WORDS = ["sex", "anal", "cum", "tits", "titte", "boobs", "cock", "schwanz", "arsch", "fik", "milf", "nude", "geil", "geile", "geiler",

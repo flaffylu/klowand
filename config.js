@@ -19,26 +19,26 @@ const firebaseConfig = {
    Nur Kleinbuchstaben, Zahlen und Bindestriche.              */
 const WAENDE = {
   "prestigio":     { name: "Prestigio",         sub: "Ristorante Italiano" },
-  "goldener-hahn": { name: "Zum Goldenen Hahn", sub: "Herren · Kabine 2", subEn: "Men · Stall 2" },
-  "zuhause":       { name: "Zuhause",           sub: "Das Familienklo", subEn: "The family loo" },
-  "demo":          { name: "Demo-Bar",          sub: "Zum Ausprobieren", subEn: "Try it out" },
+  "goldener-hahn": { name: "Zum Goldenen Hahn", sub: "Herren · Kabine 2", subEn: "Men · Stall 2", subJa: "男性用・個室2" },
+  "zuhause":       { name: "Zuhause",           sub: "Das Familienklo", subEn: "The family loo", subJa: "家族のトイレ" },
+  "demo":          { name: "Demo-Bar",          sub: "Zum Ausprobieren", subEn: "Try it out", subJa: "お試し用" },
 };
 
 /* Wochen-Challenges: jede Kalenderwoche ist die nächste dran, danach geht es von vorne los.
-   art: "text" = schreiben, "draw" = malen, "beides" = egal. en = englischer Text.                                  */
+   art: "text" = schreiben, "draw" = malen, "beides" = egal. en = englischer, ja = japanischer Text.                                  */
 const CHALLENGES = [
-  { text: "Mal den Barkeeper.", en: "Draw the bartender.", art: "draw" },
-  { text: "Bester Reim auf „Klo“.", en: "Best rhyme with “loo”.", art: "text" },
-  { text: "Dein schlechtester Anmachspruch.", en: "Your worst pickup line.", art: "text" },
-  { text: "Mal dein Lieblingsgetränk.", en: "Draw your favourite drink.", art: "draw" },
-  { text: "Was denkt die Klopapierrolle gerade?", en: "What is the toilet roll thinking right now?", art: "text" },
-  { text: "Mal ein Monster, das im Spülkasten wohnt.", en: "Draw a monster that lives in the cistern.", art: "draw" },
-  { text: "Beschreib deinen Abend in genau drei Wörtern.", en: "Describe your night in exactly three words.", art: "text" },
-  { text: "Mal die Kabine, wenn sie ein Haustier wäre.", en: "Draw the stall as if it were a pet.", art: "draw" },
-  { text: "Erfinde einen neuen Cocktail und gib ihm einen Namen.", en: "Invent a new cocktail and give it a name.", art: "text" },
-  { text: "Klo-Weisheit des Tages.", en: "Loo wisdom of the day.", art: "beides" },
-  { text: "Mal dich als Superheld.", en: "Draw yourself as a superhero.", art: "draw" },
-  { text: "Was würdest du der Kloschüssel gern mal sagen?", en: "What would you like to tell the toilet bowl?", art: "text" },
+  { text: "Mal den Barkeeper.", en: "Draw the bartender.", ja: "店員さんを描こう。", art: "draw" },
+  { text: "Bester Reim auf „Klo“.", en: "Best rhyme with “loo”.", ja: "トイレにまつわる一番面白いダジャレ。", art: "text" },
+  { text: "Dein schlechtester Anmachspruch.", en: "Your worst pickup line.", ja: "あなたの最悪の口説き文句。", art: "text" },
+  { text: "Mal dein Lieblingsgetränk.", en: "Draw your favourite drink.", ja: "好きな飲み物を描こう。", art: "draw" },
+  { text: "Was denkt die Klopapierrolle gerade?", en: "What is the toilet roll thinking right now?", ja: "トイレットペーパーは今、何を考えている？", art: "text" },
+  { text: "Mal ein Monster, das im Spülkasten wohnt.", en: "Draw a monster that lives in the cistern.", ja: "タンクに住んでいる怪物を描こう。", art: "draw" },
+  { text: "Beschreib deinen Abend in genau drei Wörtern.", en: "Describe your night in exactly three words.", ja: "今夜をちょうど3語で表すと？", art: "text" },
+  { text: "Mal die Kabine, wenn sie ein Haustier wäre.", en: "Draw the stall as if it were a pet.", ja: "この個室がペットだったら？描いてみよう。", art: "draw" },
+  { text: "Erfinde einen neuen Cocktail und gib ihm einen Namen.", en: "Invent a new cocktail and give it a name.", ja: "新しいカクテルを考えて名前をつけよう。", art: "text" },
+  { text: "Klo-Weisheit des Tages.", en: "Loo wisdom of the day.", ja: "今日のトイレ格言。", art: "beides" },
+  { text: "Mal dich als Superheld.", en: "Draw yourself as a superhero.", ja: "スーパーヒーローの自分を描こう。", art: "draw" },
+  { text: "Was würdest du der Kloschüssel gern mal sagen?", en: "What would you like to tell the toilet bowl?", ja: "便器にひとこと言うなら？", art: "text" },
 ];
 
 /* Musik zum Umschalten. src: null = der Lo-Fi-Beat, der im Browser entsteht.

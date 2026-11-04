@@ -85,7 +85,7 @@
     "Your playlist has hit potential today.",
     "The night is young. So are you.",
   ];
-  const POOL = EN ? SAYINGS_EN : SPRUECHE;
+  const POOL = (JA && typeof SAYINGS_JA !== "undefined") ? SAYINGS_JA : EN ? SAYINGS_EN : SPRUECHE;
   const $ = id => document.getElementById(id);
   let last = -1;
 
@@ -173,7 +173,9 @@
   const bar = (typeof info !== "undefined" && info.name) || "Klo-Wand";
   const h = new Date().getHours();
   const zeit = h < 5 ? "Na, du Nachteule" : h < 11 ? "Guten Morgen" : h < 17 ? "Hallo" : h < 22 ? "Guten Abend" : "Na, du Nachtschwärmer";
-  const LINES = EN ? [
+  const LINES = JA ? [
+    `注意、注意！玉座に新しいお客様です。こんばんは、ようこそ！`,
+  ] : EN ? [
     `Attention, attention! A new guest on the throne. Good evening and a warm welcome!`,
   ] : [
     `Achtung, Achtung! Ein neuer Gast auf dem Thron. Guten Abend und herzlich willkommen!`,
@@ -212,8 +214,8 @@
     try {
       speechSynthesis.cancel();
       const u = new SpeechSynthesisUtterance(text);
-      const lc = EN ? "en" : "de";
-      u.lang = EN ? "en-US" : "de-DE"; u.rate = 1.02; u.pitch = 1.15; u.volume = 1;
+      const lc = JA ? "ja" : EN ? "en" : "de";
+      u.lang = JA ? "ja-JP" : EN ? "en-US" : "de-DE"; u.rate = 1.02; u.pitch = 1.15; u.volume = 1;
       const voices = speechSynthesis.getVoices(), re = new RegExp("^" + lc, "i");
       const v = voices.find(x => re.test(x.lang) && /google/i.test(x.name)) || voices.find(x => re.test(x.lang));
       if (v) u.voice = v;
