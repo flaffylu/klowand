@@ -1,0 +1,238 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Klo-Wand für Familien</title>
+<meta name="description" content="Die lustige digitale Klowand für euer Zuhause: QR-Code an die Badezimmertür, die ganze Familie schreibt, malt und lacht mit.">
+<meta name="theme-color" content="#1d2321">
+<meta property="og:title" content="Klo-Wand für euer Zuhause">
+<meta property="og:description" content="QR-Code an die Badezimmertür. Die ganze Familie kritzelt mit. Einmalig 4,99 €.">
+<meta property="og:image" content="assets/familie-poster.jpg">
+<link rel="icon" href="icon-192.png">
+<link rel="stylesheet" href="fonts.css">
+<style>
+/* Familien-Seite: gleiche Bauweise wie die Bar-Seite, aber warmes Badezimmer-Beige statt Kabinen-Grün.
+   Einspaltig am Handy, zweispaltig ab Tablet. */
+:root{
+  --door:#efe4d6; --door-2:#e6d8c6; --plate:#fbf6ef; --ink:#1d2321; --muted:#46524b;
+  --red:#b3261e; --blue:#1f4fa3; --green:#2f6b3a; --night:#1d2321; --night-fg:#e9ece9; --night-muted:#a7b1ab;
+  --f-marker:"Permanent Marker","Comic Sans MS",cursive; --f-scrawl:"Caveat",cursive;
+  --f-head:"Barlow Condensed","Arial Narrow",sans-serif; --f-body:"Barlow",system-ui,sans-serif;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html,body{background:var(--door);color:var(--ink)}
+body{margin:0;font:400 1.05rem/1.55 var(--f-body);
+  background-image:repeating-linear-gradient(90deg,rgba(0,0,0,.018) 0 2px,transparent 2px 7px)}
+img,video{max-width:100%;height:auto;display:block}
+html,body{overflow-x:hidden}
+a{color:var(--blue)}
+:focus-visible{outline:3px dashed var(--blue);outline-offset:3px}
+.in{max-width:1040px;margin:0 auto;padding-left:max(18px,env(safe-area-inset-left,0px));padding-right:max(18px,env(safe-area-inset-right,0px))}
+section{padding-block:56px}
+h1,h2,h3{text-wrap:balance}
+h2{font:400 clamp(2rem,6vw,3rem)/1.05 var(--f-marker);margin:0 0 10px}
+.kicker{font:700 .85rem var(--f-head);letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+.lead{font-size:1.15rem;max-width:60ch;color:var(--muted);margin:0}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:48px;padding:10px 20px;border-radius:6px;
+  font:700 1rem var(--f-head);letter-spacing:.08em;text-transform:uppercase;text-decoration:none;cursor:pointer;border:2px solid var(--ink)}
+.btn.red{background:var(--red);border-color:var(--red);color:#fff}
+.btn.ghost{background:transparent;color:var(--ink)}
+
+/* Kopf */
+.top{display:flex;align-items:center;justify-content:space-between;gap:12px;padding-block:16px}
+.logo{font:400 1.5rem var(--f-marker);color:var(--ink);text-decoration:none}
+.logo span{color:var(--red)}
+.top .btn{min-height:40px;padding:6px 14px;font-size:.85rem}
+
+/* Hero */
+.hero{display:grid;gap:36px;align-items:center;padding-block:24px 56px}
+@media(min-width:820px){.hero{grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr)}}
+.hero h1{margin:8px 0 14px;font:400 clamp(2.6rem,9vw,4.6rem)/.98 var(--f-marker)}
+.hero h1 em{font-style:normal;color:var(--red)}
+.hero .scrawl{font:700 1.7rem/1.1 var(--f-scrawl);color:var(--blue);margin:0 0 18px;transform:rotate(-1.5deg);display:inline-block}
+.ctas{display:flex;gap:10px;flex-wrap:wrap;margin-top:22px}
+.phone{justify-self:center;width:min(300px,78vw);border-radius:34px;background:var(--ink);padding:10px;box-shadow:0 18px 40px rgba(29,35,33,.35);transform:rotate(2deg)}
+.phone img{border-radius:26px}
+.sticker-note{display:block;text-align:center;margin-top:14px;font:700 1.3rem var(--f-scrawl);color:var(--muted)}
+
+/* Schritte */
+.steps{display:grid;gap:14px;margin-top:26px}
+@media(min-width:720px){.steps{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.step{background:var(--plate);border:1px solid #c9b8a3;border-radius:6px;padding:18px 18px 16px;position:relative}
+.step b{display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:50%;background:var(--ink);color:var(--night-fg);font:700 1.1rem var(--f-head);margin-bottom:10px}
+.step h3{margin:0 0 4px;font:700 1.35rem var(--f-head);letter-spacing:.02em}
+.step p{margin:0;color:var(--muted)}
+
+/* Vorteile */
+.split{display:grid;gap:36px;align-items:start}
+@media(min-width:820px){.split{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}}
+.perks{list-style:none;margin:22px 0 0;padding:0;display:grid;gap:16px}
+.perks li{display:grid;grid-template-columns:34px minmax(0,1fr);gap:12px;align-items:start}
+.perks .mark{font:700 1.7rem/1 var(--f-scrawl);color:var(--red);text-align:center}
+.perks h3{margin:0;font:700 1.25rem var(--f-head)}
+.perks p{margin:2px 0 0;color:var(--muted)}
+.shot{border-radius:14px;overflow:hidden;border:6px solid var(--ink);box-shadow:0 10px 26px rgba(29,35,33,.28);max-width:340px;justify-self:center}
+.caption{font:700 1.25rem var(--f-scrawl);color:var(--muted);text-align:center;margin-top:10px}
+
+/* Clip */
+.clip{display:grid;gap:28px;align-items:center}
+@media(min-width:820px){.clip{grid-template-columns:minmax(0,.8fr) minmax(0,1.2fr)}}
+.clip video{width:min(320px,80vw);aspect-ratio:9/16;border-radius:18px;background:var(--ink);justify-self:center;box-shadow:0 12px 30px rgba(29,35,33,.3)}
+
+/* Theke: Preis + Kontakt */
+.night{background:var(--night);color:var(--night-fg)}
+.night .kicker{color:var(--night-muted)}
+.night .lead{color:var(--night-muted)}
+.price{display:grid;gap:18px;margin-top:26px}
+@media(min-width:820px){.price{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}}
+.card{border:1px solid #3a4642;border-radius:8px;padding:22px;background:#242b28}
+.card.hot{border-color:var(--red);box-shadow:0 0 0 1px var(--red) inset}
+.card h3{margin:0;font:700 1.3rem var(--f-head);letter-spacing:.04em;text-transform:uppercase}
+.amount{font:700 3rem/1 var(--f-head);margin:10px 0 2px;font-variant-numeric:tabular-nums}
+.amount small{font-size:1rem;font-weight:500;color:var(--night-muted)}
+.card ul{margin:14px 0 0;padding-left:20px;color:var(--night-muted)}
+.card li{margin:4px 0}
+.card .btn{margin-top:18px;width:100%}
+.night .btn.ghost{color:var(--night-fg);border-color:var(--night-fg)}
+.contact{margin-top:30px;display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.contact .addr{font:600 1.15rem var(--f-body);user-select:all;background:#2b3330;border-radius:6px;padding:10px 14px}
+
+/* FAQ */
+details{background:var(--plate);border:1px solid #c9b8a3;border-radius:6px;padding:0 16px;margin-top:10px}
+summary{cursor:pointer;list-style:none;padding:14px 0;font:700 1.2rem var(--f-head);display:flex;justify-content:space-between;gap:12px}
+summary::-webkit-details-marker{display:none}
+summary::after{content:"+";font:700 1.5rem/1 var(--f-head);color:var(--red)}
+details[open] summary::after{content:"–"}
+details p{margin:0 0 14px;color:var(--muted)}
+
+footer{padding-block:30px 40px;font-size:.9rem;color:var(--muted);text-align:center}
+footer .scrawl{display:block;font:700 1.5rem var(--f-scrawl);color:var(--ink);margin-bottom:6px}
+.top nav{display:flex;gap:10px;align-items:center}
+.switch{font:700 .85rem var(--f-head);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.foto{border-radius:14px;overflow:hidden;border:6px solid #fff;box-shadow:0 12px 30px rgba(29,35,33,.25);transform:rotate(-1.5deg)}
+.foto img{width:100%;aspect-ratio:16/9;object-fit:cover}
+.note{font-size:.8rem;color:var(--muted);margin-top:8px;text-align:center}
+.occ{display:flex;flex-wrap:wrap;gap:8px;margin-top:22px}
+.occ span{background:var(--plate);border:1.5px solid var(--ink);border-radius:999px;padding:6px 14px;font:700 .95rem var(--f-head);letter-spacing:.06em;text-transform:uppercase}
+.shots{display:grid;grid-template-columns:1fr 1fr;gap:14px;justify-items:center}
+.shots .shot{transform:rotate(-2deg)}.shots .shot+.shot{transform:rotate(2deg);margin-top:28px}
+[hidden]{display:none!important}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+
+<div class="in top">
+  <a class="logo" href="#">Klo<span>-</span>Wand</a>
+  <nav><a class="switch" href="wirte.html">Für Bars</a><a class="btn red" href="#preis">Für 4,99 € holen</a></nav>
+</div>
+
+<header class="in hero">
+  <div>
+    <span class="kicker">Für Familie, WG &amp; Party</span>
+    <h1>Die Klo-Wand für <em>euer Zuhause</em>.</h1>
+    <p class="scrawl">Schluss mit Zetteln am Kühlschrank.</p>
+    <p class="lead">Ein QR-Code an der Badezimmertür, und alle können Sprüche schreiben, kleine Bilder malen und auf die anderen antworten. „Klopapier ist alle!“ landet jetzt da, wo es hingehört.</p>
+    <div class="ctas">
+      <a class="btn red" href="#preis">Für 4,99 € holen</a>
+      <a class="btn ghost" href="./?wand=demo" target="_blank" rel="noopener">Live ausprobieren</a>
+    </div>
+  </div>
+  <div>
+    <div class="phone"><img src="assets/familie-wand.jpg" alt="Beispiel einer Familien-Wand mit Sprüchen wie „Wer die letzte Rolle nimmt, holt die neue. Gez. Mama“" width="540" height="1169"></div>
+    <span class="sticker-note">So könnte eure Wand aussehen.</span>
+  </div>
+</header>
+
+<section id="so-gehts">
+  <div class="in">
+    <span class="kicker">In 2 Minuten fertig</span>
+    <h2>So geht’s</h2>
+    <div class="steps">
+      <div class="step"><b>1</b><h3>Kaufen</h3><p>Für 4,99 € bekommst du sofort deinen persönlichen Code per E-Mail.</p></div>
+      <div class="step"><b>2</b><h3>Namen wählen</h3><p>Code eingeben, Namen eintragen, z. B. „Familie Müller“. Eure Wand ist sofort online.</p></div>
+      <div class="step"><b>3</b><h3>Sticker an die Tür</h3><p>QR-Sticker ausdrucken, an die Badezimmertür kleben. Handy-Kamera drauf, los geht’s.</p></div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="in split">
+    <div>
+      <span class="kicker">Was ihr davon habt</span>
+      <h2>Mehr lachen. Weniger Zettel.</h2>
+      <ul class="perks">
+        <li><span class="mark">✓</span><div><h3>Nachrichten an alle</h3><p>„Deckel runter!“, „Oma kommt Sonntag“, „Wer war das?!“ Jeder liest es spätestens beim nächsten Klogang.</p></div></li>
+        <li><span class="mark">✓</span><div><h3>Malen für die Kleinen</h3><p>Mit dem Finger kritzeln, Farbe wählen, an die Wand hängen. Kein Lesen nötig.</p></div></li>
+        <li><span class="mark">✓</span><div><h3>Wer wird Klokönig?</h3><p>Drei Mini-Spiele mit eurer eigenen Familien-Rangliste. Opa gegen Enkel, jeden Tag neu.</p></div></li>
+        <li><span class="mark">✓</span><div><h3>Wochen-Challenge</h3><p>Jede Woche eine neue Aufgabe, z. B. „Mal ein Monster, das im Spülkasten wohnt“. Der beste Beitrag wird oben angepinnt.</p></div></li>
+        <li><span class="mark">✓</span><div><h3>Familienfreundlich</h3><p>Ein Wortfilter hält Schimpfwörter und Unanständiges fern. Was trotzdem nicht passt, löschst du mit einem Tipp.</p></div></li>
+        <li><span class="mark">✓</span><div><h3>Keine App, kein Konto</h3><p>Die Familie braucht nichts zu installieren und sich nirgends anzumelden. Nur wer verwaltet, meldet sich einmal mit Google an.</p></div></li>
+      </ul>
+      <div class="occ" aria-label="Passt für"><span>Familien-Bad</span><span>WG</span><span>Geburtstag</span><span>Hochzeit</span><span>Silvester</span><span>Wichtelgeschenk</span></div>
+    </div>
+    <div>
+      <div class="foto"><img src="assets/familie-foto.jpg" alt="Familie lacht gemeinsam auf dem Sofa über ein Handy" width="1280" height="720" ></div>
+      <p class="note">Symbolbild, KI-generiert</p>
+      <div class="shots" style="margin-top:22px">
+        <div class="shot"><img src="assets/familie-spiele.jpg" alt="Familien-Rangliste im Spiel Klorollen-Fang" width="540" height="1169" ></div>
+        <div class="shot"><img src="assets/familie-wand.jpg" alt="Familien-Wand mit Sprüchen" width="540" height="1169" ></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="in clip">
+    <video src="assets/familie-clip.mp4" poster="assets/familie-poster.jpg" controls playsinline preload="none" aria-label="Werbevideo der Klo-Wand für Familien"></video>
+    <div>
+      <span class="kicker">In 30 Sekunden erklärt</span>
+      <h2>Einmal ansehen, sofort verstanden.</h2>
+      <p class="lead">Mama scannt, die Tochter lacht, Papa und Sohn kritzeln, und am Ende will jeder Klokönig werden. Die Familie im Video ist KI-generiert, die Wand ist echt.</p>
+    </div>
+  </div>
+</section>
+
+<section class="night" id="preis">
+  <div class="in">
+    <span class="kicker">Preis</span>
+    <h2>Einmal zahlen, fertig.</h2>
+    <p class="lead">Kein Abo, keine laufenden Kosten. Auch perfekt als kleines Geschenk.</p>
+    <div class="price">
+      <div class="card">
+        <h3>Erst ansehen</h3>
+        <div class="amount">0 € <small>Demo-Wand</small></div>
+        <ul><li>Die echte Wand zum Ausprobieren</li><li>Schreiben, malen, Spiele testen</li><li>Ohne Anmeldung</li></ul>
+        <a class="btn ghost" href="./?wand=demo" target="_blank" rel="noopener">Demo ansehen</a>
+      </div>
+      <div class="card hot">
+        <h3>Eure Klo-Wand</h3>
+        <div class="amount">4,99 € <small>einmalig</small></div>
+        <ul><li>Eigene Wand mit eurem Namen</li><li>QR-Sticker zum Ausdrucken</li><li>Spiele, Malen, Challenges, Musik</li><li>Eure Seite zum Mitlesen und Löschen</li></ul>
+        <a class="btn red" href="https://payhip.com/Pikumio" target="_blank" rel="noopener">Jetzt kaufen</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="in">
+    <span class="kicker">Fragen</span>
+    <h2>Gut zu wissen</h2>
+    <details><summary>Ist das für Kinder geeignet?</summary><p>Ja. Ein Wortfilter blockt Schimpfwörter, Unanständiges, Telefonnummern und Links schon beim Absenden. Auf eurer Seite „Meine Wand“ seht ihr jeden Beitrag und löscht mit einem Tipp. Bei kleinen Kindern schaut am besten ab und zu ein Erwachsener drauf.</p></details>
+    <details><summary>Muss sich jeder anmelden?</summary><p>Nein. Wer den QR-Code scannt, kann sofort schreiben, ohne Konto und ohne App. Nur die Person, die die Wand verwaltet, meldet sich einmal mit Google an.</p></details>
+    <details><summary>Kostet das später noch etwas?</summary><p>Nein. Ihr zahlt einmal 4,99 €, danach gibt es keine laufenden Kosten und kein Abo.</p></details>
+    <details><summary>Kann ich die Klo-Wand verschenken?</summary><p>Ja. Kauf sie einfach und leite die E-Mail mit dem Code weiter. Wer den Code einlöst, bekommt die Wand.</p></details>
+    <details><summary>Wie lange bleiben die Sprüche?</summary><p>Sprüche verblassen nach 3 Wochen langsam und verschwinden später ganz von der Wand. So bleibt immer Platz für Neues.</p></details>
+    <details><summary>Wer kann unsere Wand sehen?</summary><p>Jeder, der den QR-Code scannt oder den Link kennt. Darum gehören keine Namen, Adressen oder Fotos von Personen an die Wand. Die Wand ist nirgends öffentlich aufgelistet.</p></details>
+  </div>
+</section>
+
+<footer class="in">
+  <span class="scrawl">Bitte nicht runterspülen.</span>
+  Klo-Wand · <a href="wirte.html">Für Bars</a> · <a href="./?wand=demo">Demo</a> · <a href="meine-wand.html">Meine Wand</a> · <a href="impressum.html">Impressum</a> · <a href="datenschutz.html">Datenschutz</a>
+</footer>
+</body>
+</html>
