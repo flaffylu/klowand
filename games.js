@@ -2,15 +2,16 @@
    Braucht aus index.html: fs, WALL, info, esc, firebase. Und KloMusik aus music.js. */
 (function () {
   const GAMES = {
-    fang:   { title: "Klorollen-Fang", short: "Fang", desc: "30 Sekunden Rollen fangen. Gold zählt 5, der Pümpel kostet 3.", unit: "Rollen", better: "desc" },
-    reflex: { title: "Spül-Reflex",    short: "Reflex", desc: "Tipp, sobald die Kabine frei wird. 3 Runden, der Schnitt zählt.", unit: "ms", better: "asc" },
-    stapel: { title: "Klopapier-Stapeln", short: "Stapeln", desc: "Tippen lässt die Rolle fallen. Was übersteht, fällt ab. Wie hoch wird dein Turm?", unit: "Rollen", better: "desc" },
+    fang:   { title: tr("Klorollen-Fang", "Roll Catch"), desc: tr("30 Sekunden Rollen fangen. Gold zählt 5, der Pümpel kostet 3.", "Catch rolls for 30 seconds. Gold counts 5, the plunger costs 3."), better: "desc" },
+    reflex: { title: tr("Spül-Reflex", "Flush Reflex"), desc: tr("Tipp, sobald die Kabine frei wird. 3 Runden, der Schnitt zählt.", "Tap as soon as the stall is free. 3 rounds, the average counts."), better: "asc" },
+    stapel: { title: tr("Klopapier-Stapeln", "Paper Tower"), desc: tr("Tippen lässt die Rolle fallen. Was übersteht, fällt ab. Wie hoch wird dein Turm?", "Tap to drop the roll. Whatever hangs over falls off. How high can you build?"), better: "desc" },
   };
   const C = { door: "#b9c7bf", ink: "#1d2321", red: "#b3261e", gold: "#e0a92e", paper: "#fbfbf7", core: "#c9cfc9", green: "#2f6b3a", wood: "#8a5a2b", muted: "#46524b" };
   const $ = id => document.getElementById(id);
   const today = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`; };
   const scores = g => fs.collection("walls").doc(WALL).collection("games").doc(g).collection("scores");
-  const fmt = (g, s) => g === "reflex" ? `${s} ms` : `${s} ${s === 1 ? "Rolle" : "Rollen"}`;
+  const rolls = n => `${n} ${n === 1 ? tr("Rolle", "roll") : tr("Rollen", "rolls")}`;
+  const fmt = (g, s) => g === "reflex" ? `${s} ms` : rolls(s);
   const sortRows = (g, rows) => rows.sort((a, b) => GAMES[g].better === "desc" ? b.score - a.score : a.score - b.score);
   let myName = ""; try { myName = localStorage.getItem("klowand-name") || ""; } catch (e) {}
   let lastId = null, stopGame = () => {};
@@ -78,15 +79,15 @@
   /* ---------- Knöpfe an der Wand ---------- */
   const extras = document.createElement("div");
   extras.className = "extras";
-  extras.innerHTML = `<button type="button" class="games" id="kgOpen">Klo-Spiele &amp; Rangliste</button>
-    <button type="button" id="kgMusic" aria-pressed="false"><span class="eq" aria-hidden="true"><i></i><i></i><i></i></span><span id="kgMusicTxt">Musik an</span></button>
-    <button type="button" id="kgTrack" title="Lied wechseln">Lied: <span id="kgTrackTxt"></span></button>`;
+  extras.innerHTML = `<button type="button" class="games" id="kgOpen">${tr("Klo-Spiele &amp; Rangliste", "Loo Games &amp; Leaderboard")}</button>
+    <button type="button" id="kgMusic" aria-pressed="false"><span class="eq" aria-hidden="true"><i></i><i></i><i></i></span><span id="kgMusicTxt">${tr("Musik an", "Music on")}</span></button>
+    <button type="button" id="kgTrack" title="${tr("Lied wechseln", "Change song")}">${tr("Lied", "Song")}: <span id="kgTrackTxt"></span></button>`;
   document.querySelector(".tabs").before(extras);
   $("kgMusic").onclick = async () => {
     await KloMusik.toggle();
     const on = KloMusik.isOn();
     $("kgMusic").setAttribute("aria-pressed", on);
-    $("kgMusicTxt").textContent = on ? "Musik aus" : "Musik an";
+    $("kgMusicTxt").textContent = on ? tr("Musik aus", "Music off") : tr("Musik an", "Music on");
   };
   $("kgTrackTxt").textContent = KloMusik.trackName();
   $("kgTrack").hidden = !(KloMusik.trackCount > 1);
@@ -94,13 +95,13 @@
 
   /* ---------- Spiele-Fenster ---------- */
   const kg = document.createElement("div");
-  kg.className = "kg"; kg.hidden = true; kg.setAttribute("role", "dialog"); kg.setAttribute("aria-label", "Klo-Spiele");
-  kg.innerHTML = `<div class="gw"><header><div><b>Klo-Spiele</b><small id="kgWhere"></small></div><button type="button" class="x" id="kgClose">Zur Wand</button></header><div id="kgBody"></div></div>`;
+  kg.className = "kg"; kg.hidden = true; kg.setAttribute("role", "dialog"); kg.setAttribute("aria-label", tr("Klo-Spiele", "Loo Games"));
+  kg.innerHTML = `<div class="gw"><header><div><b>${tr("Klo-Spiele", "Loo Games")}</b><small id="kgWhere"></small></div><button type="button" class="x" id="kgClose">${tr("Zur Wand", "Back to wall")}</button></header><div id="kgBody"></div></div>`;
   document.body.appendChild(kg);
-  $("kgWhere").textContent = "Rangliste " + info.name;
+  $("kgWhere").textContent = tr("Rangliste ", "Leaderboard ") + info.name;
   const body = $("kgBody");
   function view(html) { stopGame(); stopGame = () => {}; body.innerHTML = html; kg.scrollTop = 0; }
-  function open() { $("kgWhere").textContent = "Rangliste " + info.name; kg.hidden = false; document.body.style.overflow = "hidden"; menu(); }
+  function open() { $("kgWhere").textContent = tr("Rangliste ", "Leaderboard ") + info.name; kg.hidden = false; document.body.style.overflow = "hidden"; menu(); }
   function close() { stopGame(); stopGame = () => {}; kg.hidden = true; document.body.style.overflow = ""; }
   $("kgOpen").onclick = open;
   $("kgClose").onclick = close;
@@ -119,21 +120,21 @@
   function menu() {
     view(Object.entries(GAMES).map(([g, x]) => `<div class="card"><h3>${x.title}</h3><p>${x.desc}</p>
       <div class="lead" id="lead-${g}">&nbsp;</div>
-      <div class="row"><button type="button" class="btn go" data-go="play:${g}">Spielen</button><button type="button" class="btn" data-go="board:${g}:heute">Rangliste</button></div></div>`).join("")
-      + `<p class="hint">Die Tages-Rangliste startet jeden Tag um Mitternacht neu.</p>`);
+      <div class="row"><button type="button" class="btn go" data-go="play:${g}">${tr("Spielen", "Play")}</button><button type="button" class="btn" data-go="board:${g}:heute">${tr("Rangliste", "Leaderboard")}</button></div></div>`).join("")
+      + `<p class="hint">${tr("Die Tages-Rangliste startet jeden Tag um Mitternacht neu.", "The daily leaderboard resets every night at midnight.")}</p>`);
     Object.keys(GAMES).forEach(async g => {
       try {
         const rows = sortRows(g, (await scores(g).where("day", "==", today()).limit(500).get()).docs.map(d => d.data()).filter(r => typeof r.name === "string" && typeof r.score === "number"));
         const el = $("lead-" + g); if (!el) return;
-        el.textContent = rows.length ? `Heute vorne: ${rows[0].name} mit ${fmt(g, rows[0].score)}` : "Heute noch kein Eintrag. Hol dir Platz 1!";
-      } catch (e) { const el = $("lead-" + g); if (el) el.textContent = "Rangliste gerade nicht erreichbar."; }
+        el.textContent = rows.length ? tr(`Heute vorne: ${rows[0].name} mit ${fmt(g, rows[0].score)}`, `Leading today: ${rows[0].name} with ${fmt(g, rows[0].score)}`) : tr("Heute noch kein Eintrag. Hol dir Platz 1!", "No entries yet today. Grab first place!");
+      } catch (e) { const el = $("lead-" + g); if (el) el.textContent = tr("Rangliste gerade nicht erreichbar.", "Leaderboard unavailable right now."); }
     });
   }
 
   /* ---------- Spiel 1: Klorollen-Fang ---------- */
   function playFang() {
-    view(`<canvas id="kgCanvas" aria-label="Spielfeld: Eimer mit dem Finger nach links und rechts ziehen"></canvas>
-      <p class="hint">Zieh den Eimer mit dem Finger hin und her.</p><button type="button" class="ghost" data-go="menu">Abbrechen</button>`);
+    view(`<canvas id="kgCanvas" aria-label="${tr("Spielfeld: Eimer mit dem Finger nach links und rechts ziehen", "Game area: drag the bucket left and right")}"></canvas>
+      <p class="hint">${tr("Zieh den Eimer mit dem Finger hin und her.", "Drag the bucket back and forth with your finger.")}</p><button type="button" class="ghost" data-go="menu">${tr("Abbrechen", "Cancel")}</button>`);
     const cv = $("kgCanvas"), W = 360, H = 520, dpr = Math.min(window.devicePixelRatio || 1, 2);
     cv.width = W * dpr; cv.height = H * dpr;
     const c = cv.getContext("2d"); c.scale(dpr, dpr);
@@ -176,12 +177,12 @@
       bucket(bx);
       pops.forEach(p => { c.globalAlpha = Math.max(0, p.t / 0.7); c.fillStyle = p.col; c.font = "400 26px 'Permanent Marker', cursive"; c.textAlign = "center"; c.fillText(p.txt, p.x, p.y); c.globalAlpha = 1; });
       c.fillStyle = C.ink; c.font = "700 26px 'Barlow Condensed', sans-serif";
-      c.textAlign = "left"; c.fillText(`${score} ${score === 1 ? "Rolle" : "Rollen"}`, 14, 34);
+      c.textAlign = "left"; c.fillText(rolls(score), 14, 34);
       c.textAlign = "right"; c.fillStyle = left <= 5 ? C.red : C.ink; c.fillText(`${Math.ceil(left)} s`, W - 14, 34);
       if (!started) {
         c.fillStyle = "rgba(29,35,33,.82)"; c.fillRect(30, 170, W - 60, 150);
-        c.fillStyle = "#fff"; c.textAlign = "center"; c.font = "400 30px 'Permanent Marker', cursive"; c.fillText("Antippen zum Start", W / 2, 230);
-        c.font = "600 18px 'Barlow Condensed', sans-serif"; c.fillText("Rolle +1 · Gold +5 · Pümpel −3", W / 2, 272);
+        c.fillStyle = "#fff"; c.textAlign = "center"; c.font = "400 30px 'Permanent Marker', cursive"; c.fillText(tr("Antippen zum Start", "Tap to start"), W / 2, 230);
+        c.font = "600 18px 'Barlow Condensed', sans-serif"; c.fillText(tr("Rolle +1 · Gold +5 · Pümpel −3", "Roll +1 · Gold +5 · Plunger −3"), W / 2, 272);
       }
     }
     function loop(now) {
@@ -212,8 +213,8 @@
 
   /* ---------- Spiel 3: Klopapier-Stapeln ---------- */
   function playStapel() {
-    view(`<canvas id="kgCanvas" aria-label="Spielfeld: Antippen lässt die Rolle fallen"></canvas>
-      <p class="hint">Tippen lässt die Rolle fallen. Was übersteht, fällt ab.</p><button type="button" class="ghost" data-go="menu">Abbrechen</button>`);
+    view(`<canvas id="kgCanvas" aria-label="${tr("Spielfeld: Antippen lässt die Rolle fallen", "Game area: tap to drop the roll")}"></canvas>
+      <p class="hint">${tr("Tippen lässt die Rolle fallen. Was übersteht, fällt ab.", "Tap to drop the roll. Whatever hangs over falls off.")}</p><button type="button" class="ghost" data-go="menu">${tr("Abbrechen", "Cancel")}</button>`);
     const cv = $("kgCanvas"), W = 360, H = 520, dpr = Math.min(window.devicePixelRatio || 1, 2);
     cv.width = W * dpr; cv.height = H * dpr;
     const c = cv.getContext("2d"); c.scale(dpr, dpr);
@@ -235,7 +236,7 @@
       const a = Math.max(mover.x, top.x), b = Math.min(mover.x + mover.w, top.x + top.w), overlap = b - a;
       if (overlap <= 3) { bits.push({ x: mover.x, w: mover.w, y: yOf(stack.length) - cam, vy: 0, rot: 0, vr: (Math.random() - 0.5) * 4 }); mover = null; end(); return; }
       let nx = a, nw = overlap;
-      if (Math.abs(mover.x - top.x) <= 4) { nx = top.x; nw = top.w; perfect++; KloMusik.blip("gold"); pops.push({ x: nx + nw / 2, y: yOf(stack.length) - 10, txt: "Perfekt!", t: 0.9 }); }
+      if (Math.abs(mover.x - top.x) <= 4) { nx = top.x; nw = top.w; perfect++; KloMusik.blip("gold"); pops.push({ x: nx + nw / 2, y: yOf(stack.length) - 10, txt: tr("Perfekt!", "Perfect!"), t: 0.9 }); }
       else {
         perfect = 0; KloMusik.blip("good");
         const cutX = mover.x < top.x ? mover.x : b, cutW = mover.w - overlap;
@@ -278,12 +279,12 @@
       bits.forEach(b => { c.save(); c.translate(b.x + b.w / 2, b.y + cam + RH / 2); c.rotate(b.rot); roll(-b.w / 2, -RH / 2, b.w, 0.9); c.restore(); });
       pops.forEach(p => { c.globalAlpha = Math.max(0, p.t / 0.9); c.fillStyle = C.green; c.font = "400 24px 'Permanent Marker', cursive"; c.textAlign = "center"; c.fillText(p.txt, p.x, p.y + cam); c.globalAlpha = 1; });
       c.fillStyle = C.ink; c.font = "700 26px 'Barlow Condensed', sans-serif"; c.textAlign = "left";
-      c.fillText(`${score()} ${score() === 1 ? "Rolle" : "Rollen"}`, 14, 34);
-      if (perfect > 1) { c.textAlign = "right"; c.fillStyle = C.green; c.fillText(`${perfect}× perfekt`, W - 14, 34); }
+      c.fillText(rolls(score()), 14, 34);
+      if (perfect > 1) { c.textAlign = "right"; c.fillStyle = C.green; c.fillText(`${perfect}× ${tr("perfekt", "perfect")}`, W - 14, 34); }
       if (!started) {
         c.fillStyle = "rgba(29,35,33,.82)"; c.fillRect(30, 150, W - 60, 150);
-        c.fillStyle = "#fff"; c.textAlign = "center"; c.font = "400 30px 'Permanent Marker', cursive"; c.fillText("Antippen zum Start", W / 2, 210);
-        c.font = "600 18px 'Barlow Condensed', sans-serif"; c.fillText("Genau drauf = Rolle bleibt so breit", W / 2, 250);
+        c.fillStyle = "#fff"; c.textAlign = "center"; c.font = "400 30px 'Permanent Marker', cursive"; c.fillText(tr("Antippen zum Start", "Tap to start"), W / 2, 210);
+        c.font = "600 18px 'Barlow Condensed', sans-serif"; c.fillText(tr("Genau drauf = Rolle bleibt so breit", "Spot on = the roll stays this wide"), W / 2, 250);
       }
     }
     function loop(now) {
@@ -304,25 +305,25 @@
 
   /* ---------- Spiel 2: Spül-Reflex ---------- */
   function playReflex() {
-    view(`<button type="button" class="pad" id="kgPad"><big id="kgBig">Bereit?</big><small id="kgSmall">Tippen zum Starten</small></button>
-      <p class="hint" id="kgRound">Runde 1 von 3</p><button type="button" class="ghost" data-go="menu">Abbrechen</button>`);
+    view(`<button type="button" class="pad" id="kgPad"><big id="kgBig">${tr("Bereit?", "Ready?")}</big><small id="kgSmall">${tr("Tippen zum Starten", "Tap to start")}</small></button>
+      <p class="hint" id="kgRound">${tr("Runde 1 von 3", "Round 1 of 3")}</p><button type="button" class="ghost" data-go="menu">${tr("Abbrechen", "Cancel")}</button>`);
     const pad = $("kgPad"), big = $("kgBig"), small = $("kgSmall"), round = $("kgRound");
     let state = "idle", times = [], timer = 0, tGo = 0, alive = true;
     const set = (cls, b, s) => { pad.className = "pad " + cls; big.textContent = b; small.textContent = s; };
     stopGame = () => { alive = false; clearTimeout(timer); document.removeEventListener("keydown", onKey); };
     function wait() {
-      state = "wait"; set("busy", "Besetzt", "Warte, bis die Kabine frei ist …");
-      timer = setTimeout(() => { if (!alive) return; state = "go"; tGo = performance.now(); set("free", "FREI!", "Jetzt tippen!"); }, 1300 + Math.random() * 2700);
+      state = "wait"; set("busy", tr("Besetzt", "Occupied"), tr("Warte, bis die Kabine frei ist …", "Wait until the stall is free …"));
+      timer = setTimeout(() => { if (!alive) return; state = "go"; tGo = performance.now(); set("free", tr("FREI!", "FREE!"), tr("Jetzt tippen!", "Tap now!")); }, 1300 + Math.random() * 2700);
     }
     function hit(ts) {
       if (state === "idle" || state === "early" || state === "shown") { wait(); return; }
-      if (state === "wait") { clearTimeout(timer); state = "early"; KloMusik.blip("bad"); set("early", "Zu früh!", "Tippen und nochmal versuchen"); return; }
+      if (state === "wait") { clearTimeout(timer); state = "early"; KloMusik.blip("bad"); set("early", tr("Zu früh!", "Too early!"), tr("Tippen und nochmal versuchen", "Tap and try again")); return; }
       if (state === "go") {
         const ms = Math.round(ts - tGo);
-        if (ms < 100) { state = "early"; KloMusik.blip("bad"); set("early", "Zu früh!", "Tippen und nochmal versuchen"); return; }
+        if (ms < 100) { state = "early"; KloMusik.blip("bad"); set("early", tr("Zu früh!", "Too early!"), tr("Tippen und nochmal versuchen", "Tap and try again")); return; }
         times.push(Math.min(ms, 3000)); KloMusik.blip("flush"); state = "shown";
-        if (times.length < 3) { set("", `${ms} ms`, "Tippen für die nächste Runde"); round.textContent = `Runde ${times.length + 1} von 3`; }
-        else { set("", `${ms} ms`, "Geschafft!"); state = "done"; const avg = Math.round(times.reduce((a, b) => a + b, 0) / 3); setTimeout(() => alive && result("reflex", avg), 900); }
+        if (times.length < 3) { set("", `${ms} ms`, tr("Tippen für die nächste Runde", "Tap for the next round")); round.textContent = tr(`Runde ${times.length + 1} von 3`, `Round ${times.length + 1} of 3`); }
+        else { set("", `${ms} ms`, tr("Geschafft!", "Done!")); state = "done"; const avg = Math.round(times.reduce((a, b) => a + b, 0) / 3); setTimeout(() => alive && result("reflex", avg), 900); }
       }
     }
     pad.addEventListener("pointerdown", e => { e.preventDefault(); hit(performance.now()); });
@@ -332,21 +333,21 @@
 
   /* ---------- Ergebnis und Eintragen ---------- */
   function checkName(n) {
-    if (n.length < 2) return "Mindestens 2 Zeichen, bitte.";
-    if (n.length > 12) return "Höchstens 12 Zeichen.";
-    if (!/^[A-Za-zÄÖÜäöüß0-9 ._-]+$/.test(n)) return "Nur Buchstaben, Zahlen, Leerzeichen, Punkt und Strich.";
-    if (KloFilter.bad(n)) return "Such dir einen netteren Namen aus.";
+    if (n.length < 2) return tr("Mindestens 2 Zeichen, bitte.", "At least 2 characters, please.");
+    if (n.length > 12) return tr("Höchstens 12 Zeichen.", "12 characters at most.");
+    if (!/^[A-Za-zÄÖÜäöüß0-9 ._-]+$/.test(n)) return tr("Nur Buchstaben, Zahlen, Leerzeichen, Punkt und Strich.", "Only letters, numbers, spaces, dots and dashes.");
+    if (KloFilter.bad(n)) return tr("Such dir einen netteren Namen aus.", "Pick a nicer name.");
     return null;
   }
   function result(g, score) {
     view(`<div class="score"><span>${GAMES[g].title}</span><big>${fmt(g, score)}</big>
-        <span>${g === "reflex" ? "Schnitt aus 3 Runden" : g === "stapel" ? "gestapelt" : "gefangen"}</span></div>
+        <span>${g === "reflex" ? tr("Schnitt aus 3 Runden", "average of 3 rounds") : g === "stapel" ? tr("gestapelt", "stacked") : tr("gefangen", "caught")}</span></div>
       <form id="kgForm" autocomplete="off">
-        <label for="kgName">Dein Name für die Rangliste</label>
-        <input id="kgName" maxlength="12" placeholder="z. B. Klokönig" value="${esc(myName)}">
+        <label for="kgName">${tr("Dein Name für die Rangliste", "Your name for the leaderboard")}</label>
+        <input id="kgName" maxlength="12" placeholder="${tr("z. B. Klokönig", "e.g. LooKing")}" value="${esc(myName)}">
         <div class="msg" id="kgMsg"></div>
-        <div class="row"><button class="btn go" type="submit">Eintragen</button><button type="button" class="btn" data-go="play:${g}">Nochmal</button></div>
-      </form><button type="button" class="ghost" data-go="menu">Ohne Eintrag zurück</button>`);
+        <div class="row"><button class="btn go" type="submit">${tr("Eintragen", "Submit")}</button><button type="button" class="btn" data-go="play:${g}">${tr("Nochmal", "Again")}</button></div>
+      </form><button type="button" class="ghost" data-go="menu">${tr("Ohne Eintrag zurück", "Back without saving")}</button>`);
     $("kgForm").addEventListener("submit", async e => {
       e.preventDefault();
       const name = $("kgName").value.trim().replace(/\s+/g, " "), err = checkName(name);
@@ -358,7 +359,7 @@
         board(g, "heute");
       } catch (x) {
         btn.disabled = false;
-        $("kgMsg").textContent = x && x.code === "permission-denied" ? "Die Rangliste hat das abgelehnt. Anderer Name?" : "Eintragen hat nicht geklappt. Versuch es nochmal.";
+        $("kgMsg").textContent = x && x.code === "permission-denied" ? tr("Die Rangliste hat das abgelehnt. Anderer Name?", "The leaderboard said no. Another name?") : tr("Eintragen hat nicht geklappt. Versuch es nochmal.", "Saving didn't work. Try again.");
       }
     });
   }
@@ -367,22 +368,22 @@
   async function board(g, tab) {
     const chip = (go, label, on) => `<button type="button" class="chip" data-go="${go}" aria-pressed="${on}">${label}</button>`;
     view(`<div class="chips">${Object.entries(GAMES).map(([k, x]) => chip(`board:${k}:${tab}`, x.title, k === g)).join("")}</div>
-      <div class="chips">${chip(`board:${g}:heute`, "Heute", tab === "heute")}${chip(`board:${g}:rekord`, "Bar-Rekorde", tab === "rekord")}</div>
-      <div id="kgList"><p class="empty">Rangliste lädt …</p></div>
-      <div class="row" style="justify-content:center"><button type="button" class="btn go" data-go="play:${g}">${GAMES[g].title} spielen</button></div>
-      <button type="button" class="ghost" data-go="menu">Zu den Spielen</button>`);
+      <div class="chips">${chip(`board:${g}:heute`, tr("Heute", "Today"), tab === "heute")}${chip(`board:${g}:rekord`, tr("Rekorde", "Records"), tab === "rekord")}</div>
+      <div id="kgList"><p class="empty">${tr("Rangliste lädt …", "Loading leaderboard …")}</p></div>
+      <div class="row" style="justify-content:center"><button type="button" class="btn go" data-go="play:${g}">${tr(`${GAMES[g].title} spielen`, `Play ${GAMES[g].title}`)}</button></div>
+      <button type="button" class="ghost" data-go="menu">${tr("Zu den Spielen", "Back to games")}</button>`);
     try {
       const q = tab === "heute" ? scores(g).where("day", "==", today()).limit(500) : scores(g).orderBy("score", GAMES[g].better).limit(10);
       const rows = sortRows(g, (await q.get()).docs.map(d => ({ id: d.id, ...d.data() })).filter(r => typeof r.name === "string" && typeof r.score === "number"));
       const list = $("kgList"); if (!list) return;
-      if (!rows.length) { list.innerHTML = `<p class="empty">${tab === "heute" ? "Heute noch niemand. Platz 1 ist frei!" : "Noch keine Rekorde."}</p>`; return; }
+      if (!rows.length) { list.innerHTML = `<p class="empty">${tab === "heute" ? tr("Heute noch niemand. Platz 1 ist frei!", "Nobody yet today. First place is free!") : tr("Noch keine Rekorde.", "No records yet.")}</p>`; return; }
       const meIdx = lastId ? rows.findIndex(r => r.id === lastId) : -1;
       const li = (r, i) => `<li class="${i === 0 ? "top1" : ""}${r.id === lastId ? " me" : ""}"><span class="p">${i + 1}.</span><span class="n">${esc(r.name)}</span><span class="s">${fmt(g, r.score)}</span></li>`;
       let html = rows.slice(0, 10).map(li).join("");
       if (meIdx >= 10) html += `<li class="gap" aria-hidden="true">…</li>` + li(rows[meIdx], meIdx);
-      list.innerHTML = (meIdx >= 0 ? `<p class="hint">Du bist auf Platz ${meIdx + 1} von ${rows.length}${tab === "heute" ? " heute" : ""}.</p>` : "") + `<ol>${html}</ol>`;
+      list.innerHTML = (meIdx >= 0 ? `<p class="hint">${tr(`Du bist auf Platz ${meIdx + 1} von ${rows.length}${tab === "heute" ? " heute" : ""}.`, `You're #${meIdx + 1} of ${rows.length}${tab === "heute" ? " today" : ""}.`)}</p>` : "") + `<ol>${html}</ol>`;
     } catch (e) {
-      const list = $("kgList"); if (list) list.innerHTML = `<p class="empty">Rangliste gerade nicht erreichbar.</p>`;
+      const list = $("kgList"); if (list) list.innerHTML = `<p class="empty">${tr("Rangliste gerade nicht erreichbar.", "Leaderboard unavailable right now.")}</p>`;
     }
   }
 })();

@@ -14,10 +14,13 @@ const KloFilter = (() => {
     // Beleidigungen und Hass
     "arschloch", "missgeburt", "spast", "schwuchtel", "kanake", "neger", "nazi", "hitler", "siegheil",
     "heilhitler", "bitch", "wichser", "umbringen", "abstechen", "kinderf", "pedo", "paedo",
+    // Englisch
+    "cunt", "whore", "faggot", "motherf", "asshole", "dickhead", "handjob", "rimjob", "deepthroat", "jerkoff", "killyourself",
   ];
   // Kurze Wörter: nur als ganzes Wort, damit „Kanal“, „Titel“ oder „Minute“ nicht hängen bleiben
   const WORDS = ["sex", "anal", "cum", "tits", "titte", "boobs", "cock", "schwanz", "arsch", "fik", "milf", "nude", "geil", "geile", "geiler",
-    "bumsen", "dick", "nutte", "nutten", "moese", "mose", "nigger", "nigga", "niger", "titten"];
+    "bumsen", "dick", "nutte", "nutten", "moese", "mose", "nigger", "nigga", "niger", "titten",
+    "rape", "raped", "slut", "sluts", "twat", "wank", "wanker", "horny", "boner", "kys", "fag", "fags", "retard", "retarded", "dicks", "boob", "porno"];
   // „geil“ und „dick“ sind im Deutschen oft harmlos. Wer das zu streng findet, löscht sie oben einfach wieder.
   // Harmlose Wörter, die einen Wortstamm enthalten: werden vor der Prüfung entfernt
   const SAFE = ["fiktion", "fiktiv", "fikus", "ficus", "hoffentlich"];

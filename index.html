@@ -200,9 +200,20 @@ html.bg-photo .legal a{color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.7)}
 
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="lang.js"></script>
 <script src="config.js"></script>
 <script src="filter.js"></script>
 <script>
+translateStatic([
+  [".occ", "text", "Occupied"], [".tabs", "aria-label", "Sort"], ["#sNew", "text", "New"], ["#sTop", "text", "Popular"], ["#status", "text", "Connecting …"],
+  [".modes", "aria-label", "What do you want to do?"], ["[data-m=text]", "text", "Write"], ["[data-m=draw]", "text", "Draw"], ["#chJoin", "text", "For the challenge"],
+  ["#mod", "text", "Write something on the wall. No names, no numbers."], ["#msg", "placeholder", "Here I sat and thought …"],
+  ["#canvas", "aria-label", "Drawing area: draw with your finger"], ["#padHint", "text", "Draw with your finger …"], ["#clearPad", "text", "Wipe"],
+  [".pens", "aria-label", "Pen colour"], [".p-ink", "aria-label", "Black"], [".p-red", "aria-label", "Red"], [".p-blue", "aria-label", "Blue"], [".p-green", "aria-label", "Green"], [".p-silver", "aria-label", "Silver"],
+  ["#fonts", "aria-label", "Font"], ["[data-f=hand]", "text", "Pen"], ["[data-f=marker]", "text", "Marker"], ["[data-f=scrawl]", "text", "Scrawl"],
+  ["#sizes", "aria-label", "Line width"], ["[data-s='3']", "aria-label", "Thin"], ["[data-s='6']", "aria-label", "Medium"], ["[data-s='12']", "aria-label", "Thick"],
+  [".send", "text", "Scribble"],
+]);
 if (typeof HINTERGRUND !== "undefined" && HINTERGRUND) {
   document.documentElement.classList.add("bg-photo");
   document.documentElement.style.setProperty("--bg-url", `url("${HINTERGRUND.replace(/["\\]/g, "")}")`);
@@ -213,12 +224,12 @@ const WALL = (params.get("wand") || lastWall || Object.keys(WAENDE)[0]).toLowerC
 try { localStorage.setItem("klowand-last", WALL); } catch (e) {}
 if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});
 const FIXED = !!WAENDE[WALL];
-const info = WAENDE[WALL] ? { ...WAENDE[WALL] } : { name: "Klo-Wand", sub: "" };
+const info = WAENDE[WALL] ? { ...WAENDE[WALL], sub: (EN && WAENDE[WALL].subEn) || WAENDE[WALL].sub } : { name: "Klo-Wand", sub: "" };
 function showInfo() {
   document.getElementById("venue").textContent = info.name;
-  document.getElementById("venueSub").textContent = (info.sub ? info.sub + " · " : "") + "Sprüche verblassen nach 3 Wochen";
+  document.getElementById("venueSub").textContent = (info.sub ? info.sub + " · " : "") + tr("Sprüche verblassen nach 3 Wochen", "Posts fade after 3 weeks");
   document.title = info.name + " · Klo-Wand";
-  const w = document.getElementById("kgWhere"); if (w) w.textContent = "Rangliste " + info.name;
+  const w = document.getElementById("kgWhere"); if (w) w.textContent = tr("Rangliste ", "Leaderboard ") + info.name;
 }
 showInfo();
 
@@ -236,7 +247,7 @@ try {
 const $ = id => document.getElementById(id);
 const wall = $("wall"), mod = $("mod"), msg = $("msg"), composer = $("composer"), status = $("status");
 const esc = s => String(s).replace(/[&<>"]/g, m => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[m]));
-const ago = ts => { const h = (Date.now() - ts) / 36e5; if (h < 1) return "gerade eben"; if (h < 24) return `vor ${Math.floor(h)} Std.`; const d = Math.floor(h / 24); return d === 1 ? "gestern" : `vor ${d} Tagen`; };
+const ago = ts => { const h = (Date.now() - ts) / 36e5; if (h < 1) return tr("gerade eben", "just now"); if (h < 24) return tr(`vor ${Math.floor(h)} Std.`, `${Math.floor(h)} h ago`); const d = Math.floor(h / 24); return d === 1 ? tr("gestern", "yesterday") : tr(`vor ${d} Tagen`, `${d} days ago`); };
 const tally = n => { const m = Math.min(n, 20); return "卌 ".repeat(Math.floor(m / 5)) + "|".repeat(m % 5) + (n > 20 ? ` +${n - 20}` : ""); };
 const say = (t, ok) => { mod.className = ok ? "mod ok" : "mod"; mod.textContent = t; };
 const ms = d => (d && d.ts && d.ts.toMillis) ? d.ts.toMillis() : Date.now();
@@ -256,9 +267,9 @@ if (!FIXED) base.get().then(d => {
 }).catch(() => {});
 function noWall() {
   try { if (localStorage.getItem("klowand-last") === WALL) localStorage.removeItem("klowand-last"); } catch (e) {}
-  document.body.insertAdjacentHTML("afterbegin", `<div class="nowall"><div><b>Diese Wand gibt es nicht.</b>
-    <p>Prüf den QR-Code oder den Link. Du betreibst eine Bar und willst eine eigene Klo-Wand?</p>
-    <a href="meine-wand.html">Eigene Klo-Wand holen</a></div></div>`);
+  document.body.insertAdjacentHTML("afterbegin", `<div class="nowall"><div><b>${tr("Diese Wand gibt es nicht.", "This wall doesn't exist.")}</b>
+    <p>${tr("Prüf den QR-Code oder den Link. Du willst eine eigene Klo-Wand?", "Check the QR code or the link. Want a Klo-Wand of your own?")}</p>
+    <a href="meine-wand.html">${tr("Eigene Klo-Wand holen", "Get your own Klo-Wand")}</a></div></div>`);
 }
 
 /* ---------- Spruch des Abends: der Spruch von gestern mit den meisten Strichen ---------- */
@@ -276,19 +287,19 @@ function postHtml(p, inChamp) {
   const carved = p.n >= 50 && !p.img, age = (Date.now() - p.ts) / DAY, op = carved ? 1 : Math.max(.35, 1 - age / 21 * .65);
   const mine = likes[p.id] && likes[p.id].has(device);
   const rs = (replies[p.id] || []).slice().sort((a, b) => a.ts - b.ts);
-  const body = p.img ? `<img class="drawing" src="${p.img}" alt="Kritzelei">` : `<div class="txt">${esc(p.t)}</div>`;
+  const body = p.img ? `<img class="drawing" src="${p.img}" alt="${tr("Kritzelei", "Doodle")}">` : `<div class="txt">${esc(p.t)}</div>`;
   return `<div class="post f-${p.font || "hand"} c-${p.color || "ink"}${carved ? " carved" : ""}" style="transform:rotate(${p.rot}deg);opacity:${op}">
-      ${carved ? '<span class="carvedtag">Eingeritzt</span>' : ""}${p.ch === THIS_WEEK && !inChamp ? '<span class="chtag">Challenge</span><br>' : ""}
+      ${carved ? `<span class="carvedtag">${tr("Eingeritzt", "Carved in")}</span>` : ""}${p.ch === THIS_WEEK && !inChamp ? '<span class="chtag">Challenge</span><br>' : ""}
       ${body}
       ${rs.length ? `<div class="replies">${rs.map(r => `<div class="reply c-ink">${esc(r.t)}</div>`).join("")}</div>` : ""}
       <div class="meta">
-        <span class="tally" aria-label="${p.n} Striche">${p.n ? tally(p.n) : ""}</span>
-        <button type="button" data-a="like" data-id="${p.id}" class="${mine ? "on" : ""}" ${mine ? "disabled" : ""}>${mine ? "Strich gesetzt" : "Strich +1"}</button>
-        <button type="button" data-a="reply" data-id="${p.id}">Antworten</button>
-        <button type="button" data-a="report" data-id="${p.id}">Melden</button>
+        <span class="tally" aria-label="${p.n} ${tr("Striche", "marks")}">${p.n ? tally(p.n) : ""}</span>
+        <button type="button" data-a="like" data-id="${p.id}" class="${mine ? "on" : ""}" ${mine ? "disabled" : ""}>${mine ? tr("Strich gesetzt", "Marked") : tr("Strich +1", "Mark +1")}</button>
+        <button type="button" data-a="reply" data-id="${p.id}">${tr("Antworten", "Reply")}</button>
+        <button type="button" data-a="report" data-id="${p.id}">${tr("Melden", "Report")}</button>
         <span>${ago(p.ts)}</span>
       </div>
-      ${openReply === p.id ? `<form class="rform" data-id="${p.id}"><input id="r-${p.id}" maxlength="60" placeholder="Drunterkritzeln …" aria-label="Antwort"><button>OK</button></form>` : ""}
+      ${openReply === p.id ? `<form class="rform" data-id="${p.id}"><input id="r-${p.id}" maxlength="60" placeholder="${tr("Drunterkritzeln …", "Scribble below …")}" aria-label="${tr("Antwort", "Reply")}"><button>OK</button></form>` : ""}
     </div>`;
 }
 
@@ -304,6 +315,7 @@ const THIS_WEEK = weekKey(Date.now()), LAST_WEEK = weekKey(Date.now() - 7 * DAY)
 const weekNo = k => Number(k.split("-W")[1]);
 const challengeFor = k => LIST.length ? LIST[(Number(k.slice(0, 4)) * 53 + weekNo(k)) % LIST.length] : null;
 const CH_NOW = challengeFor(THIS_WEEK), CH_LAST = challengeFor(LAST_WEEK);
+const chText = c => (EN && c.en) ? c.en : c.text;
 let chJoin = false;
 function chWinner(list) {
   let best = null;
@@ -312,14 +324,14 @@ function chWinner(list) {
 }
 function chCard() {
   if (!CH_NOW) return "";
-  const kind = CH_NOW.art === "draw" ? "Malen" : CH_NOW.art === "text" ? "Schreiben" : "Schreiben oder malen";
-  return `<div class="chcard"><div><span class="k">Challenge der Woche · KW ${weekNo(THIS_WEEK)}</span><span class="q">${esc(CH_NOW.text)}</span>
-    <span class="m">${kind} · Der Beitrag mit den meisten Strichen wird nächste Woche oben angepinnt.</span></div>
-    <button type="button" data-a="chgo">Mitmachen</button></div>`;
+  const kind = CH_NOW.art === "draw" ? tr("Malen", "Draw") : CH_NOW.art === "text" ? tr("Schreiben", "Write") : tr("Schreiben oder malen", "Write or draw");
+  return `<div class="chcard"><div><span class="k">${tr("Challenge der Woche · KW", "Challenge of the week · Week")} ${weekNo(THIS_WEEK)}</span><span class="q">${esc(chText(CH_NOW))}</span>
+    <span class="m">${kind} · ${tr("Der Beitrag mit den meisten Strichen wird nächste Woche oben angepinnt.", "The post with the most marks gets pinned to the top next week.")}</span></div>
+    <button type="button" data-a="chgo">${tr("Mitmachen", "Join in")}</button></div>`;
 }
 
 function render() {
-  if (!loaded) { wall.innerHTML = '<p class="empty">Wand wird geladen …</p>'; return; }
+  if (!loaded) { wall.innerHTML = `<p class="empty">${tr("Wand wird geladen …", "Loading the wall …")}</p>`; return; }
   let list = posts.filter(p => (reports[p.id] || 0) < 3).map(p => ({ ...p, n: (likes[p.id] || new Set()).size }));
   const champ = champion(list);
   if (champ) list = list.filter(p => p.id !== champ.id);
@@ -327,28 +339,28 @@ function render() {
   if (chw) list = list.filter(p => p.id !== chw.id);
   list.sort((a, b) => sort === "new" ? b.ts - a.ts : b.n - a.n);
   const top = chCard()
-    + (chw ? `<div class="champ chw"><span class="crown">Challenge-Sieger · ${esc(CH_LAST ? CH_LAST.text : "letzte Woche")}</span>${postHtml(chw, true)}</div>` : "")
-    + (champ ? `<div class="champ"><span class="crown">Spruch des Abends · gestern</span>${postHtml(champ, true)}</div>` : "");
-  if (!list.length) { wall.innerHTML = top + '<p class="empty">Die Wand ist noch sauber.<br>Schreib oder mal unten das Erste drauf.</p>'; return; }
+    + (chw ? `<div class="champ chw"><span class="crown">${tr("Challenge-Sieger", "Challenge winner")} · ${esc(CH_LAST ? chText(CH_LAST) : tr("letzte Woche", "last week"))}</span>${postHtml(chw, true)}</div>` : "")
+    + (champ ? `<div class="champ"><span class="crown">${tr("Spruch des Abends · gestern", "Post of the night · yesterday")}</span>${postHtml(champ, true)}</div>` : "");
+  if (!list.length) { wall.innerHTML = top + `<p class="empty">${tr("Die Wand ist noch sauber.<br>Schreib oder mal unten das Erste drauf.", "The wall is still clean.<br>Write or draw the first thing below.")}</p>`; return; }
   wall.innerHTML = top + list.map(p => postHtml(p)).join("");
   if (openReply) { const i = $("r-" + openReply); i && i.focus(); }
 }
 
 /* Schneller Vorab-Check im Browser. Die Regeln in Firebase prüfen nochmal. */
 function check(t) {
-  if (t.trim().length < 3) return "Bisschen mehr als das, bitte.";
-  if (/(\+?\d[\d\s\-\/]{6,}\d)/.test(t)) return "Keine Telefonnummern an der Wand.";
-  if (/\S+@\S+\.\S+/.test(t) || /@\w+/.test(t)) return "Keine Mails oder @Namen. Hier bleibt jeder anonym.";
-  if (/(https?:\/\/|www\.)/i.test(t)) return "Links sind hier nicht erlaubt.";
-  if (KloFilter.bad(t)) return "Das kommt nicht an die Wand. Witzig ja, schweinisch oder gemein nein.";
-  if (/\b(ist|sind)\s+(fett|hässlich|dumm|scheiße)\b/i.test(t)) return "Klingt nach Lästern über jemanden. Lass das.";
+  if (t.trim().length < 3) return tr("Bisschen mehr als das, bitte.", "A little more than that, please.");
+  if (/(\+?\d[\d\s\-\/]{6,}\d)/.test(t)) return tr("Keine Telefonnummern an der Wand.", "No phone numbers on the wall.");
+  if (/\S+@\S+\.\S+/.test(t) || /@\w+/.test(t)) return tr("Keine Mails oder @Namen. Hier bleibt jeder anonym.", "No emails or @names. Everyone stays anonymous here.");
+  if (/(https?:\/\/|www\.)/i.test(t)) return tr("Links sind hier nicht erlaubt.", "Links aren't allowed here.");
+  if (KloFilter.bad(t)) return tr("Das kommt nicht an die Wand. Witzig ja, schweinisch oder gemein nein.", "That's not going on the wall. Funny yes, dirty or mean no.");
+  if (/\b(ist|sind|is|are)\s+(fett|hässlich|dumm|scheiße|fat|ugly|stupid|dumb)\b/i.test(t)) return tr("Klingt nach Lästern über jemanden. Lass das.", "Sounds like talking trash about someone. Don't.");
   return null;
 }
-const fail = e => say(e && e.code === "permission-denied" ? "Die Wand hat das abgelehnt. Prüf deinen Text oder versuch es gleich nochmal." : "Hat nicht geklappt. Versuch es gleich nochmal.");
+const fail = e => say(e && e.code === "permission-denied" ? tr("Die Wand hat das abgelehnt. Prüf deinen Text oder versuch es gleich nochmal.", "The wall said no. Check your text or try again in a moment.") : tr("Hat nicht geklappt. Versuch es gleich nochmal.", "That didn't work. Try again in a moment."));
 
 /* ---------- Live-Daten ---------- */
 const since = firebase.firestore.Timestamp.fromMillis(Date.now() - 60 * DAY);
-const offline = () => { status.textContent = "Offline"; say("Die Wand ist gerade nicht erreichbar. Lade die Seite neu."); };
+const offline = () => { status.textContent = "Offline"; say(tr("Die Wand ist gerade nicht erreichbar. Lade die Seite neu.", "The wall can't be reached right now. Reload the page.")); };
 base.collection("posts").where("ts", ">", since).orderBy("ts", "desc").limit(300).onSnapshot(s => {
   posts = s.docs.map(d => { const x = d.data(); return { id: d.id, t: x.t, img: isDrawing(x.img) ? x.img : null, color: x.color, font: x.font, rot: x.rot || 0, ch: typeof x.ch === "string" ? x.ch : null, ts: ms(x) }; })
     .filter(p => p.img || typeof p.t === "string");
@@ -375,7 +387,7 @@ wall.addEventListener("click", e => {
   if (b.dataset.a === "like") base.collection("likes").doc(id + "_" + device).set({ p: id, ts: now() }).catch(fail);
   if (b.dataset.a === "reply") { openReply = openReply === id ? null : id; render(); }
   if (b.dataset.a === "report") base.collection("reports").doc(id + "_" + device).set({ p: id, ts: now() })
-    .then(() => say("Gemeldet. Nach 3 Meldungen wird der Spruch übermalt.", true)).catch(fail);
+    .then(() => say(tr("Gemeldet. Nach 3 Meldungen wird der Spruch übermalt.", "Reported. After 3 reports the post gets painted over."), true)).catch(fail);
 });
 wall.addEventListener("submit", e => {
   e.preventDefault();
@@ -429,7 +441,7 @@ function setMode(m) {
   document.querySelectorAll(".modes button").forEach(b => b.setAttribute("aria-pressed", b.dataset.m === m));
   const draw = m === "draw";
   msg.hidden = draw; pad.hidden = !draw; $("fonts").hidden = draw; $("sizes").hidden = !draw; $("count").hidden = draw;
-  say(draw ? "Mal was an die Wand. Nichts Gemeines, keine Namen." : "Schreib was an die Wand. Keine Namen, keine Nummern.", false);
+  say(draw ? tr("Mal was an die Wand. Nichts Gemeines, keine Namen.", "Draw something on the wall. Nothing mean, no names.") : tr("Schreib was an die Wand. Keine Namen, keine Nummern.", "Write something on the wall. No names, no numbers."), false);
   mod.className = "mod";
   if (draw) requestAnimationFrame(sizeCanvas);
   fitWall();
@@ -441,23 +453,23 @@ msg.addEventListener("input", () => $("count").textContent = msg.value.length + 
 document.querySelectorAll(".pen").forEach(b => b.onclick = () => { pen = b.dataset.c; document.querySelectorAll(".pen").forEach(x => x.setAttribute("aria-pressed", x === b)); });
 document.querySelectorAll("#fonts button").forEach(b => b.onclick = () => { font = b.dataset.f; document.querySelectorAll("#fonts button").forEach(x => x.setAttribute("aria-pressed", x === b)); });
 
-function setChJoin(on) { chJoin = !!on && !!CH_NOW; const b = $("chJoin"); b.setAttribute("aria-pressed", chJoin); b.textContent = chJoin ? "Challenge ✓" : "Für die Challenge"; }
+function setChJoin(on) { chJoin = !!on && !!CH_NOW; const b = $("chJoin"); b.setAttribute("aria-pressed", chJoin); b.textContent = chJoin ? "Challenge ✓" : tr("Für die Challenge", "For the challenge"); }
 if (CH_NOW) { $("chJoin").hidden = false; $("chJoin").onclick = () => setChJoin(!chJoin); }
 
 composer.addEventListener("submit", e => {
   e.preventDefault();
   const rot = Number((Math.random() * 6 - 3).toFixed(1));
   if (mode === "draw") {
-    if (!dirty) { say("Mal erst was, dann kritzeln."); return; }
+    if (!dirty) { say(tr("Mal erst was, dann kritzeln.", "Draw something first, then scribble.")); return; }
     const img = exportDrawing();
-    if (!img) { say("Mal erst was, dann kritzeln."); return; }
-    if (img.length > 150000) { say("Die Zeichnung ist zu groß. Mal etwas einfacher."); return; }
-    base.collection("posts").add(Object.assign({ img, rot, ts: now() }, chJoin ? { ch: THIS_WEEK } : {})).then(() => say("Hängt jetzt an der Wand.", true)).catch(fail);
+    if (!img) { say(tr("Mal erst was, dann kritzeln.", "Draw something first, then scribble.")); return; }
+    if (img.length > 150000) { say(tr("Die Zeichnung ist zu groß. Mal etwas einfacher.", "The drawing is too big. Try something simpler.")); return; }
+    base.collection("posts").add(Object.assign({ img, rot, ts: now() }, chJoin ? { ch: THIS_WEEK } : {})).then(() => say(tr("Hängt jetzt an der Wand.", "It's on the wall now."), true)).catch(fail);
     clearPad();
   } else {
     const t = msg.value.trim(), err = check(t);
     if (err) { say(err); return; }
-    base.collection("posts").add(Object.assign({ t, color: pen, font, rot, ts: now() }, chJoin ? { ch: THIS_WEEK } : {})).then(() => say("Hängt jetzt an der Wand.", true)).catch(fail);
+    base.collection("posts").add(Object.assign({ t, color: pen, font, rot, ts: now() }, chJoin ? { ch: THIS_WEEK } : {})).then(() => say(tr("Hängt jetzt an der Wand.", "It's on the wall now."), true)).catch(fail);
     msg.value = ""; $("count").textContent = "0/120";
   }
   setChJoin(false);

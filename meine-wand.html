@@ -114,15 +114,30 @@ summary{cursor:pointer;font:700 1rem var(--f-ui);letter-spacing:.04em;text-trans
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="lang.js"></script>
 <script src="config.js"></script>
 <script src="filter.js"></script>
 <script src="qrcode.js"></script>
 <script>
+document.title = tr("Meine Klo-Wand", "My Klo-Wand");
+translateStatic([
+  [".top h1", "text", "My Klo-Wand"], [".top p", "text", "Set up · QR code · Manage posts"],
+  ["#out h2", "text", "Your own Klo-Wand"], ["#out .sub", "text", "Ready in two minutes, no tech skills needed:"],
+  ["#out .steps li:nth-child(1)", "text", "Sign in with your Google account."],
+  ["#out .steps li:nth-child(2)", "text", "Enter the code from your purchase email and a name, e.g. your bar or “The Millers”."],
+  ["#out .steps li:nth-child(3)", "text", "Print the QR code and stick it inside the bathroom door. Done!"],
+  ["#login", "text", "Sign in with Google"], ["#out .hint", "text", "With this account you manage your wall later and can delete posts."],
+  ["#logout", "text", "Sign out"], ["#redeemTitle", "text", "Redeem code"], ["#redeemSub", "text", "Enter the code from your purchase email. Your wall is ready right away."],
+  ["label[for=code]", "text", "Your code"], ["label[for=name]", "text", "Name of the wall"], ["#name", "placeholder", "e.g. The Anchor or The Millers"],
+  ["label[for=sub]", "text", "Subtitle (optional)"], ["#sub", "placeholder", "e.g. Men · Stall 1 or Guest loo"],
+  ["#redeemForm .hint", "text", "Shown at the top of the wall’s door sign. You can change it later."], ["#redeemBtn", "text", "Set up wall"],
+  [".legal a[href='impressum.html']", "text", "Imprint"], [".legal a[href='datenschutz.html']", "text", "Privacy"],
+]);
 const $ = id => document.getElementById(id);
 const esc = s => String(s).replace(/[&<>"]/g, m => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[m]));
 const DAY = 864e5;
 const ms = d => (d && d.ts && d.ts.toMillis) ? d.ts.toMillis() : Date.now();
-const ago = ts => { const m = Math.round((Date.now() - ts) / 6e4); if (m < 1) return "gerade eben"; if (m < 60) return `vor ${m} Min.`; const h = Math.floor(m / 60); if (h < 24) return `vor ${h} Std.`; const d = Math.floor(h / 24); return d === 1 ? "gestern" : `vor ${d} Tagen`; };
+const ago = ts => { const m = Math.round((Date.now() - ts) / 6e4); if (m < 1) return tr("gerade eben", "just now"); if (m < 60) return tr(`vor ${m} Min.`, `${m} min ago`); const h = Math.floor(m / 60); if (h < 24) return tr(`vor ${h} Std.`, `${h} h ago`); const d = Math.floor(h / 24); return d === 1 ? tr("gestern", "yesterday") : tr(`vor ${d} Tagen`, `${d} days ago`); };
 const isDrawing = s => typeof s === "string" && s.startsWith("data:image/png;base64,");
 const wallUrl = id => new URL("./?wand=" + encodeURIComponent(id), location.href).href;
 
@@ -140,22 +155,22 @@ $("login").onclick = async () => {
   try { await auth.signInWithPopup(provider); }
   catch (e) {
     if (e.code === "auth/popup-blocked" || e.code === "auth/operation-not-supported-in-this-environment") auth.signInWithRedirect(provider);
-    else if (e.code !== "auth/popup-closed-by-user" && e.code !== "auth/cancelled-popup-request") notice("Anmeldung hat nicht geklappt. Versuch es nochmal.");
+    else if (e.code !== "auth/popup-closed-by-user" && e.code !== "auth/cancelled-popup-request") notice(tr("Anmeldung hat nicht geklappt. Versuch es nochmal.", "Sign-in didn't work. Please try again."));
   }
 };
 $("logout").onclick = () => auth.signOut();
-auth.getRedirectResult().catch(() => notice("Anmeldung hat nicht geklappt. Versuch es nochmal."));
+auth.getRedirectResult().catch(() => notice(tr("Anmeldung hat nicht geklappt. Versuch es nochmal.", "Sign-in didn't work. Please try again.")));
 auth.onAuthStateChanged(u => {
   user = u; notice("");
   $("out").hidden = !!u; $("in").hidden = !u;
   if (unsubWalls) { unsubWalls(); unsubWalls = null; }
   closeMod();
   if (!u) { walls = []; return; }
-  $("who").textContent = "Angemeldet: " + (u.email || "Google-Konto");
+  $("who").textContent = tr("Angemeldet: ", "Signed in: ") + (u.email || tr("Google-Konto", "Google account"));
   unsubWalls = fs.collection("walls").where("owner", "==", u.uid).onSnapshot(s => {
     walls = s.docs.map(d => ({ id: d.id, ...d.data() })).sort((a, b) => ms(a) - ms(b));
     renderWalls();
-  }, () => notice("Deine Wände konnten nicht geladen werden. Lade die Seite neu."));
+  }, () => notice(tr("Deine Wände konnten nicht geladen werden. Lade die Seite neu.", "Your walls couldn't be loaded. Reload the page.")));
 });
 
 /* ---------- QR-Code ---------- */
@@ -183,8 +198,8 @@ async function sticker(w) {
   const q = drawQr(document.createElement("canvas"), wallUrl(w.id), 760);
   c.fillStyle = "#fff"; roundRect(c, (W - 820) / 2, 420, 820, 820, 30); c.fill();
   c.imageSmoothingEnabled = false; c.drawImage(q, (W - 760) / 2, 450, 760, 760);
-  c.fillStyle = "#b3261e"; c.font = '400 92px "Gochi Hand", cursive'; c.fillText("Scan mich & schreib", W / 2, 1380); c.fillText("an die Wand!", W / 2, 1480);
-  c.fillStyle = "#46524b"; c.font = '700 44px "Barlow Condensed", sans-serif'; c.fillText("ANONYM · OHNE APP · OHNE ANMELDUNG", W / 2, 1580);
+  c.fillStyle = "#b3261e"; c.font = '400 92px "Gochi Hand", cursive'; c.fillText(tr("Scan mich & schreib", "Scan me & write"), W / 2, 1380); c.fillText(tr("an die Wand!", "on the wall!"), W / 2, 1480);
+  c.fillStyle = "#46524b"; c.font = '700 44px "Barlow Condensed", sans-serif'; c.fillText(tr("ANONYM · OHNE APP · OHNE ANMELDUNG", "ANONYMOUS · NO APP · NO SIGN-UP"), W / 2, 1580);
   download(cv, "klowand-sticker-" + w.id + ".png");
 }
 function fit(c, t, max) { while (c.measureText(t).width > max && t.length > 4) t = t.slice(0, -2) + "…"; return t; }
@@ -193,32 +208,34 @@ function roundRect(c, x, y, w, h, r) { c.beginPath(); c.moveTo(x + r, y); c.arcT
 /* ---------- Eigene Wände ---------- */
 function renderWalls() {
   const has = walls.length > 0;
-  $("redeemTitle").textContent = has ? "Weitere Wand einrichten" : "Code einlösen";
-  $("redeemSub").textContent = has ? "Für jede weitere Wand, z. B. Damen- und Herrenklo, brauchst du einen eigenen Code." : "Trag den Code aus deiner Kauf-E-Mail ein. Danach ist deine Wand sofort fertig.";
+  $("redeemTitle").textContent = has ? tr("Weitere Wand einrichten", "Set up another wall") : tr("Code einlösen", "Redeem code");
+  $("redeemSub").textContent = has ? tr("Für jede weitere Wand, z. B. Damen- und Herrenklo, brauchst du einen eigenen Code.", "Each additional wall, e.g. ladies’ and men’s room, needs its own code.") : tr("Trag den Code aus deiner Kauf-E-Mail ein. Danach ist deine Wand sofort fertig.", "Enter the code from your purchase email. Your wall is ready right away.");
   $("walls").innerHTML = walls.map(w => {
     const url = wallUrl(w.id), ed = editing === w.id;
     return `<section class="card" data-wall="${esc(w.id)}">
       <div class="wallhead">
         <div class="info"><h2>${esc(w.name)}</h2><p class="sub">${esc(w.sub || "")}</p><a class="link" href="${esc(url)}" target="_blank" rel="noopener">${esc(url)}</a></div>
-        <canvas class="qr" data-qr="${esc(w.id)}" aria-label="QR-Code für ${esc(w.name)}"></canvas>
+        <canvas class="qr" data-qr="${esc(w.id)}" aria-label="${tr("QR-Code für", "QR code for")} ${esc(w.name)}"></canvas>
       </div>
       <div class="row">
-        <a class="btn primary" href="${esc(url)}" target="_blank" rel="noopener">Wand öffnen</a>
-        <button type="button" data-act="sticker">Sticker speichern</button>
-        <button type="button" data-act="qr">Nur QR-Code</button>
-        <button type="button" data-act="copy">Link kopieren</button>
+        <a class="btn primary" href="${esc(url)}" target="_blank" rel="noopener">${tr("Wand öffnen", "Open wall")}</a>
+        <button type="button" data-act="sticker">${tr("Sticker speichern", "Save sticker")}</button>
+        <button type="button" data-act="qr">${tr("Nur QR-Code", "QR code only")}</button>
+        <button type="button" data-act="copy">${tr("Link kopieren", "Copy link")}</button>
       </div>
       ${ed ? `<form class="editForm" data-id="${esc(w.id)}" autocomplete="off">
-          <label>Name der Wand<input name="name" maxlength="30" value="${esc(w.name)}" required></label>
-          <label>Unterzeile<input name="sub" maxlength="40" value="${esc(w.sub || "")}"></label>
-          <div class="row"><button type="submit" class="dark">Speichern</button><button type="button" data-act="cancel">Abbrechen</button></div>
-        </form>` : `<div class="row"><button type="button" data-act="edit">Name ändern</button>
-          <button type="button" data-act="mod" aria-expanded="${openMod === w.id}">${openMod === w.id ? "Beiträge schließen" : "Beiträge verwalten"}</button></div>`}
-      ${openMod === w.id ? `<div class="feed" id="modFeed"><p class="empty">Beiträge werden geladen …</p></div>` : ""}
-      <details><summary>Als App aufs Handy legen</summary>
-        <ol class="steps"><li>Tippe auf <b>„Wand öffnen“</b>.</li><li>Im Chrome-Menü <b>⋮</b> auf <b>„Zum Startbildschirm hinzufügen“</b> tippen. Beim iPhone: Teilen-Symbol, dann „Zum Home-Bildschirm“.</li>
+          <label>${tr("Name der Wand", "Name of the wall")}<input name="name" maxlength="30" value="${esc(w.name)}" required></label>
+          <label>${tr("Unterzeile", "Subtitle")}<input name="sub" maxlength="40" value="${esc(w.sub || "")}"></label>
+          <div class="row"><button type="submit" class="dark">${tr("Speichern", "Save")}</button><button type="button" data-act="cancel">${tr("Abbrechen", "Cancel")}</button></div>
+        </form>` : `<div class="row"><button type="button" data-act="edit">${tr("Name ändern", "Rename")}</button>
+          <button type="button" data-act="mod" aria-expanded="${openMod === w.id}">${openMod === w.id ? tr("Beiträge schließen", "Close posts") : tr("Beiträge verwalten", "Manage posts")}</button></div>`}
+      ${openMod === w.id ? `<div class="feed" id="modFeed"><p class="empty">${tr("Beiträge werden geladen …", "Loading posts …")}</p></div>` : ""}
+      <details><summary>${tr("Als App aufs Handy legen", "Add to your phone as an app")}</summary>
+        ${tr(`<ol class="steps"><li>Tippe auf <b>„Wand öffnen“</b>.</li><li>Im Chrome-Menü <b>⋮</b> auf <b>„Zum Startbildschirm hinzufügen“</b> tippen. Beim iPhone: Teilen-Symbol, dann „Zum Home-Bildschirm“.</li>
         <li>Fertig: Die Klo-Wand liegt jetzt wie eine App auf deinem Handy.</li></ol>
-        <p class="hint">Diese Verwaltungsseite kannst du genauso als App ablegen.</p></details>
+        <p class="hint">Diese Verwaltungsseite kannst du genauso als App ablegen.</p>`, `<ol class="steps"><li>Tap <b>“Open wall”</b>.</li><li>In the Chrome menu <b>⋮</b> tap <b>“Add to Home screen”</b>. On iPhone: the Share icon, then “Add to Home Screen”.</li>
+        <li>Done: the Klo-Wand now sits on your phone like an app.</li></ol>
+        <p class="hint">You can add this management page as an app the same way.</p>`)}</details>
     </section>`;
   }).join("");
   document.querySelectorAll("[data-qr]").forEach(cv => drawQr(cv, wallUrl(cv.dataset.qr), 220));
@@ -232,7 +249,7 @@ $("walls").addEventListener("click", async e => {
     const act = b.dataset.act;
     if (act === "sticker") sticker(w);
     if (act === "qr") download(drawQr(document.createElement("canvas"), wallUrl(w.id), 1000), "klowand-qr-" + w.id + ".png");
-    if (act === "copy") { try { await navigator.clipboard.writeText(wallUrl(w.id)); b.textContent = "Kopiert ✓"; } catch (err) { b.textContent = "Bitte Link oben markieren"; } setTimeout(() => b.textContent = "Link kopieren", 2000); }
+    if (act === "copy") { try { await navigator.clipboard.writeText(wallUrl(w.id)); b.textContent = tr("Kopiert ✓", "Copied ✓"); } catch (err) { b.textContent = tr("Bitte Link oben markieren", "Please select the link above"); } setTimeout(() => b.textContent = tr("Link kopieren", "Copy link"), 2000); }
     if (act === "edit") { editing = w.id; renderWalls(); }
     if (act === "cancel") { editing = null; renderWalls(); }
     if (act === "mod") { if (openMod === w.id) closeMod(); else startMod(w.id); renderWalls(); }
@@ -247,13 +264,13 @@ $("walls").addEventListener("submit", async e => {
   const name = f.name.value.trim(), sub = f.sub.value.trim(), err = labelError(name, sub);
   if (err) { notice(err); return; }
   try { await fs.collection("walls").doc(f.dataset.id).update({ name, sub }); editing = null; notice(""); renderWalls(); }
-  catch (x) { notice("Speichern hat nicht geklappt. Prüf den Namen und versuch es nochmal."); }
+  catch (x) { notice(tr("Speichern hat nicht geklappt. Prüf den Namen und versuch es nochmal.", "Saving didn't work. Check the name and try again.")); }
 });
 
 function labelError(name, sub) {
-  if (name.length < 2) return "Der Name ist zu kurz.";
-  if (/(https?:\/\/|www\.|@|<|>)/i.test(name + sub)) return "Bitte keine Links, Mails oder Sonderzeichen wie < >.";
-  if (KloFilter.bad(name) || (sub && KloFilter.bad(sub))) return "Bitte einen anderen Namen wählen.";
+  if (name.length < 2) return tr("Der Name ist zu kurz.", "The name is too short.");
+  if (/(https?:\/\/|www\.|@|<|>)/i.test(name + sub)) return tr("Bitte keine Links, Mails oder Sonderzeichen wie < >.", "No links, emails or characters like < > please.");
+  if (KloFilter.bad(name) || (sub && KloFilter.bad(sub))) return tr("Bitte einen anderen Namen wählen.", "Please choose a different name.");
   return null;
 }
 
@@ -275,26 +292,26 @@ $("redeemForm").addEventListener("submit", async e => {
   const code = normCode($("code").value), name = $("name").value.trim(), sub = $("sub").value.trim();
   $("code").value = code;
   const err = labelError(name, sub); if (err) { redeemMsg(err); return; }
-  $("redeemBtn").disabled = true; redeemMsg("Einen Moment …", true);
+  $("redeemBtn").disabled = true; redeemMsg(tr("Einen Moment …", "One moment …"), true);
   try {
     const cref = fs.collection("codes").doc(code), c = await cref.get();
-    if (!c.exists) { redeemMsg("Diesen Code gibt es nicht. Prüf ihn nochmal in deiner Kauf-E-Mail."); return; }
-    if (c.data().used) { redeemMsg("Dieser Code wurde schon eingelöst."); return; }
+    if (!c.exists) { redeemMsg(tr("Diesen Code gibt es nicht. Prüf ihn nochmal in deiner Kauf-E-Mail.", "This code doesn't exist. Check it again in your purchase email.")); return; }
+    if (c.data().used) { redeemMsg(tr("Dieser Code wurde schon eingelöst.", "This code has already been redeemed.")); return; }
     let id = null;
     for (let i = 0; i < 6 && !id; i++) {
       const cand = slug(name) + "-" + String(Math.floor(1000 + Math.random() * 9000));
       if (!(await fs.collection("walls").doc(cand).get()).exists) id = cand;
     }
-    if (!id) { redeemMsg("Hat nicht geklappt. Versuch es nochmal."); return; }
+    if (!id) { redeemMsg(tr("Hat nicht geklappt. Versuch es nochmal.", "That didn't work. Please try again.")); return; }
     const batch = fs.batch();
     batch.set(fs.collection("walls").doc(id), { name, sub, owner: user.uid, code, ts: now() });
     batch.update(cref, { used: true, wall: id, by: user.uid, at: now() });
     await batch.commit();
     $("redeemForm").reset();
-    redeemMsg("Fertig! Deine Wand ist eingerichtet. Speichere jetzt den Sticker und kleb ihn an die Kabinentür.", true);
+    redeemMsg(tr("Fertig! Deine Wand ist eingerichtet. Speichere jetzt den Sticker und kleb ihn an die Kabinentür.", "Done! Your wall is set up. Now save the sticker and put it on the bathroom door."), true);
     setTimeout(() => { const el = document.querySelector(`[data-wall="${id}"]`); if (el) el.scrollIntoView({ behavior: "smooth", block: "start" }); }, 600);
   } catch (x) {
-    redeemMsg(x && x.code === "permission-denied" ? "Der Code konnte nicht eingelöst werden. Ist er schon benutzt? Sonst schreib uns." : "Hat nicht geklappt. Prüf deine Verbindung und versuch es nochmal.");
+    redeemMsg(x && x.code === "permission-denied" ? tr("Der Code konnte nicht eingelöst werden. Ist er schon benutzt? Sonst schreib uns.", "The code couldn't be redeemed. Has it been used already? Otherwise, contact us.") : tr("Hat nicht geklappt. Prüf deine Verbindung und versuch es nochmal.", "That didn't work. Check your connection and try again."));
   } finally { $("redeemBtn").disabled = false; }
 });
 
@@ -317,15 +334,15 @@ function startMod(id) {
 function renderMod() {
   const el = $("modFeed"); if (!el || !mod) return;
   if (!mod.loaded) return;
-  if (!mod.posts.length) { el.innerHTML = '<p class="empty">Noch nichts an der Wand.</p>'; return; }
+  if (!mod.posts.length) { el.innerHTML = `<p class="empty">${tr("Noch nichts an der Wand.", "Nothing on the wall yet.")}</p>`; return; }
   const list = mod.posts.slice().sort((a, b) => (mod.reports[b.id] || 0) - (mod.reports[a.id] || 0) || b.ts - a.ts);
   el.innerHTML = list.map(p => {
     const rep = mod.reports[p.id] || 0, k = "p/" + p.id, rs = (mod.replies[p.id] || []).slice().sort((a, b) => a.ts - b.ts);
     return `<div class="item${rep ? " flag" : ""}">
       ${p.img ? `<img src="${p.img}" alt="Zeichnung">` : `<div class="t">${esc(p.t)}</div>`}
-      ${rs.map(r => `<div class="r"><span>↳ ${esc(r.t)}</span><button type="button" class="del${confirmKey === "r/" + r.id ? " confirm" : ""}" data-del="r/${r.id}">${confirmKey === "r/" + r.id ? "Wirklich?" : "Löschen"}</button></div>`).join("")}
-      <div class="m"><span class="sp">${ago(p.ts)}${rep ? ` · <b style="color:#b3261e">${rep}× gemeldet</b>` : ""}</span>
-        <button type="button" class="del${confirmKey === k ? " confirm" : ""}" data-del="${k}">${confirmKey === k ? "Wirklich löschen?" : "Löschen"}</button></div>
+      ${rs.map(r => `<div class="r"><span>↳ ${esc(r.t)}</span><button type="button" class="del${confirmKey === "r/" + r.id ? " confirm" : ""}" data-del="r/${r.id}">${confirmKey === "r/" + r.id ? tr("Wirklich?", "Sure?") : tr("Löschen", "Delete")}</button></div>`).join("")}
+      <div class="m"><span class="sp">${ago(p.ts)}${rep ? ` · <b style="color:#b3261e">${rep}× ${tr("gemeldet", "reported")}</b>` : ""}</span>
+        <button type="button" class="del${confirmKey === k ? " confirm" : ""}" data-del="${k}">${confirmKey === k ? tr("Wirklich löschen?", "Really delete?") : tr("Löschen", "Delete")}</button></div>
     </div>`;
   }).join("");
 }
@@ -340,7 +357,7 @@ async function del(b) {
       (mod.replies[id] || []).forEach(r => base.collection("replies").doc(r.id).delete().catch(() => {}));
     } else await base.collection("replies").doc(id).delete();
     notice("");
-  } catch (x) { notice("Löschen hat nicht geklappt. Versuch es nochmal."); renderMod(); }
+  } catch (x) { notice(tr("Löschen hat nicht geklappt. Versuch es nochmal.", "Deleting didn't work. Please try again.")); renderMod(); }
 }
 </script>
 </body>

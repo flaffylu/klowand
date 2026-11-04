@@ -43,6 +43,49 @@
     "Deine Playlist hat heute Hitpotenzial.",
     "Der Abend ist jung. Du auch.",
   ];
+  const SAYINGS_EN = [
+    "There's one more drink in your future tonight.",
+    "The next round is on someone at your table.",
+    "Your phone battery will outlast your plan to go home early.",
+    "The stall says: you look great. The stall never lies.",
+    "Whoever flushes now has done everything right today.",
+    "Tonight is a good night for fries.",
+    "Someone here secretly thinks you're great.",
+    "Drink a glass of water. The oracle is worried.",
+    "Your dance moves are better than everyone says.",
+    "There's enough toilet paper. This time.",
+    "Order something you've never tried.",
+    "Tomorrow you'll laugh about today. Maybe with a headache.",
+    "The bartender has a favourite guest. Ask who.",
+    "You're the reason someone is in a good mood today.",
+    "Write something nice on the wall. Karma is a toilet roll.",
+    "The future is uncertain. The queue for the ladies' room is not.",
+    "Today you'll meet someone who loves the same song.",
+    "A taxi home is cheaper than a bad morning.",
+    "The oracle sees: pizza. Very soon.",
+    "You deserve the best seat in the house tonight.",
+    "Tell your friends they're awesome. Right now.",
+    "The stars are aligned for a Loo Games record.",
+    "Whoever washes their hands wins. Always.",
+    "No drama today. Only good music.",
+    "Your next joke will land. Go for it.",
+    "The stall remembers everything. Don't worry, it keeps quiet.",
+    "You'll laugh until your stomach hurts tonight.",
+    "A stranger will give you a smile today.",
+    "The oracle recommends a deep breath. Okay, not in here.",
+    "Stay as you are. Just with freshly washed hands.",
+    "It's prosecco weather. Whatever the weather.",
+    "Someone will love what you write on the wall today.",
+    "The best idea of the night comes on the way home.",
+    "Lucky you: the stall next door is occupied, not yours.",
+    "The oracle says yes. What was the question?",
+    "Call your grandma tomorrow. She'll be happy.",
+    "Tonight will be legendary. Or at least funny.",
+    "Tip the bartender. The oracle sees everything.",
+    "Your playlist has hit potential today.",
+    "The night is young. So are you.",
+  ];
+  const POOL = EN ? SAYINGS_EN : SPRUECHE;
   const $ = id => document.getElementById(id);
   let last = -1;
 
@@ -73,18 +116,18 @@
   const extras = document.querySelector(".extras");
   if (extras) {
     const b = document.createElement("button");
-    b.type = "button"; b.className = "oracle"; b.id = "orcOpen"; b.textContent = "Klo-Orakel";
+    b.type = "button"; b.className = "oracle"; b.id = "orcOpen"; b.textContent = tr("Klo-Orakel", "Loo Oracle");
     extras.appendChild(b);
     b.onclick = open;
   }
 
   /* Orakel-Fenster */
   const orc = document.createElement("div");
-  orc.className = "orc"; orc.hidden = true; orc.setAttribute("role", "dialog"); orc.setAttribute("aria-label", "Klo-Orakel");
-  orc.innerHTML = `<div class="box"><div class="k">Das Klo-Orakel spricht</div>
+  orc.className = "orc"; orc.hidden = true; orc.setAttribute("role", "dialog"); orc.setAttribute("aria-label", tr("Klo-Orakel", "Loo Oracle"));
+  orc.innerHTML = `<div class="box"><div class="k">${tr("Das Klo-Orakel spricht", "The Loo Oracle speaks")}</div>
     <div class="ball" id="orcBall"><span>?</span></div>
     <div class="say" id="orcSay" aria-live="polite"></div>
-    <div class="row"><button type="button" class="go" id="orcAgain">Nochmal fragen</button><button type="button" id="orcClose">Zur Wand</button></div></div>`;
+    <div class="row"><button type="button" class="go" id="orcAgain">${tr("Nochmal fragen", "Ask again")}</button><button type="button" id="orcClose">${tr("Zur Wand", "Back to wall")}</button></div></div>`;
   document.body.appendChild(orc);
   orc.addEventListener("click", e => { if (e.target === orc) close(); });
   $("orcAgain").onclick = ask;
@@ -94,20 +137,20 @@
   function open() { orc.hidden = false; ask(); $("orcAgain").focus(); }
   function close() { orc.hidden = true; }
   function ask() {
-    let i; do { i = Math.floor(Math.random() * SPRUECHE.length); } while (i === last && SPRUECHE.length > 1);
+    let i; do { i = Math.floor(Math.random() * POOL.length); } while (i === last && POOL.length > 1);
     last = i;
     const ball = $("orcBall"), say = $("orcSay");
     say.classList.add("hide"); ball.classList.remove("shake"); void ball.offsetWidth; ball.classList.add("shake");
     try { KloMusik.blip("flush"); } catch (e) {}
-    setTimeout(() => { say.textContent = SPRUECHE[i]; say.classList.remove("hide"); try { KloMusik.blip("gold"); } catch (e) {} }, 700);
+    setTimeout(() => { say.textContent = POOL[i]; say.classList.remove("hide"); try { KloMusik.blip("gold"); } catch (e) {} }, 700);
   }
 
   /* Impressum und Datenschutz unter der Wand und in den Spielen */
-  const legal = '<a href="impressum.html">Impressum</a><a href="datenschutz.html">Datenschutz</a>';
+  const legal = `<a href="impressum.html">${tr("Impressum", "Imprint")}</a><a href="datenschutz.html">${tr("Datenschutz", "Privacy")}</a>`;
   const wrap = document.querySelector(".wrap");
-  if (wrap) { const f = document.createElement("nav"); f.className = "legal"; f.setAttribute("aria-label", "Rechtliches"); f.innerHTML = legal; wrap.appendChild(f); }
+  if (wrap) { const f = document.createElement("nav"); f.className = "legal"; f.setAttribute("aria-label", tr("Rechtliches", "Legal")); f.innerHTML = legal; wrap.appendChild(f); }
   const gw = document.querySelector(".kg .gw");
-  if (gw) { const f = document.createElement("nav"); f.className = "legal"; f.setAttribute("aria-label", "Rechtliches"); f.innerHTML = legal; gw.appendChild(f); }
+  if (gw) { const f = document.createElement("nav"); f.className = "legal"; f.setAttribute("aria-label", tr("Rechtliches", "Legal")); f.innerHTML = legal; gw.appendChild(f); }
 })();
 
 /* Begrüßung beim Öffnen der Wand: lustiger Spruch, auf Tipp laut vorgelesen (Sprachausgabe des Handys). */
@@ -118,7 +161,9 @@
   const bar = (typeof info !== "undefined" && info.name) || "Klo-Wand";
   const h = new Date().getHours();
   const zeit = h < 5 ? "Na, du Nachteule" : h < 11 ? "Guten Morgen" : h < 17 ? "Hallo" : h < 22 ? "Guten Abend" : "Na, du Nachtschwärmer";
-  const LINES = [
+  const LINES = EN ? [
+    `Attention, attention! A new guest on the throne. Good evening and a warm welcome!`,
+  ] : [
     `Achtung, Achtung! Ein neuer Gast auf dem Thron. Guten Abend und herzlich willkommen!`,
   ];
   const line = LINES[Math.floor(Math.random() * LINES.length)];
@@ -141,11 +186,11 @@
   document.head.appendChild(css);
 
   const el = document.createElement("div");
-  el.className = "hallo"; el.setAttribute("role", "dialog"); el.setAttribute("aria-label", "Begrüßung");
-  el.innerHTML = `<div class="box"><span class="sign">Besetzt · von dir</span>
-    <h2>Herzlich willkommen!</h2>
+  el.className = "hallo"; el.setAttribute("role", "dialog"); el.setAttribute("aria-label", tr("Begrüßung", "Welcome"));
+  el.innerHTML = `<div class="box"><span class="sign">${tr("Besetzt · von dir", "Occupied · by you")}</span>
+    <h2>${tr("Herzlich willkommen!", "Welcome!")}</h2>
     <p id="halloLine"></p>
-    <div class="row"><button type="button" class="go" id="halloGo">Hallo!</button><button type="button" id="halloQuiet">Leise rein</button></div></div>`;
+    <div class="row"><button type="button" class="go" id="halloGo">${tr("Hallo!", "Hello!")}</button><button type="button" id="halloQuiet">${tr("Leise rein", "Sneak in quietly")}</button></div></div>`;
   document.body.appendChild(el);
   document.getElementById("halloLine").textContent = line;
 
@@ -155,9 +200,10 @@
     try {
       speechSynthesis.cancel();
       const u = new SpeechSynthesisUtterance(text);
-      u.lang = "de-DE"; u.rate = 1.02; u.pitch = 1.15; u.volume = 1;
-      const voices = speechSynthesis.getVoices();
-      const v = voices.find(x => /^de/i.test(x.lang) && /google/i.test(x.name)) || voices.find(x => /^de/i.test(x.lang));
+      const lc = EN ? "en" : "de";
+      u.lang = EN ? "en-US" : "de-DE"; u.rate = 1.02; u.pitch = 1.15; u.volume = 1;
+      const voices = speechSynthesis.getVoices(), re = new RegExp("^" + lc, "i");
+      const v = voices.find(x => re.test(x.lang) && /google/i.test(x.name)) || voices.find(x => re.test(x.lang));
       if (v) u.voice = v;
       speechSynthesis.speak(u);
     } catch (e) {}
@@ -167,6 +213,7 @@
   function sayIt() {
     let done = false;
     const fallback = () => { if (!done) { done = true; speak(line); } };
+    if (EN) { fallback(); return; }   // die Aufnahme ist deutsch
     try {
       const a = new Audio(`stimme/${file}.mp3`);
       a.onerror = fallback;
