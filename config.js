@@ -49,7 +49,7 @@ const MUSIK = [
 ];
 
 /* Angaben für Impressum und Datenschutz. Leer = Platzhalter in eckigen Klammern. */
-const IMPRESSUM = { name: "Kay Trautner", strasse: "", ort: "Leipzig", email: "kaytrut426@gmail.com", telefon: "" };
+const IMPRESSUM = { name: "Kay Trautner", strasse: "Rathenaustr. 1", ort: "04179 Leipzig", email: "kaytrut426@gmail.com", telefon: "" };
 
 /* Hintergrundbild der Wand. Leer ("") = klassische grüne Kabinentür. */
 const HINTERGRUND = "bilder/wasser.jpg";
