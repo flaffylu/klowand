@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="color-scheme" content="only light">
 <title>Klo-Wand</title>
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#1d2321">
@@ -20,7 +21,7 @@
   --f-scrawl:"Caveat","Gochi Hand",cursive;
   --f-scratch:"Rock Salt","Gochi Hand",cursive;
   --f-ui:"Barlow Condensed","Arial Narrow",system-ui,sans-serif;
-  color-scheme:light;
+  color-scheme:only light;
 }
 html,body{background:var(--door);color:var(--ink)}
 body{
@@ -124,6 +125,9 @@ body{margin:0}
 .modes .chjoin[aria-pressed="true"]{background:#f2c34d;color:var(--bar)}
 /* Hintergrundbild: Sprüche werden zu angepinnten Zetteln, damit sie lesbar bleiben */
 html.bg-photo{background:#2a3330}
+html.bg-light{background:#eef2ef}
+html.bg-photo.bg-light .tabs .hint,html.bg-photo.bg-light .legal a{color:var(--ink);text-shadow:0 1px 2px rgba(255,255,255,.8)}
+html.bg-photo.bg-light .post{box-shadow:0 3px 10px rgba(0,0,0,.16)}
 html.bg-photo body{background:transparent}
 html.bg-photo body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--bg-url) center/cover no-repeat}
 html.bg-photo .post{position:relative;box-sizing:border-box;background:rgba(250,250,246,.86);border-radius:4px;padding:16px 12px 8px;box-shadow:0 3px 10px rgba(0,0,0,.28);
@@ -216,6 +220,7 @@ translateStatic([
 ]);
 if (typeof HINTERGRUND !== "undefined" && HINTERGRUND) {
   document.documentElement.classList.add("bg-photo");
+  if (typeof HINTERGRUND_HELL !== "undefined" && HINTERGRUND_HELL) document.documentElement.classList.add("bg-light");
   document.documentElement.style.setProperty("--bg-url", `url("${HINTERGRUND.replace(/["\\]/g, "")}")`);
 }
 const params = new URLSearchParams(location.search);
