@@ -70,7 +70,7 @@
 
   function bar(locked) {
     const at = document.querySelector(".demobar") || document.querySelector(".plate");
-    at.insertAdjacentHTML("afterend", `<div class="fambar"><b>${tr("Familien-Bereich · nur für euch", "Family area · just for you", "家族エリア・家族だけ")}</b>
+    at.insertAdjacentHTML("afterend", `<div class="fambar"><b>${tr("Familien-Planner · nur für euch", "Family Planner · just for you", "ファミリープランナー・家族だけ")}</b>
       <button type="button" id="famPlan" class="${locked ? "locked" : ""}">📅 ${tr("Stundenplan", "Timetable", "時間割")}</button>
       <button type="button" id="famFoto" class="${locked ? "locked" : ""}">📷 ${tr("Familienfotos", "Family photos", "家族の写真")}</button>
       <button type="button" id="famSos" class="sos">🚑 ${tr("Notfall – Hilfe!", "Emergency – help!", "きんきゅう – たすけて！")}</button></div>`);
@@ -101,6 +101,15 @@
   let planMode = "heute", selDay = null, flash = null, plans = [], plansLoaded = false, current = null, dirty = false, view = null, fotoUnsub = null, fotos = [], pending = null;
 
   bar(false);
+  /* Auf Familien-Handys heißt die App „Familien-Planner“ statt Klo-Wand */
+  (function rename() {
+    const fix = () => {
+      const g = document.getElementById("kgOpen"); if (g && /Klo-Spiele|Loo Games/.test(g.textContent)) g.textContent = "🎮 " + tr("Spiele & Rangliste", "Games & leaderboard", "ゲーム＆ランキング");
+      const o = document.getElementById("orcOpen"); if (o && /Orakel|Oracle/.test(o.textContent)) o.textContent = "🔮 " + tr("Orakel", "Oracle", "占い");
+      if (typeof info !== "undefined") document.title = info.name + " · " + tr("Familien-Planner", "Family Planner", "ファミリープランナー");
+    };
+    fix(); setTimeout(fix, 500);
+  })();
   document.getElementById("famPlan").onclick = () => openPlan();
   document.getElementById("famFoto").onclick = () => openFotos();
 

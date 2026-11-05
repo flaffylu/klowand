@@ -392,13 +392,13 @@ function loadFamKey(id) {
 }
 function stopFamFotos() { if (famUnsub) famUnsub(); famUnsub = null; famFotos = null; famConfirm = null; }
 function famHtml(w) {
-  if (famOpen !== w.id) return `<div class="row"><button type="button" data-act="fam">👨‍👩‍👧 ${tr("Familien-Bereich: Stundenplan & Fotos", "Family area: timetable & photos", "家族エリア：時間割と写真")}</button></div>`;
+  if (famOpen !== w.id) return `<div class="row"><button type="button" data-act="fam">👨‍👩‍👧 ${tr("Familien-Planner: Stundenplan, Fotos & Notfall", "Family Planner: timetable, photos & emergency", "ファミリープランナー")}</button></div>`;
   const k = famKeys[w.id];
   let inner;
   if (k === undefined) inner = `<p class="hint">${tr("Lädt …", "Loading …")}</p>`;
   else if (k === "err") inner = `<p class="msg err">${tr("Konnte nicht geladen werden. Lade die Seite neu und versuch es nochmal.", "Couldn't be loaded. Reload the page and try again.")}</p>`;
   else if (!k) inner = `<p class="sub">${tr("Für jedes Kind ein Stundenplan und Familienfotos, die nur ihr seht. Dafür bekommt ihr einen eigenen, geheimen Familien-QR-Code. Gäste mit dem normalen QR-Code sehen davon nichts.", "A timetable for each child and family photos only you can see. You get your own secret family QR code. Guests using the normal QR code see none of it.")}</p>
-    <div class="row"><button type="button" class="primary" data-act="famOn">${tr("Familien-Bereich einschalten", "Turn on family area")}</button></div>`;
+    <div class="row"><button type="button" class="primary" data-act="famOn">${tr("Familien-Planner einschalten", "Turn on Family Planner")}</button></div>`;
   else {
     const url = famUrl(w.id, k);
     inner = `<div class="wallhead"><div class="info"><p class="sub">${tr("Diesen QR-Code scannt jedes Familienmitglied einmal mit dem Handy. Danach sind Stundenplan und Fotos auf diesem Handy immer an der Wand zu sehen.", "Each family member scans this QR code once. After that, the timetable and photos always show on the wall on that phone.")}</p></div>
@@ -415,7 +415,7 @@ function famHtml(w) {
       <div class="row"><button type="button" class="del${famArm ? " confirm" : ""}" data-act="famNew">${famArm ? tr("Sicher? Alte Fotos & Pläne verschwinden!", "Sure? Old photos & timetables disappear!") : tr("Neuen Familien-Code erstellen", "Create new family code")}</button></div>
       <p class="hint">${tr("Nur nötig, wenn der Code in falsche Hände geraten ist. Danach muss jeder den neuen QR-Code scannen.", "Only needed if the code got into the wrong hands. Everyone must then scan the new QR code.")}</p>`;
   }
-  return `<div class="fambox"><h3>👨‍👩‍👧 ${tr("Familien-Bereich", "Family area")}</h3>${inner}
+  return `<div class="fambox"><h3>👨‍👩‍👧 ${tr("Familien-Planner", "Family Planner")}</h3>${inner}
     <div class="row"><button type="button" data-act="fam">${tr("Schließen", "Close")}</button></div></div>`;
 }
 async function famAction(act, w, b) {

@@ -20,7 +20,7 @@ const firebaseConfig = {
 const WAENDE = {
   "prestigio":     { name: "Prestigio",         sub: "Ristorante Italiano" },
   "goldener-hahn": { name: "Zum Goldenen Hahn", sub: "Herren · Kabine 2", subEn: "Men · Stall 2", subJa: "男性用・個室2" },
-  "zuhause":       { name: "Zuhause",           sub: "Das Familienklo", subEn: "The family loo", subJa: "家族のトイレ" },
+  "zuhause":       { name: "Zuhause",           sub: "Familien-Planner", subEn: "Family Planner", subJa: "ファミリープランナー" },
   "demo":          { name: "Demo-Bar",          sub: "Zum Ausprobieren", subEn: "Try it out", subJa: "お試し用" },
 };
 
