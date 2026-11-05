@@ -41,6 +41,22 @@ const CHALLENGES = [
   { text: "Was würdest du der Kloschüssel gern mal sagen?", en: "What would you like to tell the toilet bowl?", ja: "便器にひとこと言うなら？", art: "text" },
 ];
 
+/* Challenges für Familien: auf Handys mit Familien-Code und auf der Wand „zuhause“ statt der Bar-Challenges */
+const FAMILIEN_CHALLENGES = [
+  { text: "Mal dein Lieblingstier.", en: "Draw your favourite animal.", ja: "好きな動物を描こう。", art: "draw" },
+  { text: "Was war heute dein schönster Moment?", en: "What was your best moment today?", ja: "今日いちばん楽しかったことは？", art: "text" },
+  { text: "Mal unsere Familie als Superhelden.", en: "Draw our family as superheroes.", ja: "家族をスーパーヒーローにして描こう。", art: "draw" },
+  { text: "Was wollen wir am Wochenende zusammen machen?", en: "What shall we do together at the weekend?", ja: "週末みんなで何をする？", art: "text" },
+  { text: "Mal dein Lieblingsessen.", en: "Draw your favourite food.", ja: "好きな食べ物を描こう。", art: "draw" },
+  { text: "Erzähl einen Witz, der alle zum Lachen bringt.", en: "Tell a joke that makes everyone laugh.", ja: "みんなが笑うジョークを書こう。", art: "text" },
+  { text: "Mal, wie du in 20 Jahren aussiehst.", en: "Draw what you'll look like in 20 years.", ja: "20年後の自分を描こう。", art: "draw" },
+  { text: "Wofür bist du heute dankbar?", en: "What are you thankful for today?", ja: "今日感謝したいことは？", art: "text" },
+  { text: "Mal ein Fantasietier, das es noch nicht gibt.", en: "Draw a fantasy animal that doesn't exist yet.", ja: "まだいない空想の動物を描こう。", art: "draw" },
+  { text: "Sag jemandem aus der Familie etwas Nettes.", en: "Say something nice to someone in the family.", ja: "家族の誰かにやさしいひとことを。", art: "text" },
+  { text: "Mal unser Haus, wenn es ein Schloss wäre.", en: "Draw our home as if it were a castle.", ja: "おうちがお城だったら？描いてみよう。", art: "draw" },
+  { text: "Was wünschst du dir für die nächste Woche?", en: "What do you wish for next week?", ja: "来週のねがいごとは？", art: "beides" },
+];
+
 /* Musik zum Umschalten. src: null = der Lo-Fi-Beat, der im Browser entsteht.
    Eigene Lieder als MP3 in den Ordner „musik“ legen und hier eintragen. */
 const MUSIK = [

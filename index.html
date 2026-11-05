@@ -332,7 +332,10 @@ function weekKey(t) {
   const n = 1 + Math.round(((d - w1) / DAY - 3 + ((w1.getDay() + 6) % 7)) / 7);
   return d.getFullYear() + "-W" + String(n).padStart(2, "0");
 }
-const LIST = (typeof CHALLENGES !== "undefined" && CHALLENGES.length) ? CHALLENGES : [];
+/* Familien-Handys (mit Familien-Code) und die Wand „zuhause“ bekommen familienfreundliche Challenges */
+const FAM_DEVICE = WALL === "zuhause" || (() => { try { return !!(/^[A-Za-z0-9]{24,40}$/.test(params.get("k") || "") || localStorage.getItem("klowand-fam-" + WALL)); } catch (e) { return false; } })();
+const LIST = (FAM_DEVICE && typeof FAMILIEN_CHALLENGES !== "undefined" && FAMILIEN_CHALLENGES.length) ? FAMILIEN_CHALLENGES
+  : (typeof CHALLENGES !== "undefined" && CHALLENGES.length) ? CHALLENGES : [];
 const THIS_WEEK = weekKey(Date.now()), LAST_WEEK = weekKey(Date.now() - 7 * DAY);
 const weekNo = k => Number(k.split("-W")[1]);
 const challengeFor = k => LIST.length ? LIST[(Number(k.slice(0, 4)) * 53 + weekNo(k)) % LIST.length] : null;
