@@ -15,6 +15,10 @@
   const sortRows = (g, rows) => rows.sort((a, b) => GAMES[g].better === "desc" ? b.score - a.score : a.score - b.score);
   let myName = ""; try { myName = localStorage.getItem("klowand-name") || ""; } catch (e) {}
   let lastId = null, stopGame = () => {};
+  /* Demo-Wand: nur ein Spiel und keine Musik, der Rest zeigt auf die Vollversion */
+  const IS_DEMO = typeof DEMO !== "undefined" && DEMO;
+  const LOCKED = IS_DEMO ? ["reflex", "stapel"] : [];
+  const upsell = r => { if (window.kloUpsell) kloUpsell(r); };
 
   /* ---------- Styles ---------- */
   const css = document.createElement("style");
@@ -23,6 +27,10 @@
   .extras button{display:inline-flex;align-items:center;gap:8px;font:700 .95rem var(--f-ui);letter-spacing:.05em;text-transform:uppercase;
     border-radius:6px;border:1.5px solid var(--ink);background:var(--plate);color:var(--ink);padding:7px 12px;min-height:40px;cursor:pointer}
   .extras button.games{background:var(--ink);color:var(--door)}
+  .extras button.locked::before{content:"🔒";margin-right:2px}
+  .kg .card.locked{border-style:dashed;background:#eef1ef}
+  .kg .card.locked h3,.kg .card.locked p{opacity:.6}
+  .kg .card.locked .lead{color:var(--red)}
   .extras button[aria-pressed="true"]{background:var(--green);border-color:var(--green);color:#fff}
   .extras .eq{display:inline-flex;gap:2px;align-items:flex-end;height:14px}
   .extras .eq i{display:block;width:3px;height:5px;background:currentColor;border-radius:1px}
@@ -83,14 +91,16 @@
     <button type="button" id="kgMusic" aria-pressed="false"><span class="eq" aria-hidden="true"><i></i><i></i><i></i></span><span id="kgMusicTxt">${tr("Musik an", "Music on")}</span></button>
     <button type="button" id="kgTrack" title="${tr("Lied wechseln", "Change song")}">${tr("Lied", "Song")}: <span id="kgTrackTxt"></span></button>`;
   document.querySelector(".tabs").before(extras);
+  if (IS_DEMO) $("kgMusic").classList.add("locked");
   $("kgMusic").onclick = async () => {
+    if (IS_DEMO) { upsell("music"); return; }
     await KloMusik.toggle();
     const on = KloMusik.isOn();
     $("kgMusic").setAttribute("aria-pressed", on);
     $("kgMusicTxt").textContent = on ? tr("Musik aus", "Music off") : tr("Musik an", "Music on");
   };
   $("kgTrackTxt").textContent = KloMusik.trackName();
-  $("kgTrack").hidden = !(KloMusik.trackCount > 1);
+  $("kgTrack").hidden = IS_DEMO || !(KloMusik.trackCount > 1);
   $("kgTrack").onclick = async () => { $("kgTrackTxt").textContent = await KloMusik.next(); };
 
   /* ---------- Spiele-Fenster ---------- */
@@ -112,17 +122,22 @@
     const b = e.target.closest("[data-go]"); if (!b) return;
     const [what, g, tab] = b.dataset.go.split(":");
     if (what === "menu") menu();
+    if ((what === "play" || what === "board") && LOCKED.includes(g)) { upsell("game"); return; }
     if (what === "play") ({ fang: playFang, reflex: playReflex, stapel: playStapel })[g]();
     if (what === "board") board(g, tab || "heute");
   });
 
   /* ---------- Menü ---------- */
   function menu() {
-    view(Object.entries(GAMES).map(([g, x]) => `<div class="card"><h3>${x.title}</h3><p>${x.desc}</p>
+    view(Object.entries(GAMES).map(([g, x]) => LOCKED.includes(g)
+      ? `<div class="card locked"><h3>🔒 ${x.title}</h3><p>${x.desc}</p>
+      <div class="lead">${tr("Nur in der Vollversion", "Full version only", "フルバージョン限定")}</div>
+      <div class="row"><button type="button" class="btn go" data-go="play:${g}">${tr("Freischalten", "Unlock", "解放する")}</button></div></div>`
+      : `<div class="card"><h3>${x.title}</h3><p>${x.desc}</p>
       <div class="lead" id="lead-${g}">&nbsp;</div>
       <div class="row"><button type="button" class="btn go" data-go="play:${g}">${tr("Spielen", "Play")}</button><button type="button" class="btn" data-go="board:${g}:heute">${tr("Rangliste", "Leaderboard")}</button></div></div>`).join("")
       + `<p class="hint">${tr("Die Tages-Rangliste startet jeden Tag um Mitternacht neu.", "The daily leaderboard resets every night at midnight.")}</p>`);
-    Object.keys(GAMES).forEach(async g => {
+    Object.keys(GAMES).filter(g => !LOCKED.includes(g)).forEach(async g => {
       try {
         const rows = sortRows(g, (await scores(g).where("day", "==", today()).limit(500).get()).docs.map(d => d.data()).filter(r => typeof r.name === "string" && typeof r.score === "number"));
         const el = $("lead-" + g); if (!el) return;
@@ -367,7 +382,7 @@
   /* ---------- Rangliste ---------- */
   async function board(g, tab) {
     const chip = (go, label, on) => `<button type="button" class="chip" data-go="${go}" aria-pressed="${on}">${label}</button>`;
-    view(`<div class="chips">${Object.entries(GAMES).map(([k, x]) => chip(`board:${k}:${tab}`, x.title, k === g)).join("")}</div>
+    view(`<div class="chips">${Object.entries(GAMES).filter(([k]) => !LOCKED.includes(k)).map(([k, x]) => chip(`board:${k}:${tab}`, x.title, k === g)).join("")}</div>
       <div class="chips">${chip(`board:${g}:heute`, tr("Heute", "Today"), tab === "heute")}${chip(`board:${g}:rekord`, tr("Rekorde", "Records"), tab === "rekord")}</div>
       <div id="kgList"><p class="empty">${tr("Rangliste lädt …", "Loading leaderboard …")}</p></div>
       <div class="row" style="justify-content:center"><button type="button" class="btn go" data-go="play:${g}">${tr(`${GAMES[g].title} spielen`, `Play ${GAMES[g].title}`, `${GAMES[g].title}で遊ぶ`)}</button></div>

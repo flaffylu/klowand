@@ -165,6 +165,58 @@
   if (gw) { const f = document.createElement("nav"); f.className = "legal"; f.setAttribute("aria-label", tr("Rechtliches", "Legal")); f.innerHTML = legal; gw.appendChild(f); }
 })();
 
+/* Demo-Wand: Hinweis oben und Fenster „Das gibt's in der Vollversion“ */
+(function () {
+  if (typeof DEMO === "undefined" || !DEMO) return;
+  const css = document.createElement("style");
+  css.textContent = `
+  .demobar{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin:12px 0 0;padding:10px 12px;border-radius:8px;
+    background:#fff6d6;border:1.5px solid #e0a92e;font:600 .95rem/1.3 var(--f-ui);color:var(--ink)}
+  .demobar button{font:700 .85rem var(--f-ui);letter-spacing:.06em;text-transform:uppercase;background:var(--red);color:#fff;border:none;border-radius:6px;padding:8px 12px;min-height:38px;cursor:pointer}
+  .ups{position:fixed;inset:0;z-index:45;background:rgba(20,24,22,.8);display:flex;align-items:center;justify-content:center;padding:20px max(16px,env(safe-area-inset-left,0px))}
+  .ups .box{width:min(420px,100%);background:var(--plate);border:3px solid var(--ink);border-radius:14px;padding:20px 18px 16px;text-align:center;box-shadow:0 18px 40px rgba(0,0,0,.45)}
+  .ups .k{display:inline-block;background:var(--red);color:#fff;font:700 .8rem var(--f-ui);letter-spacing:.14em;text-transform:uppercase;padding:4px 10px;border-radius:3px}
+  .ups h2{margin:10px 0 4px;font:400 1.7rem/1.1 var(--f-marker);color:var(--ink)}
+  .ups p{margin:0 0 8px;font:600 1rem var(--f-ui);color:var(--muted)}
+  .ups ul{list-style:none;margin:8px 0 12px;padding:0;text-align:left;font:600 1.05rem/1.7 var(--f-ui);color:var(--ink)}
+  .ups li::before{content:"✓ ";color:var(--green);font-weight:700}
+  .ups .price{font:400 2rem var(--f-marker);color:var(--red);margin:4px 0 12px}
+  .ups .row{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+  .ups a,.ups button{font:700 .95rem var(--f-ui);letter-spacing:.06em;text-transform:uppercase;border-radius:6px;padding:10px 14px;min-height:44px;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center}
+  .ups a{background:var(--red);color:#fff}.ups a+a{background:var(--ink)}
+  .ups button{background:none;border:none;color:var(--muted);text-decoration:underline;width:100%;justify-content:center}`;
+  document.head.appendChild(css);
+
+  const plate = document.querySelector(".plate");
+  if (plate) plate.insertAdjacentHTML("afterend", `<div class="demobar"><span>🔒 ${tr("Demo: Malen, Musik und 2 Spiele gibt's in der Vollversion.", "Demo: drawing, music and 2 games are in the full version.", "デモ版：お絵かき・音楽・2つのゲームはフルバージョンで。")}</span>
+    <button type="button" id="demoMore">${tr("Alles freischalten", "Unlock all", "すべて解放")}</button></div>`);
+  const what = {
+    draw: tr("Malen ist in der Vollversion frei.", "Drawing is unlocked in the full version.", "お絵かきはフルバージョンで使えます。"),
+    music: tr("Musik gibt's in der Vollversion.", "Music comes with the full version.", "音楽はフルバージョンで使えます。"),
+    game: tr("Dieses Spiel gibt's in der Vollversion.", "This game comes with the full version.", "このゲームはフルバージョンで遊べます。"),
+    all: tr("Das alles bekommst du mit deiner eigenen Klo-Wand:", "All this comes with your own Klo-Wand:", "自分のKlo-Wandなら全部使えます："),
+  };
+  window.kloUpsell = function (reason) {
+    if (document.querySelector(".ups")) return;
+    const el = document.createElement("div");
+    el.className = "ups"; el.setAttribute("role", "dialog"); el.setAttribute("aria-label", tr("Vollversion", "Full version", "フルバージョン"));
+    el.innerHTML = `<div class="box"><span class="k">${tr("Vollversion", "Full version", "フルバージョン")}</span>
+      <h2>${tr("Alles freischalten", "Unlock everything", "すべて解放")}</h2>
+      <p>${what[reason] || what.all}</p>
+      <ul><li>${tr("Malen mit dem Finger", "Drawing with your finger", "指でお絵かき")}</li><li>${tr("Alle 3 Klo-Spiele mit Rangliste", "All 3 loo games with leaderboard", "トイレゲーム3種＋ランキング")}</li>
+        <li>${tr("Gemütliche Musik", "Cozy music", "ゆったり音楽")}</li><li>${tr("Eigene Wand mit deinem Namen", "Your own wall with your name", "名前入りの自分専用ウォール")}</li>
+        <li>${tr("QR-Sticker zum Ausdrucken", "Printable QR sticker", "印刷できるQRステッカー")}</li><li>${tr("Du löschst, was nicht passt", "You delete anything unwanted", "不適切な投稿は自分で削除")}</li></ul>
+      <div class="price">${tr("nur 4,99 € einmalig", "only €4.99 once", "一度だけ 約890円")}</div>
+      <div class="row"><a href="familie.html">${tr("Für zu Hause", "For your home", "おうち用")}</a><a href="wirte.html">${tr("Für deine Bar", "For your bar", "お店用")}</a></div>
+      <button type="button" class="later">${tr("Weiter testen", "Keep testing", "このまま試す")}</button></div>`;
+    document.body.appendChild(el);
+    const close = () => el.remove();
+    el.querySelector(".later").onclick = close;
+    el.addEventListener("click", e => { if (e.target === el) close(); });
+  };
+  const more = document.getElementById("demoMore"); if (more) more.onclick = () => kloUpsell("all");
+})();
+
 /* Begrüßung beim Öffnen der Wand: lustiger Spruch, auf Tipp laut vorgelesen (Sprachausgabe des Handys). */
 (function () {
   const ONCE_KEY = "klowand-hallo";
