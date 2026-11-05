@@ -154,11 +154,13 @@
   const legal = `<a href="impressum.html">${tr("Impressum", "Imprint")}</a><a href="datenschutz.html">${tr("Datenschutz", "Privacy")}</a>${langButton()}`;
   const wrap = document.querySelector(".wrap");
   if (wrap) {
-    /* Hinweis für Gäste: eigene Klo-Wand holen */
+    /* Hinweis „eigene Wand holen“: nur auf der Demo-Wand, nicht auf gekauften Wänden */
+    if (typeof DEMO !== "undefined" && DEMO) {
     const ad = document.createElement("div"); ad.className = "getown";
     ad.innerHTML = `<b>${tr("Auch so eine Klo-Wand haben?", "Want a Klo-Wand of your own?")}</b>
       <span><a href="familie.html">${tr("Für zu Hause", "For your home")}</a><a href="wirte.html">${tr("Für deine Bar", "For your bar")}</a></span>`;
     wrap.appendChild(ad);
+    }
     const f = document.createElement("nav"); f.className = "legal"; f.setAttribute("aria-label", tr("Rechtliches", "Legal")); f.innerHTML = legal; wrap.appendChild(f);
   }
   const gw = document.querySelector(".kg .gw");
