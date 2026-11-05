@@ -406,7 +406,8 @@ function famHtml(w) {
       <p class="warn">🔒 <b>${tr("Nur an die Familie geben!", "Only share with family!")}</b> ${tr("Wer diesen Code hat, sieht eure Fotos. Häng ihn nicht für Gäste sichtbar auf, schick ihn lieber per WhatsApp an die Familie.", "Anyone with this code sees your photos. Don't hang it where guests can see it; send it to your family via WhatsApp instead.")}</p>
       <div class="row">
         <a class="btn primary" href="${esc(url)}" target="_blank" rel="noopener">📱 ${tr("Auf diesem Handy öffnen", "Open on this phone")}</a>
-        <button type="button" class="dark" data-act="famQr">${tr("Familien-QR speichern", "Save family QR")}</button>
+        <button type="button" class="dark" data-act="famPoster">🖼️ ${tr("Familien-Poster speichern", "Save family poster")}</button>
+        <button type="button" data-act="famQr">${tr("Familien-QR speichern", "Save family QR")}</button>
         <button type="button" data-act="famCopy">${tr("Familien-Link kopieren", "Copy family link")}</button>
         <button type="button" data-act="famFotos">${famFotos ? tr("Fotos schließen", "Close photos") : tr("Fotos verwalten", "Manage photos")}</button>
       </div>
@@ -435,6 +436,7 @@ async function famAction(act, w, b) {
   }
   if (act === "famNew") { famArm = true; renderWalls(); setTimeout(() => { if (famArm) { famArm = false; renderWalls(); } }, 5000); return; }
   if (!k || k === "err") return;
+  if (act === "famPoster") famPoster(w, k);
   if (act === "famQr") download(drawQr(document.createElement("canvas"), famUrl(w.id, k), 1000), "klowand-familien-qr-" + w.id + ".png");
   if (act === "famCopy") { try { await navigator.clipboard.writeText(famUrl(w.id, k)); b.textContent = tr("Kopiert ✓", "Copied ✓"); } catch (err) { b.textContent = tr("Kopieren ging nicht", "Couldn't copy"); } setTimeout(() => renderWalls(), 2000); }
   if (act === "famFotos") {
@@ -452,6 +454,39 @@ async function famAction(act, w, b) {
     try { await fs.collection("walls").doc(w.id).collection("familie").doc(k).collection("fotos").doc(id).delete(); notice(""); }
     catch (x) { notice(tr("Löschen hat nicht geklappt. Versuch es nochmal.", "Deleting didn't work. Please try again.")); renderWalls(); }
   }
+}
+
+/* Familien-Poster zum Ausdrucken (A6 hoch, 300 dpi): bunt, großer QR-Code, was man damit machen kann */
+async function famPoster(w, k) {
+  try { await Promise.all(['400 80px "Permanent Marker"', '700 40px "Barlow Condensed"', '600 40px "Barlow Condensed"'].map(f => document.fonts.load(f))); } catch (e) {}
+  const W = 1240, H = 1748, cv = document.createElement("canvas"); cv.width = W; cv.height = H;
+  const c = cv.getContext("2d");
+  const g = c.createLinearGradient(0, 0, W * 0.6, H);
+  ["#ffd1dc", "#ffe9a8", "#c8f7c5", "#bde0fe", "#e3c8ff"].forEach((col, i) => g.addColorStop(i / 4, col));
+  c.fillStyle = g; c.fillRect(0, 0, W, H);
+  // Konfetti
+  const cols = ["#b3261e", "#f2c14e", "#1f4fa3", "#2f6b3a", "#e86fa0", "#8e5bd6"];
+  let seed = 7; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+  for (let i = 0; i < 90; i++) { c.save(); c.translate(rnd() * W, rnd() * H); c.rotate(rnd() * 6.3); c.fillStyle = cols[i % cols.length]; c.globalAlpha = .55;
+    if (i % 3) c.fillRect(-9, -4, 18, 8); else { c.beginPath(); c.arc(0, 0, 7, 0, 7); c.fill(); } c.restore(); }
+  c.globalAlpha = 1; c.textAlign = "center"; c.fillStyle = "#1d2321";
+  c.font = '110px "Noto Color Emoji","Apple Color Emoji","Segoe UI Emoji",sans-serif'; c.fillText("🦊 🐻 🐼 🐸", W / 2, 170);
+  c.font = '400 128px "Permanent Marker", cursive'; c.fillText(tr("Familien-", "Family"), W / 2, 330); c.fillText(tr("Planner", "Planner"), W / 2, 460);
+  c.font = '700 64px "Barlow Condensed", sans-serif'; c.fillText(fit(c, w.name.toUpperCase(), W - 200), W / 2, 550);
+  // QR-Code
+  const S = 700, x = (W - S) / 2, y = 600;
+  c.fillStyle = "rgba(0,0,0,.18)"; roundRect(c, x - 30, y - 22, S + 60, S + 60, 44); c.fill();
+  c.fillStyle = "#fff"; roundRect(c, x - 36, y - 36, S + 72, S + 72, 44); c.fill();
+  c.lineWidth = 10; c.strokeStyle = "#1d2321"; c.stroke();
+  const q = drawQr(document.createElement("canvas"), famUrl(w.id, k), S);
+  c.imageSmoothingEnabled = false; c.drawImage(q, x, y, S, S);
+  c.fillStyle = "#b3261e"; c.font = '400 84px "Permanent Marker", cursive'; c.fillText(tr("Scannen & loslegen!", "Scan & go!"), W / 2, 1470);
+  c.fillStyle = "#1d2321"; c.font = '600 50px "Barlow Condensed", "Noto Color Emoji", sans-serif';
+  c.fillText(tr("📅 Stundenplan  ·  📷 Fotos  ·  🚑 Notfall", "📅 Timetable  ·  📷 Photos  ·  🚑 Emergency"), W / 2, 1556);
+  c.fillStyle = "#1d2321"; roundRect(c, 170, 1600, W - 340, 84, 42); c.fill();
+  c.fillStyle = "#fff"; c.font = '700 42px "Barlow Condensed", "Noto Color Emoji", sans-serif';
+  c.fillText(tr("🔒 Nur für unsere Familie – nicht für Gäste", "🔒 Family only – not for guests"), W / 2, 1656);
+  download(cv, "familien-planner-poster-" + w.id + ".png");
 }
 </script>
 </body>
