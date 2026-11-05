@@ -407,6 +407,7 @@ function famHtml(w) {
       <div class="row">
         <a class="btn primary" href="${esc(url)}" target="_blank" rel="noopener">📱 ${tr("Auf diesem Handy öffnen", "Open on this phone")}</a>
         <button type="button" class="dark" data-act="famPoster">🖼️ ${tr("Familien-Poster speichern", "Save family poster")}</button>
+        <button type="button" class="dark" data-act="famFridge">🧲 ${tr("Kühlschrank-Karte (A4 drucken)", "Fridge card (print A4)")}</button>
         <button type="button" data-act="famQr">${tr("Familien-QR speichern", "Save family QR")}</button>
         <button type="button" data-act="famCopy">${tr("Familien-Link kopieren", "Copy family link")}</button>
         <button type="button" data-act="famFotos">${famFotos ? tr("Fotos schließen", "Close photos") : tr("Fotos verwalten", "Manage photos")}</button>
@@ -437,6 +438,7 @@ async function famAction(act, w, b) {
   if (act === "famNew") { famArm = true; renderWalls(); setTimeout(() => { if (famArm) { famArm = false; renderWalls(); } }, 5000); return; }
   if (!k || k === "err") return;
   if (act === "famPoster") famPoster(w, k);
+  if (act === "famFridge") famFridge(w, k);
   if (act === "famQr") download(drawQr(document.createElement("canvas"), famUrl(w.id, k), 1000), "klowand-familien-qr-" + w.id + ".png");
   if (act === "famCopy") { try { await navigator.clipboard.writeText(famUrl(w.id, k)); b.textContent = tr("Kopiert ✓", "Copied ✓"); } catch (err) { b.textContent = tr("Kopieren ging nicht", "Couldn't copy"); } setTimeout(() => renderWalls(), 2000); }
   if (act === "famFotos") {
@@ -457,7 +459,7 @@ async function famAction(act, w, b) {
 }
 
 /* Familien-Poster zum Ausdrucken (A6 hoch, 300 dpi): bunt, großer QR-Code, was man damit machen kann */
-async function famPoster(w, k) {
+async function makePoster(w, k) {
   try { await Promise.all(['400 80px "Permanent Marker"', '700 40px "Barlow Condensed"', '600 40px "Barlow Condensed"'].map(f => document.fonts.load(f))); } catch (e) {}
   const W = 1240, H = 1748, cv = document.createElement("canvas"); cv.width = W; cv.height = H;
   const c = cv.getContext("2d");
@@ -486,7 +488,28 @@ async function famPoster(w, k) {
   c.fillStyle = "#1d2321"; roundRect(c, 170, 1600, W - 340, 84, 42); c.fill();
   c.fillStyle = "#fff"; c.font = '700 42px "Barlow Condensed", "Noto Color Emoji", sans-serif';
   c.fillText(tr("🔒 Nur für unsere Familie – nicht für Gäste", "🔒 Family only – not for guests"), W / 2, 1656);
-  download(cv, "familien-planner-poster-" + w.id + ".png");
+  return cv;
+}
+async function famPoster(w, k) { download(await makePoster(w, k), "familien-planner-poster-" + w.id + ".png"); }
+/* Kühlschrank-Karte: zwei kleine Karten (ca. 9 × 12,7 cm) auf einem A4-Blatt mit Schnittlinien, 300 dpi */
+async function famFridge(w, k) {
+  const card = await makePoster(w, k);
+  const W = 2480, H = 3508, cw = 1063, ch = Math.round(cw * card.height / card.width), gap = Math.round((W - 2 * cw) / 3), top = 420;
+  const cv = document.createElement("canvas"); cv.width = W; cv.height = H;
+  const c = cv.getContext("2d"); c.fillStyle = "#fff"; c.fillRect(0, 0, W, H);
+  c.fillStyle = "#1d2321"; c.textAlign = "center";
+  c.font = '400 92px "Permanent Marker", cursive'; c.fillText(tr("Ausschneiden & an den Kühlschrank!", "Cut out & stick on the fridge!"), W / 2, 200);
+  c.font = '600 54px "Barlow Condensed", "Noto Color Emoji", sans-serif';
+  c.fillText(tr("✂️ An der gestrichelten Linie ausschneiden · 🧲 Mit Magnet oder Klebeband aufhängen", "✂️ Cut along the dashed line · 🧲 Hang up with a magnet or tape"), W / 2, 300);
+  for (let i = 0; i < 2; i++) {
+    const x = gap + i * (cw + gap);
+    c.drawImage(card, x, top, cw, ch);
+    c.setLineDash([24, 18]); c.lineWidth = 4; c.strokeStyle = "#8b958f"; c.strokeRect(x - 2, top - 2, cw + 4, ch + 4); c.setLineDash([]);
+  }
+  c.fillStyle = "#56635c"; c.font = '600 46px "Barlow Condensed", sans-serif';
+  c.fillText(tr("Beim Drucken: Papier A4 und „Tatsächliche Größe“ bzw. 100 % wählen.", "When printing: A4 paper and “Actual size” / 100 %."), W / 2, top + ch + 140);
+  c.fillText(tr("Zweite Karte z. B. für Oma & Opa oder als Ersatz.", "Second card e.g. for grandparents or as a spare."), W / 2, top + ch + 210);
+  download(cv, "familien-planner-kuehlschrank-A4-" + w.id + ".png");
 }
 </script>
 </body>
