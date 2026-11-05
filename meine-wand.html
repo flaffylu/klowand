@@ -405,6 +405,7 @@ function famHtml(w) {
       <canvas class="qr" data-famqr="${esc(w.id)}" aria-label="${tr("Familien-QR-Code", "Family QR code")}"></canvas></div>
       <p class="warn">🔒 <b>${tr("Nur an die Familie geben!", "Only share with family!")}</b> ${tr("Wer diesen Code hat, sieht eure Fotos. Häng ihn nicht für Gäste sichtbar auf, schick ihn lieber per WhatsApp an die Familie.", "Anyone with this code sees your photos. Don't hang it where guests can see it; send it to your family via WhatsApp instead.")}</p>
       <div class="row">
+        <a class="btn primary" href="${esc(url)}" target="_blank" rel="noopener">📱 ${tr("Auf diesem Handy öffnen", "Open on this phone")}</a>
         <button type="button" class="dark" data-act="famQr">${tr("Familien-QR speichern", "Save family QR")}</button>
         <button type="button" data-act="famCopy">${tr("Familien-Link kopieren", "Copy family link")}</button>
         <button type="button" data-act="famFotos">${famFotos ? tr("Fotos schließen", "Close photos") : tr("Fotos verwalten", "Manage photos")}</button>
