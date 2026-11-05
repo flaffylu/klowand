@@ -155,6 +155,25 @@ service cloud.firestore {
         && request.resource.data.z is string && request.resource.data.z.size() <= 4000
         && request.resource.data.ts == request.time;
     }
+    // Sprüche und Kritzeleien, die jemand nur für die Familie an die Wand hängt
+    match /walls/{wall}/familie/{key}/posts/{id} {
+      allow read: if famOk(wall, key);
+      allow create: if famOk(wall, key)
+        && (textPost(request.resource.data) || drawPost(request.resource.data))
+        && okWeek(request.resource.data)
+        && request.resource.data.rot is number
+        && request.resource.data.ts == request.time;
+      allow delete: if isOwner(wall) && famOk(wall, key);
+    }
+    match /walls/{wall}/familie/{key}/replies/{id} {
+      allow read: if famOk(wall, key);
+      allow create: if famOk(wall, key)
+        && request.resource.data.keys().hasOnly(['p', 't', 'ts'])
+        && request.resource.data.p is string
+        && okText(request.resource.data.t, 60)
+        && request.resource.data.ts == request.time;
+      allow delete: if isOwner(wall) && famOk(wall, key);
+    }
     match /walls/{wall}/familie/{key}/fotos/{id} {
       allow read: if famOk(wall, key);
       allow create: if famOk(wall, key)

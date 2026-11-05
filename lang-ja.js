@@ -3,7 +3,7 @@ const JA_TEXT = {
   "Posts fade after 3 weeks": "投稿は3週間で薄れていきます", "Leaderboard ": "ランキング ", "just now": "たった今", "yesterday": "昨日",
   "This wall doesn't exist.": "このウォールは存在しません。", "Check the QR code or the link. Want a Klo-Wand of your own?": "QRコードかリンクを確認してね。自分だけのKlo-Wandがほしい？",
   "Get your own Klo-Wand": "自分のKlo-Wandを手に入れる", "Doodle": "落書き", "Carved in": "殿堂入り", "marks": "いいね", "Marked": "いいね済み", "Mark +1": "いいね +1",
-  "Reply": "返信", "Report": "通報", "Scribble below …": "下に書き込む…", "Draw": "描く", "Write": "書く", "✏️ Write": "✏️ 書く", "🖍️ Draw": "🖍️ 描く", "Write or draw": "書く・描く",
+  "Reply": "返信", "Report": "通報", "Scribble below …": "下に書き込む…", "Draw": "描く", "Write": "書く", "🔒 Family only": "🔒 家族だけ", "🌍 Everyone (live)": "🌍 みんなに（ライブ）", "✏️ Write": "✏️ 書く", "🖍️ Draw": "🖍️ 描く", "Write or draw": "書く・描く",
   "The post with the most marks gets pinned to the top next week.": "いちばん「いいね」が多い投稿は、来週トップに固定されます。", "Join in": "参加する",
   "Loading the wall …": "ウォールを読み込み中…", "Challenge winner": "チャレンジ優勝", "last week": "先週", "Post of the night · yesterday": "昨夜のベスト投稿",
   "The wall is still clean.<br>Write or draw the first thing below.": "ウォールはまだまっさら。<br>下から最初のひとことをどうぞ。",

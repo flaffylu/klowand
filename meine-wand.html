@@ -347,17 +347,32 @@ function startMod(id) {
   modUnsubs.push(base.collection("reports").where("ts", ">", since).limit(5000).onSnapshot(s => {
     mod.reports = {}; s.docs.forEach(d => { const p = d.data().p; mod.reports[p] = (mod.reports[p] || 0) + 1; }); renderMod();
   }, () => {}));
+  // Familien-Beiträge (nur für die Familie) mit anzeigen, wenn der Familien-Planner eingeschaltet ist
+  mod.famPosts = []; mod.famReplies = {};
+  famKeyRef(id).get().then(d => {
+    if (!d.exists || openMod !== id) return;
+    const fb = base.collection("familie").doc(d.data().k); mod.famBase = fb;
+    modUnsubs.push(fb.collection("posts").where("ts", ">", since).orderBy("ts", "desc").limit(300).onSnapshot(s => {
+      mod.famPosts = s.docs.map(x => { const v = x.data(); return { id: x.id, t: typeof v.t === "string" ? v.t : "", img: isDrawing(v.img) ? v.img : null, ts: ms(v), fam: true }; }); renderMod();
+    }, () => {}));
+    modUnsubs.push(fb.collection("replies").where("ts", ">", since).limit(2000).onSnapshot(s => {
+      mod.famReplies = {}; s.docs.forEach(x => { const r = x.data(); if (typeof r.t === "string") (mod.famReplies[r.p] ||= []).push({ id: x.id, t: r.t, ts: ms(r) }); }); renderMod();
+    }, () => {}));
+  }).catch(() => {});
 }
 function renderMod() {
   const el = $("modFeed"); if (!el || !mod) return;
   if (!mod.loaded) return;
-  if (!mod.posts.length) { el.innerHTML = `<p class="empty">${tr("Noch nichts an der Wand.", "Nothing on the wall yet.")}</p>`; return; }
-  const list = mod.posts.slice().sort((a, b) => (mod.reports[b.id] || 0) - (mod.reports[a.id] || 0) || b.ts - a.ts);
+  const all = mod.posts.concat(mod.famPosts || []);
+  if (!all.length) { el.innerHTML = `<p class="empty">${tr("Noch nichts an der Wand.", "Nothing on the wall yet.")}</p>`; return; }
+  const list = all.slice().sort((a, b) => (mod.reports[b.id] || 0) - (mod.reports[a.id] || 0) || b.ts - a.ts);
   el.innerHTML = list.map(p => {
-    const rep = mod.reports[p.id] || 0, k = "p/" + p.id, rs = (mod.replies[p.id] || []).slice().sort((a, b) => a.ts - b.ts);
+    const rep = p.fam ? 0 : (mod.reports[p.id] || 0), k = (p.fam ? "fp/" : "p/") + p.id, rk = p.fam ? "fr/" : "r/";
+    const rs = ((p.fam ? (mod.famReplies || {}) : mod.replies)[p.id] || []).slice().sort((a, b) => a.ts - b.ts);
     return `<div class="item${rep ? " flag" : ""}">
+      ${p.fam ? `<div class="hint" style="font-weight:700">🔒 ${tr("Nur Familie", "Family only")}</div>` : ""}
       ${p.img ? `<img src="${p.img}" alt="Zeichnung">` : `<div class="t">${esc(p.t)}</div>`}
-      ${rs.map(r => `<div class="r"><span>↳ ${esc(r.t)}</span><button type="button" class="del${confirmKey === "r/" + r.id ? " confirm" : ""}" data-del="r/${r.id}">${confirmKey === "r/" + r.id ? tr("Wirklich?", "Sure?") : tr("Löschen", "Delete")}</button></div>`).join("")}
+      ${rs.map(r => `<div class="r"><span>↳ ${esc(r.t)}</span><button type="button" class="del${confirmKey === rk + r.id ? " confirm" : ""}" data-del="${rk}${r.id}">${confirmKey === rk + r.id ? tr("Wirklich?", "Sure?") : tr("Löschen", "Delete")}</button></div>`).join("")}
       <div class="m"><span class="sp">${ago(p.ts)}${rep ? ` · <b style="color:#b3261e">${rep}× ${tr("gemeldet", "reported")}</b>` : ""}</span>
         <button type="button" class="del${confirmKey === k ? " confirm" : ""}" data-del="${k}">${confirmKey === k ? tr("Wirklich löschen?", "Really delete?") : tr("Löschen", "Delete")}</button></div>
     </div>`;
@@ -372,7 +387,11 @@ async function del(b) {
     if (kind === "p") {
       await base.collection("posts").doc(id).delete();
       (mod.replies[id] || []).forEach(r => base.collection("replies").doc(r.id).delete().catch(() => {}));
-    } else await base.collection("replies").doc(id).delete();
+    } else if (kind === "fp" && mod.famBase) {
+      await mod.famBase.collection("posts").doc(id).delete();
+      ((mod.famReplies || {})[id] || []).forEach(r => mod.famBase.collection("replies").doc(r.id).delete().catch(() => {}));
+    } else if (kind === "fr" && mod.famBase) await mod.famBase.collection("replies").doc(id).delete();
+    else await base.collection("replies").doc(id).delete();
     notice("");
   } catch (x) { notice(tr("Löschen hat nicht geklappt. Versuch es nochmal.", "Deleting didn't work. Please try again.")); renderMod(); }
 }
