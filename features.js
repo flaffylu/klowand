@@ -235,12 +235,7 @@
   ] : [
     `Achtung, Achtung! Ein neuer Gast auf dem Thron. Guten Abend und herzlich willkommen!`,
   ];
-  const IS_DEMO = typeof DEMO !== "undefined" && DEMO;
-  // Auf der Demo-Wand wird angesagt, dass hier alle zusammen schreiben
-  const DEMO_LINE = tr("Achtung, Achtung! Ein neuer Gast auf dem Thron. Willkommen auf der Demo-Wand! Hier schreibst du live mit allen zusammen, die gerade hier sind. Schreib einfach los, und die anderen antworten dir!",
-    "Attention, attention! A new guest on the throne. Welcome to the demo wall! Here you write live together with everyone who's here right now. Just start writing, and the others will reply!",
-    "注意、注意！玉座に新しいお客様です。デモウォールへようこそ！ここでは今いるみんなと一緒にリアルタイムで書けます。さっそく書いてみよう、みんなが返事をくれるよ！");
-  const line = IS_DEMO ? DEMO_LINE : LINES[Math.floor(Math.random() * LINES.length)];
+  const line = LINES[Math.floor(Math.random() * LINES.length)];
 
   const css = document.createElement("style");
   css.textContent = `
@@ -287,7 +282,7 @@
   function sayIt() {
     let done = false;
     const fallback = () => { if (!done) { done = true; speak(line); } };
-    if (EN || IS_DEMO) { fallback(); return; }   // die Aufnahme ist deutsch und hat den Demo-Satz nicht
+    if (EN) { fallback(); return; }   // die Aufnahme ist deutsch
     try {
       const a = new Audio(`stimme/${file}.mp3`);
       a.onerror = fallback;
