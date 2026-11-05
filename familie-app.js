@@ -156,10 +156,10 @@
     return Array.from({ length: CELLS }, (_, i) => typeof z[i] === "string" ? z[i] : "");
   }
   const ANIMALS = ["🦊", "🐻", "🐼", "🐸", "🦁", "🐰", "🐯", "🐨", "🐵", "🦄"];
-  const FACH = [[/^(mathe|mat|rechnen)/, "➗"], [/^(deutsch|lesen|schreiben)/, "📖"], [/^(engl)/, "🇬🇧"], [/^(sport|turnen)/, "⚽"], [/^(schwimm)/, "🏊"],
-    [/^(musik)/, "🎵"], [/^(kunst|malen|zeichnen)/, "🎨"], [/^(sach|su$|hsu|nawi)/, "🔬"], [/^(bio)/, "🌱"], [/^(reli|ethik|lebensk)/, "🕊️"],
-    [/^(physik)/, "🧲"], [/^(chemie)/, "⚗️"], [/^(gesch)/, "🏰"], [/^(erdk|geo)/, "🌍"], [/^(infor|pc|computer)/, "💻"], [/^(franz)/, "🥐"],
-    [/^(latein)/, "🏛️"], [/^(span)/, "💃"], [/^(werk|technik)/, "🔨"], [/^(pause|frühst|essen|mittag)/, "🍎"], [/^(ag|hort|betreu)/, "⭐"], [/^(frei)/, "🎉"]];
+  const FACH = [[/^(mathe|mat|rechnen|算数|数学)/, "➗"], [/^(deutsch|lesen|schreiben|reading|writing|literacy|国語)/, "📖"], [/^(engl|英語)/, "🇬🇧"], [/^(sport|turnen|pe$|p\.e\.|gym|体育)/, "⚽"], [/^(schwimm)/, "🏊"],
+    [/^(musik|music|音楽)/, "🎵"], [/^(kunst|malen|zeichnen|art|図工|美術)/, "🎨"], [/^(sach|su$|hsu|nawi|science|理科)/, "🔬"], [/^(bio)/, "🌱"], [/^(reli|ethik|lebensk|re$)/, "🕊️"],
+    [/^(physik)/, "🧲"], [/^(chemie)/, "⚗️"], [/^(gesch|history|社会)/, "🏰"], [/^(erdk|geo)/, "🌍"], [/^(infor|pc|computer|computing|ict)/, "💻"], [/^(franz|french)/, "🥐"],
+    [/^(latein)/, "🏛️"], [/^(span)/, "💃"], [/^(werk|technik)/, "🔨"], [/^(pause|frühst|essen|mittag|break|lunch|給食)/, "🍎"], [/^(ag|hort|betreu)/, "⭐"], [/^(frei)/, "🎉"]];
   const fachEmoji = t => { const l = (t || "").toLowerCase().trim(); const f = FACH.find(([r]) => r.test(l)); return f ? f[1] : "📘"; };
   const DAYS_LONG = [tr("Montag", "Monday", "月曜日"), tr("Dienstag", "Tuesday", "火曜日"), tr("Mittwoch", "Wednesday", "水曜日"), tr("Donnerstag", "Thursday", "木曜日"), tr("Freitag", "Friday", "金曜日")];
   function speakPlan(name, day, list) {
