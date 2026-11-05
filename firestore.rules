@@ -129,6 +129,44 @@ service cloud.firestore {
         && request.resource.data.n == resource.data.n + 1;
     }
 
+    /* ---------- Familien-Bereich: Stundenplan und Fotos, nur mit dem geheimen Familien-Code ---------- */
+    function famKeyDoc(wall) {
+      return /databases/$(database)/documents/walls/$(wall)/private/key;
+    }
+    function famOk(wall, key) {
+      return exists(famKeyDoc(wall)) && get(famKeyDoc(wall)).data.k == key;
+    }
+    // Den Familien-Code sieht und ändert nur der Besitzer der Wand
+    match /walls/{wall}/private/{doc} {
+      allow read, delete: if doc == 'key' && isOwner(wall);
+      allow create, update: if doc == 'key' && isOwner(wall)
+        && request.resource.data.keys().hasOnly(['k', 'ts'])
+        && request.resource.data.k is string
+        && request.resource.data.k.matches('[A-Za-z0-9]{24,40}')
+        && request.resource.data.ts == request.time;
+    }
+    match /walls/{wall}/familie/{key}/plaene/{id} {
+      allow read, delete: if famOk(wall, key);
+      allow create, update: if famOk(wall, key)
+        && id.matches('[a-z0-9]{6,30}')
+        && request.resource.data.keys().hasOnly(['name', 'z', 'ts'])
+        && request.resource.data.name is string
+        && request.resource.data.name.size() >= 1 && request.resource.data.name.size() <= 20
+        && request.resource.data.z is string && request.resource.data.z.size() <= 4000
+        && request.resource.data.ts == request.time;
+    }
+    match /walls/{wall}/familie/{key}/fotos/{id} {
+      allow read: if famOk(wall, key);
+      allow create: if famOk(wall, key)
+        && request.resource.data.keys().hasOnly(['img', 'cap', 'ts'])
+        && request.resource.data.img is string && request.resource.data.img.size() <= 300000
+        && request.resource.data.img.matches('data:image/jpeg;base64,[A-Za-z0-9+/=]+')
+        && (!('cap' in request.resource.data) || (request.resource.data.cap is string && request.resource.data.cap.size() <= 80))
+        && request.resource.data.ts == request.time;
+      // Löschen: nur die Eltern (Besitzer der Wand)
+      allow delete: if isOwner(wall) && famOk(wall, key);
+    }
+
     /* ---------- Inhalte einer Wand ---------- */
     match /walls/{wall}/posts/{id} {
       allow read: if true;

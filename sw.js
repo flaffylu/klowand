@@ -1,6 +1,6 @@
 // Klo-Wand: einfacher Service Worker, damit die Seite als App installierbar ist.
-const CACHE = "klowand-v24";
-const SHELL = ["./", "index.html", "lang-ja.js", "lang.js", "config.js", "bilder/konfetti.jpg", "filter.js", "music.js", "games.js", "features.js", "fonts.css", "manifest.webmanifest", "icon-192.png", "icon-512.png"];
+const CACHE = "klowand-v25";
+const SHELL = ["./", "index.html", "lang-ja.js", "lang.js", "config.js", "bilder/konfetti.jpg", "filter.js", "music.js", "games.js", "features.js", "familie-app.js", "fonts.css", "manifest.webmanifest", "icon-192.png", "icon-512.png"];
 self.addEventListener("install", e => { e.waitUntil(caches.open(CACHE).then(c => c.addAll(SHELL)).then(() => self.skipWaiting())); });
 self.addEventListener("activate", e => { e.waitUntil(self.clients.claim()); });
 self.addEventListener("fetch", e => {
