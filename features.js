@@ -190,7 +190,7 @@
   document.head.appendChild(css);
 
   const plate = document.querySelector(".plate");
-  if (plate) plate.insertAdjacentHTML("afterend", `<div class="demobar"><span>🔒 ${tr("Demo: Malen, Musik und 2 Spiele gibt's in der Vollversion.", "Demo: drawing, music and 2 games are in the full version.", "デモ版：お絵かき・音楽・2つのゲームはフルバージョンで。")}</span>
+  if (plate) plate.insertAdjacentHTML("afterend", `<div class="demobar"><span>💬 <b>${tr("Hier schreibst du live mit allen zusammen, die gerade die Demo testen!", "Here you write live with everyone who's trying the demo right now!", "ここでは今デモを試しているみんなと一緒に書けます！")}</b><br>🔒 ${tr("Malen, Musik und 2 Spiele gibt's in der Vollversion.", "Drawing, music and 2 games are in the full version.", "お絵かき・音楽・2つのゲームはフルバージョンで。")}</span>
     <button type="button" id="demoMore">${tr("Alles freischalten", "Unlock all", "すべて解放")}</button></div>`);
   const what = {
     draw: tr("Malen ist in der Vollversion frei.", "Drawing is unlocked in the full version.", "お絵かきはフルバージョンで使えます。"),
@@ -235,7 +235,12 @@
   ] : [
     `Achtung, Achtung! Ein neuer Gast auf dem Thron. Guten Abend und herzlich willkommen!`,
   ];
-  const line = LINES[Math.floor(Math.random() * LINES.length)];
+  const IS_DEMO = typeof DEMO !== "undefined" && DEMO;
+  // Auf der Demo-Wand wird angesagt, dass hier alle zusammen schreiben
+  const DEMO_LINE = tr("Achtung, Achtung! Ein neuer Gast auf dem Thron. Willkommen auf der Demo-Wand! Hier schreibst du live mit allen zusammen, die gerade hier sind. Schreib einfach los, und die anderen antworten dir!",
+    "Attention, attention! A new guest on the throne. Welcome to the demo wall! Here you write live together with everyone who's here right now. Just start writing, and the others will reply!",
+    "注意、注意！玉座に新しいお客様です。デモウォールへようこそ！ここでは今いるみんなと一緒にリアルタイムで書けます。さっそく書いてみよう、みんなが返事をくれるよ！");
+  const line = IS_DEMO ? DEMO_LINE : LINES[Math.floor(Math.random() * LINES.length)];
 
   const css = document.createElement("style");
   css.textContent = `
@@ -282,7 +287,7 @@
   function sayIt() {
     let done = false;
     const fallback = () => { if (!done) { done = true; speak(line); } };
-    if (EN) { fallback(); return; }   // die Aufnahme ist deutsch
+    if (EN || IS_DEMO) { fallback(); return; }   // die Aufnahme ist deutsch und hat den Demo-Satz nicht
     try {
       const a = new Audio(`stimme/${file}.mp3`);
       a.onerror = fallback;
