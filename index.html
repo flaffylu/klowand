@@ -169,8 +169,8 @@ html.bg-photo .legal a{color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.7)}
 <form class="bar" id="composer" autocomplete="off">
   <div class="inner">
     <div class="modes" role="group" aria-label="Was willst du machen?">
-      <button type="button" data-m="text" aria-pressed="true">Schreiben</button>
-      <button type="button" data-m="draw" aria-pressed="false">Malen</button>
+      <button type="button" data-m="text" aria-pressed="true">✏️ Schreiben</button>
+      <button type="button" data-m="draw" aria-pressed="false">🖍️ Malen</button>
       <button type="button" id="chJoin" class="chjoin" aria-pressed="false" hidden>Für die Challenge</button>
     </div>
     <label for="msg" class="mod" id="mod">Schreib was an die Wand. Keine Namen, keine Nummern.</label>
@@ -213,7 +213,7 @@ html.bg-photo .legal a{color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.7)}
 <script>
 translateStatic([
   [".occ", "text", "Occupied"], [".tabs", "aria-label", "Sort"], ["#sNew", "text", "New"], ["#sTop", "text", "Popular"], ["#status", "text", "Connecting …"],
-  [".modes", "aria-label", "What do you want to do?"], ["[data-m=text]", "text", "Write"], ["[data-m=draw]", "text", "Draw"], ["#chJoin", "text", "For the challenge"],
+  [".modes", "aria-label", "What do you want to do?"], ["[data-m=text]", "text", "✏️ Write"], ["[data-m=draw]", "text", "🖍️ Draw"], ["#chJoin", "text", "For the challenge"],
   ["#mod", "text", "Write something on the wall. No names, no numbers."], ["#msg", "placeholder", "Here I sat and thought …"],
   ["#canvas", "aria-label", "Drawing area: draw with your finger"], ["#padHint", "text", "Draw with your finger …"], ["#clearPad", "text", "Wipe"],
   [".pens", "aria-label", "Pen colour"], [".p-ink", "aria-label", "Black"], [".p-red", "aria-label", "Red"], [".p-blue", "aria-label", "Blue"], [".p-green", "aria-label", "Green"], [".p-silver", "aria-label", "Silver"],
@@ -221,11 +221,22 @@ translateStatic([
   ["#sizes", "aria-label", "Line width"], ["[data-s='3']", "aria-label", "Thin"], ["[data-s='6']", "aria-label", "Medium"], ["[data-s='12']", "aria-label", "Thick"],
   [".send", "text", "Scribble"],
 ]);
-if (typeof HINTERGRUND !== "undefined" && HINTERGRUND) {
-  document.documentElement.classList.add("bg-photo");
-  if (typeof HINTERGRUND_HELL !== "undefined" && HINTERGRUND_HELL) document.documentElement.classList.add("bg-light");
-  document.documentElement.style.setProperty("--bg-url", `url("${HINTERGRUND.replace(/["\\]/g, "")}")`);
-}
+/* Hintergrund: eigene Wahl auf diesem Handy (Knopf „Hintergrund“), sonst der aus config.js */
+window.kloApplyBg = function (css, light) {
+  const r = document.documentElement;
+  r.classList.toggle("bg-photo", !!css); r.classList.toggle("bg-light", !!css && !!light);
+  if (css) r.style.setProperty("--bg-url", css); else r.style.removeProperty("--bg-url");
+};
+(function () {
+  let css = typeof HINTERGRUND !== "undefined" && HINTERGRUND ? `url("${HINTERGRUND.replace(/["\\]/g, "")}")` : "";
+  let light = typeof HINTERGRUND_HELL !== "undefined" && HINTERGRUND_HELL;
+  try {
+    const w = JSON.parse(localStorage.getItem("klowand-stil") || "null");
+    if (w && w.own) { const f = localStorage.getItem("klowand-stil-foto"); if (f && f.startsWith("data:image/jpeg")) { css = `url("${f}")`; light = !!w.light; } }
+    else if (w && typeof w.css === "string") { css = w.css; light = !!w.light; }
+  } catch (e) {}
+  kloApplyBg(css, light);
+})();
 const params = new URLSearchParams(location.search);
 let lastWall = null; try { lastWall = localStorage.getItem("klowand-last"); } catch (e) {}
 const WALL = (params.get("wand") || lastWall || Object.keys(WAENDE)[0]).toLowerCase().replace(/[^a-z0-9-]/g, "").slice(0, 60) || "wand";
@@ -501,5 +512,7 @@ render();
 <script src="games.js"></script>
 <script src="features.js"></script>
 <script src="familie-app.js"></script>
+<script src="notfall.js"></script>
+<script src="stil.js"></script>
 </body>
 </html>

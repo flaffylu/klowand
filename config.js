@@ -54,7 +54,7 @@ const IMPRESSUM = { name: "Kay Trautner", strasse: "Rathenaustr. 1", ort: "04179
 /* Hintergrundbild der Wand. Leer ("") = klassische grüne Kabinentür.
    "bilder/hell.jpg" = helle Pastell-Steine, "bilder/wasser.jpg" = dunkles Wasser über Steinen.
    HINTERGRUND_HELL = true, wenn das Bild hell ist (dann wird die Schrift daneben dunkel). */
-const HINTERGRUND = "bilder/konfetti.jpg";
+const HINTERGRUND = "bilder/kay-igel.jpg";
 const HINTERGRUND_HELL = true;
 
 /* Kontakt für die Infoseite (wirte.html). Leer lassen = Kontaktbereich ausblenden. */

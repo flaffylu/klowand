@@ -121,7 +121,7 @@
   const extras = document.querySelector(".extras");
   if (extras) {
     const b = document.createElement("button");
-    b.type = "button"; b.className = "oracle"; b.id = "orcOpen"; b.textContent = tr("Klo-Orakel", "Loo Oracle");
+    b.type = "button"; b.className = "oracle"; b.id = "orcOpen"; b.textContent = "🔮 " + tr("Klo-Orakel", "Loo Oracle");
     extras.appendChild(b);
     b.onclick = open;
   }

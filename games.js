@@ -87,7 +87,7 @@
   /* ---------- Knöpfe an der Wand ---------- */
   const extras = document.createElement("div");
   extras.className = "extras";
-  extras.innerHTML = `<button type="button" class="games" id="kgOpen">${tr("Klo-Spiele &amp; Rangliste", "Loo Games &amp; Leaderboard")}</button>
+  extras.innerHTML = `<button type="button" class="games" id="kgOpen">🎮 ${tr("Klo-Spiele &amp; Rangliste", "Loo Games &amp; Leaderboard")}</button>
     <button type="button" id="kgMusic" aria-pressed="false"><span class="eq" aria-hidden="true"><i></i><i></i><i></i></span><span id="kgMusicTxt">${tr("Musik an", "Music on")}</span></button>
     <button type="button" id="kgTrack" title="${tr("Lied wechseln", "Change song")}">${tr("Lied", "Song")}: <span id="kgTrackTxt"></span></button>`;
   document.querySelector(".tabs").before(extras);
