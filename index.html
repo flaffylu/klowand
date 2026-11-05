@@ -146,10 +146,7 @@ html.bg-photo .legal a{color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.7)}
 .nowall{position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;padding:24px;background:rgba(18,24,22,.92);color:#fff;text-align:center;font:500 1.1rem/1.4 var(--f-ui)}
 .nowall b{display:block;font:400 1.8rem/1.1 var(--f-marker);margin-bottom:10px}
 .nowall a{display:inline-block;margin-top:14px;background:var(--red);color:#fff;padding:10px 18px;border-radius:6px;text-decoration:none;font-weight:700;letter-spacing:.05em;text-transform:uppercase}
-.live{display:flex;gap:6px;margin:8px 0 2px}
-.live button{flex:1;font:700 .9rem var(--f-ui);letter-spacing:.04em;border-radius:999px;border:1.5px solid rgba(255,255,255,.35);background:transparent;color:inherit;padding:8px 10px;min-height:42px;cursor:pointer}
-.live button[aria-pressed=true]{background:#f2c14e;border-color:#f2c14e;color:#1d2321}
-.live #liveAll[aria-pressed=true]{background:#2f9e5b;border-color:#2f9e5b;color:#fff}
+.live{margin:8px 0 0;font:700 .95rem var(--f-ui);color:#f2c14e}
 .famtag{display:inline-block;font:700 .7rem var(--f-ui);letter-spacing:.08em;text-transform:uppercase;background:#1d2321;color:#f2c14e;padding:2px 7px;border-radius:4px;margin-bottom:4px}
 </style>
 </head>
@@ -178,10 +175,7 @@ html.bg-photo .legal a{color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.7)}
       <button type="button" data-m="draw" aria-pressed="false">🖍️ Malen</button>
       <button type="button" id="chJoin" class="chjoin" aria-pressed="false" hidden>Für die Challenge</button>
     </div>
-    <div class="live" id="liveRow" role="group" aria-label="Wer soll es sehen?" hidden>
-      <button type="button" id="liveFam" aria-pressed="true">🔒 Nur Familie</button>
-      <button type="button" id="liveAll" aria-pressed="false">🌍 An alle (live)</button>
-    </div>
+    <p class="live" id="liveRow" hidden>🔒 Alles, was du hier schreibst, sieht nur deine Familie.</p>
     <label for="msg" class="mod" id="mod">Schreib was an die Wand. Keine Namen, keine Nummern.</label>
     <textarea id="msg" maxlength="120" placeholder="Hier saß ich und dachte …"></textarea>
     <div class="pad" id="pad" hidden>
@@ -222,7 +216,7 @@ html.bg-photo .legal a{color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.7)}
 <script>
 translateStatic([
   [".occ", "text", "Occupied"], [".tabs", "aria-label", "Sort"], ["#sNew", "text", "New"], ["#sTop", "text", "Popular"], ["#status", "text", "Connecting …"],
-  [".modes", "aria-label", "What do you want to do?"], ["#liveFam", "text", "🔒 Family only"], ["#liveAll", "text", "🌍 Everyone (live)"], ["[data-m=text]", "text", "✏️ Write"], ["[data-m=draw]", "text", "🖍️ Draw"], ["#chJoin", "text", "For the challenge"],
+  [".modes", "aria-label", "What do you want to do?"], ["#liveRow", "text", "🔒 Everything you write here is only seen by your family."], ["[data-m=text]", "text", "✏️ Write"], ["[data-m=draw]", "text", "🖍️ Draw"], ["#chJoin", "text", "For the challenge"],
   ["#mod", "text", "Write something on the wall. No names, no numbers."], ["#msg", "placeholder", "Here I sat and thought …"],
   ["#canvas", "aria-label", "Drawing area: draw with your finger"], ["#padHint", "text", "Draw with your finger …"], ["#clearPad", "text", "Wipe"],
   [".pens", "aria-label", "Pen colour"], [".p-ink", "aria-label", "Black"], [".p-red", "aria-label", "Red"], [".p-blue", "aria-label", "Blue"], [".p-green", "aria-label", "Green"], [".p-silver", "aria-label", "Silver"],
@@ -343,18 +337,12 @@ function weekKey(t) {
 }
 /* Familien-Handys (mit Familien-Code) und die Wand „zuhause“ bekommen familienfreundliche Challenges */
 const FAM_DEVICE = WALL === "zuhause" || (() => { try { return !!(/^[A-Za-z0-9]{24,40}$/.test(params.get("k") || "") || localStorage.getItem("klowand-fam-" + WALL)); } catch (e) { return false; } })();
-/* Familien-Handys dürfen beim Schreiben wählen: nur für die Familie (geheim) oder live für alle mit dem Wand-Link */
+/* Familien-Handys schreiben immer nur für die Familie (geheim unter dem Familien-Code), nie live für alle */
 const FAM_KEY = FIXED ? null : (() => { try { const k = params.get("k"); if (/^[A-Za-z0-9]{24,40}$/.test(k || "")) return k; const s = localStorage.getItem("klowand-fam-" + WALL); return /^[A-Za-z0-9]{24,40}$/.test(s || "") ? s : null; } catch (e) { return null; } })();
 let famBase = FAM_KEY ? base.collection("familie").doc(FAM_KEY) : null;
-let famOnly = !!famBase && (() => { try { return localStorage.getItem("klowand-live") !== "1"; } catch (e) { return true; } })();
+const famOnly = !!famBase;
 let postsPub = [], postsFam = [], repliesPub = {}, repliesFam = {};
 function mergeData() { posts = postsPub.concat(postsFam); replies = Object.assign({}, repliesPub); Object.keys(repliesFam).forEach(k => { replies[k] = (replies[k] || []).concat(repliesFam[k]); }); }
-function setLive(fam) {
-  famOnly = !!fam && !!famBase;
-  try { localStorage.setItem("klowand-live", famOnly ? "0" : "1"); } catch (e) {}
-  const a = document.getElementById("liveFam"), b = document.getElementById("liveAll");
-  if (a) { a.setAttribute("aria-pressed", famOnly); b.setAttribute("aria-pressed", !famOnly); }
-}
 const LIST = (FAM_DEVICE && typeof FAMILIEN_CHALLENGES !== "undefined" && FAMILIEN_CHALLENGES.length) ? FAMILIEN_CHALLENGES
   : (typeof CHALLENGES !== "undefined" && CHALLENGES.length) ? CHALLENGES : [];
 const THIS_WEEK = weekKey(Date.now()), LAST_WEEK = weekKey(Date.now() - 7 * DAY);
@@ -408,42 +396,52 @@ const fail = e => say(e && e.code === "permission-denied" ? tr("Die Wand hat das
 const since = firebase.firestore.Timestamp.fromMillis(Date.now() - 60 * DAY);
 const offline = () => { status.textContent = "Offline"; say(tr("Die Wand ist gerade nicht erreichbar. Lade die Seite neu.", "The wall can't be reached right now. Reload the page.")); };
 const mapPost = (d, fam) => { const x = d.data(); return { id: d.id, t: x.t, img: isDrawing(x.img) ? x.img : null, color: x.color, font: x.font, rot: x.rot || 0, ch: typeof x.ch === "string" ? x.ch : null, ts: ms(x), fam }; };
-base.collection("posts").where("ts", ">", since).orderBy("ts", "desc").limit(300).onSnapshot(s => {
-  postsPub = s.docs.map(d => { const x = d.data(); return { id: d.id, t: x.t, img: isDrawing(x.img) ? x.img : null, color: x.color, font: x.font, rot: x.rot || 0, ch: typeof x.ch === "string" ? x.ch : null, ts: ms(x) }; })
-    .filter(p => p.img || typeof p.t === "string");
-  mergeData(); loaded = true; status.textContent = "Live"; render();
-}, offline);
-/* Familien-Beiträge: liegen geheim unter dem Familien-Code */
+const LEGACY = FIXED && Date.now() < Date.parse("2027-01-10");
 if (famBase) {
-  $("liveRow").hidden = false; setLive(famOnly);
-  $("liveFam").onclick = () => setLive(true); $("liveAll").onclick = () => setLive(false);
-  const famOff = () => { famBase = null; famOnly = false; postsFam = []; repliesFam = {}; $("liveRow").hidden = true; mergeData(); render(); };
+  /* Familien-Handy: nur die geheimen Familien-Beiträge laden. Öffentliches sieht und schreibt man hier nicht. */
+  $("liveRow").hidden = false;
   famBase.collection("posts").where("ts", ">", since).orderBy("ts", "desc").limit(300).onSnapshot(s => {
-    postsFam = s.docs.map(d => mapPost(d, true)).filter(p => p.img || typeof p.t === "string"); mergeData(); render();
-  }, famOff);
+    postsFam = s.docs.map(d => mapPost(d, true)).filter(p => p.img || typeof p.t === "string");
+    mergeData(); loaded = true; status.textContent = tr("Privat", "Private", "家族だけ"); render();
+  }, () => { loaded = true; mergeData(); render(); say(tr("Die Familien-Wand konnte nicht geladen werden. Lade die Seite neu.", "The family wall couldn't be loaded. Reload the page.")); });
   famBase.collection("replies").where("ts", ">", since).limit(2000).onSnapshot(s => {
     repliesFam = {}; s.docs.forEach(d => { const r = d.data(); if (typeof r.t === "string") (repliesFam[r.p] ||= []).push({ t: r.t, ts: ms(r) }); }); mergeData(); render();
   }, () => {});
+  famBase.collection("likes").where("ts", ">", since).limit(5000).onSnapshot(s => {
+    likes = {}; s.docs.forEach(d => { const p = d.data().p; (likes[p] ||= new Set()).add(d.id.slice(p.length + 1)); }); render();
+  }, () => {});
+} else {
+  base.collection("posts").where("ts", ">", since).orderBy("ts", "desc").limit(300).onSnapshot(s => {
+    postsPub = s.docs.map(d => mapPost(d, false)).filter(p => p.img || typeof p.t === "string");
+    mergeData(); loaded = true; status.textContent = "Live"; render();
+  }, err => {
+    if (err && err.code === "permission-denied") {
+      /* Familien-Wand ohne Familien-Code: privat, hier gibt es nichts zu sehen */
+      loaded = true; status.textContent = tr("Privat", "Private", "家族だけ");
+      wall.innerHTML = `<p class="empty">🔒 ${tr("Diese Wand ist privat.<br>Nur die Familie kann hier lesen und schreiben.", "This wall is private.<br>Only the family can read and write here.", "このウォールは家族専用です。")}</p>`;
+      composer.hidden = true; document.querySelectorAll(".extras,#sNew,#sTop,.getown").forEach(x => x.hidden = true);
+      render = () => {};
+    } else offline();
+  });
+  /* Striche und Meldungen der letzten Wochen. Alte Wände laden bis Januar noch alles, weil frühere Striche keinen Zeitstempel haben. */
+  const recent = c => LEGACY ? base.collection(c).limit(5000) : base.collection(c).where("ts", ">", since).limit(5000);
+  recent("likes").onSnapshot(s => {
+    likes = {}; s.docs.forEach(d => { const p = d.data().p; (likes[p] ||= new Set()).add(d.id.slice(p.length + 1)); }); render();
+  }, () => {});
+  recent("reports").onSnapshot(s => {
+    reports = {}; s.docs.forEach(d => { const p = d.data().p; reports[p] = (reports[p] || 0) + 1; }); render();
+  }, () => {});
+  (LEGACY ? base.collection("replies").limit(2000) : base.collection("replies").where("ts", ">", since).limit(2000)).onSnapshot(s => {
+    repliesPub = {}; s.docs.forEach(d => { const r = d.data(); if (typeof r.t === "string") (repliesPub[r.p] ||= []).push({ t: r.t, ts: ms(r) }); }); mergeData(); render();
+  }, () => {});
 }
-/* Striche und Meldungen der letzten Wochen. Alte Wände laden bis Januar noch alles, weil frühere Striche keinen Zeitstempel haben. */
-const LEGACY = FIXED && Date.now() < Date.parse("2027-01-10");
-const recent = c => LEGACY ? base.collection(c).limit(5000) : base.collection(c).where("ts", ">", since).limit(5000);
-recent("likes").onSnapshot(s => {
-  likes = {}; s.docs.forEach(d => { const p = d.data().p; (likes[p] ||= new Set()).add(d.id.slice(p.length + 1)); }); render();
-}, () => {});
-recent("reports").onSnapshot(s => {
-  reports = {}; s.docs.forEach(d => { const p = d.data().p; reports[p] = (reports[p] || 0) + 1; }); render();
-}, () => {});
-(LEGACY ? base.collection("replies").limit(2000) : base.collection("replies").where("ts", ">", since).limit(2000)).onSnapshot(s => {
-  repliesPub = {}; s.docs.forEach(d => { const r = d.data(); if (typeof r.t === "string") (repliesPub[r.p] ||= []).push({ t: r.t, ts: ms(r) }); }); mergeData(); render();
-}, () => {});
 
 /* ---------- Interaktion an der Wand ---------- */
 wall.addEventListener("click", e => {
   const b = e.target.closest("button[data-a]"); if (!b) return;
   const id = b.dataset.id;
   if (b.dataset.a === "chgo") { setChJoin(true); setMode(CH_NOW && CH_NOW.art === "draw" ? "draw" : "text"); if (mode === "text") msg.focus(); return; }
-  if (b.dataset.a === "like") base.collection("likes").doc(id + "_" + device).set({ p: id, ts: now() }).catch(fail);
+  if (b.dataset.a === "like") (famBase || base).collection("likes").doc(id + "_" + device).set({ p: id, ts: now() }).catch(fail);
   if (b.dataset.a === "reply") { openReply = openReply === id ? null : id; render(); }
   if (b.dataset.a === "report") base.collection("reports").doc(id + "_" + device).set({ p: id, ts: now() })
     .then(() => say(tr("Gemeldet. Nach 3 Meldungen wird der Spruch übermalt.", "Reported. After 3 reports the post gets painted over."), true)).catch(fail);

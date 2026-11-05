@@ -9,7 +9,9 @@
   const C = { door: "#b9c7bf", ink: "#1d2321", red: "#b3261e", gold: "#e0a92e", paper: "#fbfbf7", core: "#c9cfc9", green: "#2f6b3a", wood: "#8a5a2b", muted: "#46524b" };
   const $ = id => document.getElementById(id);
   const today = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`; };
-  const scores = g => fs.collection("walls").doc(WALL).collection("games").doc(g).collection("scores");
+  // Auf Familien-Handys liegt die Rangliste geheim bei der Familie, sonst öffentlich an der Wand
+  const scoreBase = () => (typeof famBase !== "undefined" && famBase) ? famBase : fs.collection("walls").doc(WALL);
+  const scores = g => scoreBase().collection("games").doc(g).collection("scores");
   const rolls = n => JA ? `${n}個` : `${n} ${n === 1 ? tr("Rolle", "roll") : tr("Rollen", "rolls")}`;
   const fmt = (g, s) => g === "reflex" ? `${s} ms` : rolls(s);
   const sortRows = (g, rows) => rows.sort((a, b) => GAMES[g].better === "desc" ? b.score - a.score : a.score - b.score);

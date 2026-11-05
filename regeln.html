@@ -3,7 +3,7 @@
 <style>body{margin:0;font:16px/1.4 system-ui,sans-serif;background:#f4f7f5;color:#1d2321}.top{position:sticky;top:0;background:#1d2321;color:#fff;padding:14px 16px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
 button{font:700 18px system-ui;background:#b3261e;color:#fff;border:none;border-radius:10px;padding:14px 22px;min-height:52px}#ok{font-weight:700}
 pre{margin:0;padding:16px;font:12px/1.4 ui-monospace,monospace;white-space:pre-wrap;overflow-wrap:anywhere}</style></head><body>
-<div class="top"><button id="b">📋 Alle Regeln kopieren</button><span id="ok">243 Zeilen</span></div>
+<div class="top"><button id="b">📋 Alle Regeln kopieren</button><span id="ok">259 Zeilen</span></div>
 <pre id="r">rules_version = &#x27;2&#x27;;
 service cloud.firestore {
   match /databases/{database}/documents {
@@ -139,6 +139,10 @@ service cloud.firestore {
     function famKeyDoc(wall) {
       return /databases/$(database)/documents/walls/$(wall)/private/key;
     }
+    // Familien-Planner eingeschaltet: Die Wand ist privat, öffentlich kann dort niemand mehr lesen oder schreiben
+    function famOn(wall) {
+      return exists(famKeyDoc(wall));
+    }
     function famOk(wall, key) {
       return exists(famKeyDoc(wall)) &amp;&amp; get(famKeyDoc(wall)).data.k == key;
     }
@@ -180,6 +184,15 @@ service cloud.firestore {
         &amp;&amp; request.resource.data.ts == request.time;
       allow delete: if isOwner(wall) &amp;&amp; famOk(wall, key);
     }
+    match /walls/{wall}/familie/{key}/likes/{id} {
+      allow read: if famOk(wall, key);
+      allow create: if famOk(wall, key) &amp;&amp; okMark(request.resource.data, id);
+    }
+    match /walls/{wall}/familie/{key}/games/{game}/scores/{id} {
+      allow read: if famOk(wall, key);
+      allow create: if famOk(wall, key) &amp;&amp; okScore(game, request.resource.data);
+      allow delete: if isOwner(wall) &amp;&amp; famOk(wall, key);
+    }
     match /walls/{wall}/familie/{key}/fotos/{id} {
       allow read: if famOk(wall, key);
       allow create: if famOk(wall, key)
@@ -194,8 +207,8 @@ service cloud.firestore {
 
     /* ---------- Inhalte einer Wand ---------- */
     match /walls/{wall}/posts/{id} {
-      allow read: if true;
-      allow create: if openWall(wall)
+      allow read: if !famOn(wall) || canModerate(wall);
+      allow create: if openWall(wall) &amp;&amp; !famOn(wall)
         &amp;&amp; (textPost(request.resource.data) || drawPost(request.resource.data))
         &amp;&amp; okWeek(request.resource.data)
         &amp;&amp; request.resource.data.rot is number
@@ -204,8 +217,8 @@ service cloud.firestore {
     }
 
     match /walls/{wall}/replies/{id} {
-      allow read: if true;
-      allow create: if openWall(wall)
+      allow read: if !famOn(wall) || canModerate(wall);
+      allow create: if openWall(wall) &amp;&amp; !famOn(wall)
         &amp;&amp; request.resource.data.keys().hasOnly([&#x27;p&#x27;, &#x27;t&#x27;, &#x27;ts&#x27;])
         &amp;&amp; request.resource.data.p is string
         &amp;&amp; okText(request.resource.data.t, 60)
@@ -214,14 +227,14 @@ service cloud.firestore {
     }
 
     match /walls/{wall}/likes/{id} {
-      allow read: if true;
-      allow create: if openWall(wall) &amp;&amp; okMark(request.resource.data, id);
+      allow read: if !famOn(wall) || canModerate(wall);
+      allow create: if openWall(wall) &amp;&amp; !famOn(wall) &amp;&amp; okMark(request.resource.data, id);
       allow delete: if canModerate(wall);
     }
 
     match /walls/{wall}/reports/{id} {
-      allow read: if true;
-      allow create: if openWall(wall) &amp;&amp; okMark(request.resource.data, id);
+      allow read: if !famOn(wall) || canModerate(wall);
+      allow create: if openWall(wall) &amp;&amp; !famOn(wall) &amp;&amp; okMark(request.resource.data, id);
       allow delete: if canModerate(wall);
     }
 
@@ -231,18 +244,21 @@ service cloud.firestore {
         &amp;&amp; !dirty(n);
     }
 
+    function okScore(game, d) {
+      return d.keys().hasOnly([&#x27;name&#x27;, &#x27;score&#x27;, &#x27;day&#x27;, &#x27;ts&#x27;])
+        &amp;&amp; okName(d.name)
+        &amp;&amp; d.score is int
+        &amp;&amp; d.day is string
+        &amp;&amp; d.day.matches(&#x27;[0-9]{4}-[0-9]{2}-[0-9]{2}&#x27;)
+        &amp;&amp; d.ts == request.time
+        &amp;&amp; ((game == &#x27;fang&#x27; &amp;&amp; d.score &gt;= 0 &amp;&amp; d.score &lt;= 300)
+          || (game == &#x27;reflex&#x27; &amp;&amp; d.score &gt;= 100 &amp;&amp; d.score &lt;= 3000)
+          || (game == &#x27;stapel&#x27; &amp;&amp; d.score &gt;= 0 &amp;&amp; d.score &lt;= 500));
+    }
+
     match /walls/{wall}/games/{game}/scores/{id} {
-      allow read: if true;
-      allow create: if openWall(wall)
-        &amp;&amp; request.resource.data.keys().hasOnly([&#x27;name&#x27;, &#x27;score&#x27;, &#x27;day&#x27;, &#x27;ts&#x27;])
-        &amp;&amp; okName(request.resource.data.name)
-        &amp;&amp; request.resource.data.score is int
-        &amp;&amp; request.resource.data.day is string
-        &amp;&amp; request.resource.data.day.matches(&#x27;[0-9]{4}-[0-9]{2}-[0-9]{2}&#x27;)
-        &amp;&amp; request.resource.data.ts == request.time
-        &amp;&amp; ((game == &#x27;fang&#x27; &amp;&amp; request.resource.data.score &gt;= 0 &amp;&amp; request.resource.data.score &lt;= 300)
-          || (game == &#x27;reflex&#x27; &amp;&amp; request.resource.data.score &gt;= 100 &amp;&amp; request.resource.data.score &lt;= 3000)
-          || (game == &#x27;stapel&#x27; &amp;&amp; request.resource.data.score &gt;= 0 &amp;&amp; request.resource.data.score &lt;= 500));
+      allow read: if !famOn(wall) || canModerate(wall);
+      allow create: if openWall(wall) &amp;&amp; !famOn(wall) &amp;&amp; okScore(game, request.resource.data);
       allow delete: if canModerate(wall);
     }
   }
