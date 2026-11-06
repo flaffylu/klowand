@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="color-scheme" content="only light">
-<title>Meine Klo-Wand</title>
-<meta name="description" content="Code einlösen und die eigene Klo-Wand für deine Bar einrichten.">
+<title>Meine Wand</title>
+<meta name="description" content="Code einlösen und deinen Familien-Planner oder deine Klo-Wand einrichten.">
 <meta name="theme-color" content="#1d2321">
 <link rel="icon" href="icon-192.png">
 <link rel="stylesheet" href="fonts.css">
@@ -78,18 +78,18 @@ summary{cursor:pointer;font:700 1rem var(--f-ui);letter-spacing:.04em;text-trans
 <body>
 <div class="wrap">
   <div class="top">
-    <h1>Meine Klo-Wand</h1>
+    <h1>Meine Wand</h1>
     <p>Einrichten · QR-Code · Beiträge verwalten</p>
   </div>
 
   <!-- Nicht angemeldet -->
   <section class="card" id="out" hidden>
-    <h2>Deine eigene Klo-Wand</h2>
+    <h2>Deine eigene Wand</h2>
     <p class="sub">In zwei Minuten fertig, ganz ohne Technik:</p>
     <ol class="steps">
       <li>Mit deinem Google-Konto anmelden.</li>
       <li>Den <b>Code aus deiner Kauf-E-Mail</b> und einen Namen eintragen, z. B. deine Bar oder „Familie Müller“.</li>
-      <li>QR-Code ausdrucken und innen an die Kabinentür kleben. Fertig!</li>
+      <li>Familie: „Familien-Planner“ einschalten und den Familien-Link teilen. Bar: QR-Code ausdrucken und an die Kabinentür kleben. Fertig!</li>
     </ol>
     <div class="row"><button type="button" class="primary" id="login">Mit Google anmelden</button></div>
     <p class="hint">Mit diesem Konto verwaltest du später deine Wand und kannst Beiträge löschen.</p>
@@ -130,14 +130,14 @@ summary{cursor:pointer;font:700 1rem var(--f-ui);letter-spacing:.04em;text-trans
 <script src="filter.js"></script>
 <script src="qrcode.js"></script>
 <script>
-document.title = tr("Meine Klo-Wand", "My Klo-Wand");
+document.title = tr("Meine Wand", "My wall");
 document.getElementById("legalNav").insertAdjacentHTML("beforeend", " · " + langButton());
 translateStatic([
-  [".top h1", "text", "My Klo-Wand"], [".top p", "text", "Set up · QR code · Manage posts"],
-  ["#out h2", "text", "Your own Klo-Wand"], ["#out .sub", "text", "Ready in two minutes, no tech skills needed:"],
+  [".top h1", "text", "My wall"], [".top p", "text", "Set up · QR code · Manage posts"],
+  ["#out h2", "text", "Your own wall"], ["#out .sub", "text", "Ready in two minutes, no tech skills needed:"],
   ["#out .steps li:nth-child(1)", "text", "Sign in with your Google account."],
   ["#out .steps li:nth-child(2)", "text", "Enter the code from your purchase email and a name, e.g. your bar or “The Millers”."],
-  ["#out .steps li:nth-child(3)", "text", "Print the QR code and stick it inside the bathroom door. Done!"],
+  ["#out .steps li:nth-child(3)", "text", "Family: turn on the “Family Planner” and share the family link. Bar: print the QR code and stick it on the cubicle door. Done!"],
   ["#login", "text", "Sign in with Google"], ["#out .hint", "text", "With this account you manage your wall later and can delete posts."],
   ["#logout", "text", "Sign out"], ["#redeemTitle", "text", "Redeem code"], ["#redeemSub", "text", "Enter the code from your purchase email. Your wall is ready right away."],
   ["label[for=code]", "text", "Your code"], ["label[for=name]", "text", "Name of the wall"], ["#name", "placeholder", "e.g. The Anchor or The Millers"],
@@ -245,7 +245,7 @@ function renderWalls() {
       ${openMod === w.id ? `<div class="feed" id="modFeed"><p class="empty">${tr("Beiträge werden geladen …", "Loading posts …")}</p></div>` : ""}
       <details><summary>${tr("Als App aufs Handy legen", "Add to your phone as an app")}</summary>
         ${tr(`<ol class="steps"><li>Tippe auf <b>„Wand öffnen“</b>.</li><li>Im Chrome-Menü <b>⋮</b> auf <b>„Zum Startbildschirm hinzufügen“</b> tippen. Beim iPhone: Teilen-Symbol, dann „Zum Home-Bildschirm“.</li>
-        <li>Fertig: Die Klo-Wand liegt jetzt wie eine App auf deinem Handy.</li></ol>
+        <li>Fertig: Deine Wand liegt jetzt wie eine App auf deinem Handy.</li></ol>
         <p class="hint">Diese Verwaltungsseite kannst du genauso als App ablegen.</p>`, `<ol class="steps"><li>Tap <b>“Open wall”</b>.</li><li>In the Chrome menu <b>⋮</b> tap <b>“Add to Home screen”</b>. On iPhone: the Share icon, then “Add to Home Screen”.</li>
         <li>Done: the Klo-Wand now sits on your phone like an app.</li></ol>
         <p class="hint">You can add this management page as an app the same way.</p>`, `<ol class="steps"><li><b>「ウォールを開く」</b>をタップ。</li><li>Chromeのメニュー <b>⋮</b> から<b>「ホーム画面に追加」</b>。iPhoneは共有ボタンから「ホーム画面に追加」。</li>
@@ -325,7 +325,7 @@ $("redeemForm").addEventListener("submit", async e => {
     batch.update(cref, { used: true, wall: id, by: user.uid, at: now() });
     await batch.commit();
     $("redeemForm").reset();
-    redeemMsg(tr("Fertig! Deine Wand ist eingerichtet. Speichere jetzt den Sticker und kleb ihn an die Kabinentür.", "Done! Your wall is set up. Now save the sticker and put it on the bathroom door."), true);
+    redeemMsg(tr("Fertig! Deine Wand ist eingerichtet. Für die Familie: Tippe unten auf „Familien-Planner“. Für die Bar: Speichere den Sticker und kleb ihn an die Kabinentür.", "Done! Your wall is set up. Now save the sticker and put it on the bathroom door."), true);
     setTimeout(() => { const el = document.querySelector(`[data-wall="${id}"]`); if (el) el.scrollIntoView({ behavior: "smooth", block: "start" }); }, 600);
   } catch (x) {
     redeemMsg(x && x.code === "permission-denied" ? tr("Der Code konnte nicht eingelöst werden. Ist er schon benutzt? Sonst schreib uns.", "The code couldn't be redeemed. Has it been used already? Otherwise, contact us.") : tr("Hat nicht geklappt. Prüf deine Verbindung und versuch es nochmal.", "That didn't work. Check your connection and try again."));
