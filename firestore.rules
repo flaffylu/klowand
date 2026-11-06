@@ -89,7 +89,7 @@ service cloud.firestore {
         && request.resource.data.ts == request.time
         && request.resource.data.code is string
         && exists(/databases/$(database)/documents/codes/$(request.resource.data.code))
-        && get(/databases/$(database)/documents/codes/$(request.resource.data.code)).data.used == false
+        && codeUses(get(/databases/$(database)/documents/codes/$(request.resource.data.code)).data) < 2
         && getAfter(/databases/$(database)/documents/codes/$(request.resource.data.code)).data.wall == wall
       );
       // Besitzer darf Name und Unterzeile ändern
@@ -102,15 +102,25 @@ service cloud.firestore {
       allow delete: if isAdmin();
     }
 
-    /* ---------- Codes aus Payhip ---------- */
+    /* ---------- Codes aus Payhip: jeder Code reicht für 2 Wände desselben Kontos ---------- */
+    // Wie oft wurde der Code schon benutzt? Alte Codes ohne Zähler: einmal, wenn "used" gesetzt ist.
+    function codeUses(c) {
+      return c.get('n', c.get('used', false) == true ? 1 : 0);
+    }
+    function codeWalls(c) {
+      return c.get('walls', ('wall' in c) ? [c.wall] : []);
+    }
     match /codes/{code} {
       allow get: if request.auth != null;
       allow list, create, delete: if isAdmin();
       allow update: if isAdmin() || (
         request.auth != null
-        && resource.data.used == false
-        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['used', 'wall', 'by', 'at'])
-        && request.resource.data.used == true
+        && codeUses(resource.data) < 2
+        && (!('by' in resource.data) || resource.data.by == request.auth.uid)
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['used', 'wall', 'walls', 'n', 'by', 'at'])
+        && request.resource.data.n == codeUses(resource.data) + 1
+        && request.resource.data.used == (request.resource.data.n >= 2)
+        && request.resource.data.walls == codeWalls(resource.data).concat([request.resource.data.wall])
         && request.resource.data.by == request.auth.uid
         && request.resource.data.at == request.time
         && request.resource.data.wall is string

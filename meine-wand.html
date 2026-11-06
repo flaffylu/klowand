@@ -33,7 +33,7 @@ h3{margin:14px 0 6px;font:700 1.05rem var(--f-ui);letter-spacing:.04em;text-tran
 .steps{margin:10px 0 0;padding-left:22px}.steps li{margin:4px 0}
 button,.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;font:700 .95rem var(--f-ui);letter-spacing:.05em;text-transform:uppercase;border-radius:7px;border:1.5px solid var(--ink);background:transparent;color:var(--ink);padding:9px 14px;min-height:44px;cursor:pointer;text-decoration:none;box-sizing:border-box}
 button.primary,.btn.primary{background:var(--red);border-color:var(--red);color:#fff}
-button.dark{background:var(--ink);color:#fff}
+button.dark,.btn.dark{background:var(--ink);color:#fff}
 button:disabled{opacity:.5;cursor:default}
 :focus-visible{outline:2px dashed #1f4fa3;outline-offset:2px}
 .row{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
@@ -113,6 +113,7 @@ summary{cursor:pointer;font:700 1rem var(--f-ui);letter-spacing:.04em;text-trans
         <input id="sub" maxlength="40" placeholder="z. B. Herren · Kabine 1 oder Gästeklo">
         <p class="hint">Steht oben auf dem Türschild der Wand. Kannst du später ändern.</p>
         <div class="row"><button type="submit" class="primary" id="redeemBtn">Wand einrichten</button></div>
+        <div class="row" id="updateBox" hidden><a class="btn dark" id="updateLink" href="#" target="_blank" rel="noopener">⭐ Update kaufen: 2 weitere Wände · 4,99 €</a></div>
         <p class="msg" id="redeemMsg"></p>
       </form>
     </section>
@@ -218,11 +219,22 @@ async function sticker(w) {
 function fit(c, t, max) { while (c.measureText(t).width > max && t.length > 4) t = t.slice(0, -2) + "…"; return t; }
 function roundRect(c, x, y, w, h, r) { c.beginPath(); c.moveTo(x + r, y); c.arcTo(x + w, y, x + w, y + h, r); c.arcTo(x + w, y + h, x, y + h, r); c.arcTo(x, y + h, x, y, r); c.arcTo(x, y, x + w, y, r); c.closePath(); }
 
+/* ---------- Update-Link (2 weitere Wände) ---------- */
+$("updateLink").href = typeof UPDATE_LINK !== "undefined" ? UPDATE_LINK : "https://payhip.com/Pikumio";
+if (EN) $("updateLink").textContent = tr("", "⭐ Buy update: 2 more walls · €4.99", "⭐ アップデート：ウォール2つ追加 · 4.99€");
+
 /* ---------- Eigene Wände ---------- */
 function renderWalls() {
   const has = walls.length > 0;
+  // Jeder Code reicht für 2 Wände: Hat einer meiner Codes noch einen freien Platz?
+  const perCode = {}; walls.forEach(w => { if (w.code) perCode[w.code] = (perCode[w.code] || 0) + 1; });
+  const free = Object.keys(perCode).find(c => perCode[c] < WAENDE_PRO_CODE);
   $("redeemTitle").textContent = has ? tr("Weitere Wand einrichten", "Set up another wall") : tr("Code einlösen", "Redeem code");
-  $("redeemSub").textContent = has ? tr("Für jede weitere Wand, z. B. Damen- und Herrenklo, brauchst du einen eigenen Code.", "Each additional wall, e.g. ladies’ and men’s room, needs its own code.") : tr("Trag den Code aus deiner Kauf-E-Mail ein. Danach ist deine Wand sofort fertig.", "Enter the code from your purchase email. Your wall is ready right away.");
+  $("redeemSub").textContent = !has ? tr("Trag den Code aus deiner Kauf-E-Mail ein. Danach ist deine Wand sofort fertig. Jeder Code reicht für 2 Wände.", "Enter the code from your purchase email. Your wall is ready right away. Each code is good for 2 walls.")
+    : free ? tr(`Mit deinem Code ${free} kannst du noch 1 Wand einrichten – ohne Zusatzkosten. Er ist schon eingetragen.`, `You can set up 1 more wall with your code ${free} – at no extra cost. It's already filled in.`)
+    : tr("Deine 2 Wände sind eingerichtet. Für 2 weitere Wände brauchst du ein Update für 4,99 €. Den neuen Code trägst du dann hier ein.", "Your 2 walls are set up. For 2 more walls you need an update for €4.99. Then enter the new code here.");
+  const ub = $("updateBox"); if (ub) ub.hidden = !has || !!free;
+  if (free && !$("code").value) $("code").value = free;
   $("walls").innerHTML = walls.map(w => {
     const url = wallUrl(w.id), ed = editing === w.id;
     return `<section class="card" data-wall="${esc(w.id)}">
@@ -314,7 +326,10 @@ $("redeemForm").addEventListener("submit", async e => {
   try {
     const cref = fs.collection("codes").doc(code), c = await cref.get();
     if (!c.exists) { redeemMsg(tr("Diesen Code gibt es nicht. Prüf ihn nochmal in deiner Kauf-E-Mail.", "This code doesn't exist. Check it again in your purchase email.")); return; }
-    if (c.data().used) { redeemMsg(tr("Dieser Code wurde schon eingelöst.", "This code has already been redeemed.")); return; }
+    const cd = c.data(), uses = typeof cd.n === "number" ? cd.n : (cd.used ? 1 : 0);
+    if (cd.by && cd.by !== user.uid) { redeemMsg(tr("Dieser Code wurde schon von einem anderen Konto eingelöst.", "This code has already been redeemed by another account.")); return; }
+    if (uses >= WAENDE_PRO_CODE) { redeemMsg(tr("Mit diesem Code wurden schon 2 Wände eingerichtet. Für 2 weitere Wände brauchst du ein Update für 4,99 €.", "This code has already been used for 2 walls. For 2 more walls you need an update for €4.99.")); $("updateBox").hidden = false; return; }
+    const prevWalls = Array.isArray(cd.walls) ? cd.walls : (cd.wall ? [cd.wall] : []);
     let id = null;
     for (let i = 0; i < 6 && !id; i++) {
       const cand = slug(name) + "-" + String(Math.floor(1000 + Math.random() * 9000));
@@ -323,10 +338,12 @@ $("redeemForm").addEventListener("submit", async e => {
     if (!id) { redeemMsg(tr("Hat nicht geklappt. Versuch es nochmal.", "That didn't work. Please try again.")); return; }
     const batch = fs.batch();
     batch.set(fs.collection("walls").doc(id), { name, sub, owner: user.uid, code, ts: now() });
-    batch.update(cref, { used: true, wall: id, by: user.uid, at: now() });
+    batch.update(cref, { n: uses + 1, used: uses + 1 >= WAENDE_PRO_CODE, wall: id, walls: prevWalls.concat([id]), by: user.uid, at: now() });
     await batch.commit();
     $("redeemForm").reset();
-    redeemMsg(tr("Fertig! Deine Wand ist eingerichtet. Für die Familie: Tippe unten auf „Familien-Planner“. Für die Bar: Speichere den Sticker und kleb ihn an die Kabinentür.", "Done! Your wall is set up. Now save the sticker and put it on the bathroom door."), true);
+    const left = WAENDE_PRO_CODE - uses - 1;
+    redeemMsg(tr("Fertig! Deine Wand ist eingerichtet. Für die Familie: Tippe auf „Familien-Planner“. Für die Bar: Speichere den Sticker und kleb ihn an die Kabinentür.", "Done! Your wall is set up. For a family: tap “Family Planner”. For a bar: save the sticker and put it on the cubicle door.")
+      + (left > 0 ? " " + tr(`Mit deinem Code kannst du noch ${left} weitere Wand einrichten.`, `You can set up ${left} more wall with your code.`) : ""), true);
     setTimeout(() => { const el = document.querySelector(`[data-wall="${id}"]`); if (el) el.scrollIntoView({ behavior: "smooth", block: "start" }); }, 600);
   } catch (x) {
     redeemMsg(x && x.code === "permission-denied" ? tr("Der Code konnte nicht eingelöst werden. Ist er schon benutzt? Sonst schreib uns.", "The code couldn't be redeemed. Has it been used already? Otherwise, contact us.") : tr("Hat nicht geklappt. Prüf deine Verbindung und versuch es nochmal.", "That didn't work. Check your connection and try again."));

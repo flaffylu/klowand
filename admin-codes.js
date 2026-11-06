@@ -22,7 +22,7 @@ window.KloCodes = (function () {
     if (!isAdmin) { loaded = false; draw(); return; }
     try {
       const snap = await fs.collection("codes").limit(2000).get();
-      codes = snap.docs.map(d => { const x = d.data(); return { id: d.id, used: !!x.used, wall: x.wall || "", created: x.created && x.created.toMillis ? x.created.toMillis() : 0, at: x.at && x.at.toMillis ? x.at.toMillis() : 0 }; });
+      codes = snap.docs.map(d => { const x = d.data(); const n = typeof x.n === "number" ? x.n : (x.used ? 1 : 0); return { id: d.id, n, used: n > 0 || !!x.used || !!x.wall, walls: Array.isArray(x.walls) ? x.walls : (x.wall ? [x.wall] : []), wall: x.wall || "", created: x.created && x.created.toMillis ? x.created.toMillis() : 0, at: x.at && x.at.toMillis ? x.at.toMillis() : 0 }; });
       loaded = true;
     } catch (e) { loaded = false; notice("Codes konnten nicht geladen werden. Sind die neuen Regeln in Firebase veröffentlicht?"); }
     try {
@@ -68,7 +68,7 @@ window.KloCodes = (function () {
       </div>
       <div class="item" style="background:var(--panel);color:var(--fg);border:1px solid var(--line)">
         <b style="font-size:1.1rem">Neue Codes für Payhip</b>
-        <p style="margin:6px 0 10px;color:var(--muted)">Erzeugen, als Datei speichern und bei Payhip im Produkt unter <i>License Keys → Upload</i> hochladen. Jeder Käufer bekommt automatisch einen Code.</p>
+        <p style="margin:6px 0 10px;color:var(--muted)">Erzeugen, als Datei speichern und bei Payhip im Produkt unter <i>License Keys → Upload</i> hochladen. Jeder Käufer bekommt automatisch einen Code. <b>Jeder Code reicht für 2 Wände.</b> Für das Update-Produkt (2 weitere Wände) einfach eine eigene Liste erzeugen und dort hochladen.</p>
         <div class="actions" style="margin-top:0">
           <button type="button" class="primary" data-make="20" ${busy ? "disabled" : ""}>20 Codes erzeugen</button>
           <button type="button" data-make="100" ${busy ? "disabled" : ""}>100 Codes erzeugen</button>
@@ -78,8 +78,8 @@ window.KloCodes = (function () {
       </div>
       ${used.length ? `<h3 style="margin:18px 0 8px;font:700 1rem var(--f-ui);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)">Eingelöst</h3>
         <div class="feed">${used.map(c => {
-          const w = DYN[c.wall];
-          return `<div class="rk-row"><div><span class="n">${esc(w ? w.name : c.wall)}</span><span class="m">${esc(c.id)} · ${c.at ? day(c.at) : ""}${w && w.sub ? " · " + esc(w.sub) : ""}</span></div>
+          const names = c.walls.map(id => DYN[id] ? DYN[id].name : id);
+          return `<div class="rk-row"><div><span class="n">${esc(names.join(" · ") || c.wall)}</span><span class="m">${esc(c.id)} · ${c.walls.length || c.n} von 2 Wänden · ${c.at ? day(c.at) : ""}</span></div>
             <a href="./?wand=${encodeURIComponent(c.wall)}" target="_blank" rel="noopener" style="color:var(--ink);font-weight:700">Wand ansehen</a><span></span></div>`;
         }).join("")}</div>` : ""}
       ${unused.length ? `<details style="margin-top:18px"><summary style="cursor:pointer;color:var(--muted)">Alle ${unused.length} freien Codes anzeigen</summary>

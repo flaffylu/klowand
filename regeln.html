@@ -3,7 +3,7 @@
 <style>body{margin:0;font:16px/1.4 system-ui,sans-serif;background:#f4f7f5;color:#1d2321}.top{position:sticky;top:0;background:#1d2321;color:#fff;padding:14px 16px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
 button{font:700 18px system-ui;background:#b3261e;color:#fff;border:none;border-radius:10px;padding:14px 22px;min-height:52px}#ok{font-weight:700}
 pre{margin:0;padding:16px;font:12px/1.4 ui-monospace,monospace;white-space:pre-wrap;overflow-wrap:anywhere}</style></head><body>
-<div class="top"><button id="b">📋 Alle Regeln kopieren</button><span id="ok">259 Zeilen</span></div>
+<div class="top"><button id="b">📋 Alle Regeln kopieren</button><span id="ok">269 Zeilen</span></div>
 <pre id="r">rules_version = &#x27;2&#x27;;
 service cloud.firestore {
   match /databases/{database}/documents {
@@ -95,7 +95,7 @@ service cloud.firestore {
         &amp;&amp; request.resource.data.ts == request.time
         &amp;&amp; request.resource.data.code is string
         &amp;&amp; exists(/databases/$(database)/documents/codes/$(request.resource.data.code))
-        &amp;&amp; get(/databases/$(database)/documents/codes/$(request.resource.data.code)).data.used == false
+        &amp;&amp; codeUses(get(/databases/$(database)/documents/codes/$(request.resource.data.code)).data) &lt; 2
         &amp;&amp; getAfter(/databases/$(database)/documents/codes/$(request.resource.data.code)).data.wall == wall
       );
       // Besitzer darf Name und Unterzeile ändern
@@ -108,15 +108,25 @@ service cloud.firestore {
       allow delete: if isAdmin();
     }
 
-    /* ---------- Codes aus Payhip ---------- */
+    /* ---------- Codes aus Payhip: jeder Code reicht für 2 Wände desselben Kontos ---------- */
+    // Wie oft wurde der Code schon benutzt? Alte Codes ohne Zähler: einmal, wenn &quot;used&quot; gesetzt ist.
+    function codeUses(c) {
+      return c.get(&#x27;n&#x27;, c.get(&#x27;used&#x27;, false) == true ? 1 : 0);
+    }
+    function codeWalls(c) {
+      return c.get(&#x27;walls&#x27;, (&#x27;wall&#x27; in c) ? [c.wall] : []);
+    }
     match /codes/{code} {
       allow get: if request.auth != null;
       allow list, create, delete: if isAdmin();
       allow update: if isAdmin() || (
         request.auth != null
-        &amp;&amp; resource.data.used == false
-        &amp;&amp; request.resource.data.diff(resource.data).affectedKeys().hasOnly([&#x27;used&#x27;, &#x27;wall&#x27;, &#x27;by&#x27;, &#x27;at&#x27;])
-        &amp;&amp; request.resource.data.used == true
+        &amp;&amp; codeUses(resource.data) &lt; 2
+        &amp;&amp; (!(&#x27;by&#x27; in resource.data) || resource.data.by == request.auth.uid)
+        &amp;&amp; request.resource.data.diff(resource.data).affectedKeys().hasOnly([&#x27;used&#x27;, &#x27;wall&#x27;, &#x27;walls&#x27;, &#x27;n&#x27;, &#x27;by&#x27;, &#x27;at&#x27;])
+        &amp;&amp; request.resource.data.n == codeUses(resource.data) + 1
+        &amp;&amp; request.resource.data.used == (request.resource.data.n &gt;= 2)
+        &amp;&amp; request.resource.data.walls == codeWalls(resource.data).concat([request.resource.data.wall])
         &amp;&amp; request.resource.data.by == request.auth.uid
         &amp;&amp; request.resource.data.at == request.time
         &amp;&amp; request.resource.data.wall is string

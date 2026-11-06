@@ -74,4 +74,8 @@ const HINTERGRUND = "bilder/kay-igel.jpg";
 const HINTERGRUND_HELL = true;
 
 /* Kontakt für die Infoseite (wirte.html). Leer lassen = Kontaktbereich ausblenden. */
+/* Jeder Code reicht für 2 Wände. Für 2 weitere Wände kauft man ein Update (4,99 €) bei Payhip.
+   Sobald es bei Payhip ein eigenes Update-Produkt gibt, hier dessen Link eintragen. */
+const UPDATE_LINK = "https://payhip.com/Pikumio";
+const WAENDE_PRO_CODE = 2;
 const KONTAKT = { email: "kaytrut426@gmail.com", telefon: "" };
