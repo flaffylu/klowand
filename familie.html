@@ -144,6 +144,17 @@ h2 em,h1 em{font-style:italic;font-weight:500;color:var(--coral)}
 .step h3{font:600 1.35rem var(--f-display);margin-bottom:6px}
 .step p{margin:0;color:var(--soft)}
 
+/* Anleitung */
+.guide{display:grid;gap:36px;align-items:center;background:linear-gradient(135deg,#e3eefc,#ece4fb);border-radius:36px;padding:clamp(28px,6vw,60px)}
+@media(min-width:860px){.guide{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}}
+.pages{position:relative;height:clamp(300px,52vw,420px)}
+.pages img{position:absolute;width:clamp(170px,30vw,240px);border-radius:10px;box-shadow:0 24px 44px -20px rgba(31,42,46,.55);background:#fff}
+.pages img:nth-child(1){left:6%;top:6%;transform:rotate(-7deg);z-index:1}
+.pages img:nth-child(2){left:28%;top:0;transform:rotate(-1deg);z-index:2}
+.pages img:nth-child(3){left:50%;top:8%;transform:rotate(6deg);z-index:3}
+.guide ul{list-style:none;margin:18px 0 0;padding:0;display:grid;gap:8px;color:#3f4a47}
+.guide li::before{content:"✓";color:#2f8a5b;font-weight:700;margin-right:8px}
+
 /* Preis */
 .pricing{display:grid;gap:20px;margin-top:44px;align-items:stretch}
 @media(min-width:860px){.pricing{grid-template-columns:minmax(0,.8fr) minmax(0,1.2fr)}}
@@ -201,6 +212,7 @@ footer a{color:var(--soft)}
     <nav aria-label="Hauptmenü">
       <a class="link" href="#funktionen">Funktionen</a>
       <a class="link" href="#privat">Privatsphäre</a>
+      <a class="link" href="#anleitung">Anleitung</a>
       <a class="link" href="#preis">Preis</a>
       <a class="btn main sm" href="#preis"><span><span class="long">Für </span>4,99&nbsp;€ holen</span></a>
     </nav>
@@ -307,6 +319,26 @@ footer a{color:var(--soft)}
     <div class="step reveal"><h3>Einrichten</h3><p>Code auf „Meine Wand“ eingeben, Namen wählen – z. B. „Familie Müller“ – und den Familien-Planner einschalten.</p></div>
     <div class="step reveal"><h3>Teilen</h3><p>Den Familien-Link per WhatsApp schicken oder die Kühlschrank-Karte ausdrucken. Einmal scannen – fertig.</p></div>
   </div>
+  <p class="center" style="margin-top:26px"><a class="btn line" href="#anleitung">📖 Alles nochmal mit Bildern</a></p>
+</section>
+
+<section id="anleitung" style="padding-top:0">
+  <div class="in">
+    <div class="guide reveal">
+      <div class="pages" aria-hidden="true"><img src="assets/anleitung-1.jpg" alt=""><img src="assets/anleitung-2.jpg" alt=""><img src="assets/anleitung-3.jpg" alt=""></div>
+      <div>
+        <span class="eyebrow">Anleitung mit Bildern</span>
+        <h2>Schritt für Schritt – <em>so versteht es jeder</em>.</h2>
+        <p class="lead">Vom Kauf bis zum ersten Familienfoto: 19 Schritte mit echten Bildern aus der App. Rote Rahmen zeigen genau, wo ihr tippen müsst.</p>
+        <ul><li>Code einlösen &amp; Planner einschalten</li><li>Familie per WhatsApp oder Kühlschrank-Karte einladen</li><li>Stundenplan, Fotos, Notfall-Knopf &amp; mehr</li></ul>
+        <div class="ctas">
+          <a class="btn main" href="assets/familien-planner-anleitung.pdf" target="_blank" rel="noopener">📖 Anleitung ansehen</a>
+          <a class="btn line" href="assets/familien-planner-anleitung.pdf" download="Familien-Planner-Anleitung.pdf">⬇️ Als PDF speichern</a>
+        </div>
+        <p class="note" style="margin-top:12px">PDF · 12 Seiten · ca. 6 MB</p>
+      </div>
+    </div>
+  </div>
 </section>
 
 <section id="preis">
@@ -363,6 +395,7 @@ footer a{color:var(--soft)}
     <details><summary>Ist das eine App?</summary><p>Nein, und das ist Absicht. Der Familien-Planner läuft im Browser eures Handys. Ihr müsst nichts aus dem App Store oder Play Store laden und gebt keine Berechtigungen frei. Wer möchte, legt ihn mit einem Tipp als Symbol auf den Startbildschirm.</p></details>
     <details><summary>Wer kann unsere Wand, Fotos und Stundenpläne sehen?</summary><p>Nur Handys, die euren geheimen Familien-QR-Code gescannt haben. Wer den Code nicht hat, sieht nur den Hinweis „Diese Wand ist privat“ und kann auch nichts schreiben. Gerät der Code in falsche Hände, erstellt ihr auf „Meine Wand“ mit einem Tipp einen neuen.</p></details>
     <details><summary>Ist das für Kinder geeignet?</summary><p>Ja. Große Knöpfe, Bilder und die Vorlese-Funktion machen es schon für Kinder ab 7 leicht. Ein Wortfilter blockt Schimpfwörter, Telefonnummern und Links. Eltern sehen auf „Meine Wand“ jeden Beitrag und können ihn löschen.</p></details>
+    <details><summary>Gibt es eine Anleitung?</summary><p>Ja! Unsere <a href="assets/familien-planner-anleitung.pdf" target="_blank" rel="noopener">Anleitung mit Bildern</a> zeigt in 19 Schritten alles vom Code-Einlösen bis zum ersten Familienfoto. Bei Fragen hilft Kay gern per E-Mail.</p></details>
     <details><summary>Muss sich jeder anmelden?</summary><p>Nein. Die Familie scannt nur einmal den Familien-Code – ohne Konto. Nur wer den Planner verwaltet, meldet sich einmal mit Google an.</p></details>
     <details><summary>Kostet das später noch etwas?</summary><p>Nein. Ihr zahlt einmal 4,99 € – kein Abo, keine laufenden Kosten, keine Werbung.</p></details>
     <details><summary>Kann ich den Familien-Planner verschenken?</summary><p>Ja. Kauft ihn und leitet die E-Mail mit dem Code weiter. Wer den Code einlöst, bekommt den Planner.</p></details>
@@ -389,7 +422,7 @@ footer a{color:var(--soft)}
 <footer>
   <div class="in">
     <span>© Familien-Planner · gemacht mit ❤️ in Leipzig</span>
-    <nav aria-label="Weitere Seiten"><a href="meine-wand.html">Meine Wand</a><a href="./?wand=demo">Demo</a><a href="wirte.html">Für Bars</a><a href="impressum.html">Impressum</a><a href="datenschutz.html">Datenschutz</a></nav>
+    <nav aria-label="Weitere Seiten"><a href="assets/familien-planner-anleitung.pdf" target="_blank" rel="noopener">Anleitung (PDF)</a><a href="meine-wand.html">Meine Wand</a><a href="./?wand=demo">Demo</a><a href="wirte.html">Für Bars</a><a href="impressum.html">Impressum</a><a href="datenschutz.html">Datenschutz</a></nav>
   </div>
 </footer>
 
