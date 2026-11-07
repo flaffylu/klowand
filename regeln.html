@@ -1,10 +1,18 @@
 <!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex">
 <title>Firebase-Regeln kopieren</title>
-<style>body{margin:0;font:16px/1.4 system-ui,sans-serif;background:#f4f7f5;color:#1d2321}.top{position:sticky;top:0;background:#1d2321;color:#fff;padding:14px 16px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
-button{font:700 18px system-ui;background:#b3261e;color:#fff;border:none;border-radius:10px;padding:14px 22px;min-height:52px}#ok{font-weight:700}
-pre{margin:0;padding:16px;font:12px/1.4 ui-monospace,monospace;white-space:pre-wrap;overflow-wrap:anywhere}</style></head><body>
-<div class="top"><button id="b">📋 Alle Regeln kopieren</button><span id="ok">278 Zeilen</span></div>
-<pre id="r">rules_version = &#x27;2&#x27;;
+<style>body{margin:0;font:16px/1.4 system-ui,sans-serif;background:#f4f7f5;color:#1d2321}
+.top{background:#1d2321;color:#fff;padding:14px 16px}.top p{margin:6px 0 0;font-size:15px;color:#cfd8d4}
+button{font:700 18px system-ui;background:#b3261e;color:#fff;border:none;border-radius:10px;padding:14px 22px;min-height:52px}
+.ph{position:sticky;top:0;background:#e3ebe7;padding:10px 16px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;border-top:3px solid #1d2321}.st{font-weight:700}
+.ok{background:#1f7a4d}pre{margin:0;padding:16px;font:12px/1.4 ui-monospace,monospace;white-space:pre-wrap;overflow-wrap:anywhere}
+ol{margin:8px 0 0;padding-left:20px;font-size:15px;color:#e8efec}</style></head><body>
+<div class="top"><b>Firebase-Regeln · 278 Zeilen in 4 Teilen</b>
+<ol><li>In Firebase: lange drücken → <b>Alles auswählen</b> → <b>Ausschneiden</b>. Das Feld muss <b>leer</b> sein.</li>
+<li>Hier <b>Teil 1</b> kopieren → in Firebase lange drücken → <b>Einfügen</b>.</li>
+<li>Ganz nach unten ins Feld tippen (hinter die letzte Zeile) → <b>Teil 2</b> einfügen. Dann Teil 3 und Teil 4 genauso.</li>
+<li>Prüfen: Zeile 1 = <code>rules_version = '2';</code>, letzte Zeile = <code>}</code>, insgesamt 278 Zeilen. Dann <b>Veröffentlichen</b>.</li></ol>
+<p>Tipp: Nicht über die Zwischenablage der Tastatur einfügen, sondern über „Einfügen“ beim langen Drücken.</p></div>
+<section><div class="ph"><button data-i="0">📋 Teil 1 von 4 kopieren</button><span class="st" id="st0">Zeile 1–81</span></div><pre id="p0">rules_version = &#x27;2&#x27;;
 service cloud.firestore {
   match /databases/{database}/documents {
 
@@ -85,7 +93,7 @@ service cloud.firestore {
         &amp;&amp; d.img.matches(&#x27;data:image/png;base64,[A-Za-z0-9+/=]+&#x27;);
     }
 
-    /* ---------- Gekaufte Wände ---------- */
+</pre></section><section><div class="ph"><button data-i="1">📋 Teil 2 von 4 kopieren</button><span class="st" id="st1">Zeile 82–147</span></div><pre id="p1">    /* ---------- Gekaufte Wände ---------- */
     match /walls/{wall} {
       // Einzelne Wand lesen darf jeder (Name fürs Türschild). Auflisten nur der Besitzer seine eigenen.
       allow get: if true;
@@ -151,7 +159,7 @@ service cloud.firestore {
         &amp;&amp; request.resource.data.n == resource.data.n + 1;
     }
 
-    /* ---------- Familien-Bereich: Stundenplan und Fotos, nur mit dem geheimen Familien-Code ---------- */
+</pre></section><section><div class="ph"><button data-i="2">📋 Teil 3 von 4 kopieren</button><span class="st" id="st2">Zeile 148–217</span></div><pre id="p2">    /* ---------- Familien-Bereich: Stundenplan und Fotos, nur mit dem geheimen Familien-Code ---------- */
     function famKeyDoc(wall) {
       return /databases/$(database)/documents/walls/$(wall)/private/key;
     }
@@ -221,7 +229,7 @@ service cloud.firestore {
       allow delete: if isOwner(wall) &amp;&amp; famOk(wall, key);
     }
 
-    /* ---------- Inhalte einer Wand ---------- */
+</pre></section><section><div class="ph"><button data-i="3">📋 Teil 4 von 4 kopieren</button><span class="st" id="st3">Zeile 218–278</span></div><pre id="p3">    /* ---------- Inhalte einer Wand ---------- */
     match /walls/{wall}/posts/{id} {
       allow read: if !famOn(wall) || canModerate(wall);
       allow create: if openWall(wall) &amp;&amp; !famOn(wall)
@@ -282,6 +290,7 @@ service cloud.firestore {
     }
   }
 }
-</pre>
-<script>document.getElementById("b").onclick=async()=>{const t=document.getElementById("r").textContent,o=document.getElementById("ok");
-try{await navigator.clipboard.writeText(t);o.textContent="✓ Kopiert! Jetzt in Firebase einfügen.";}catch(e){const s=getSelection(),g=document.createRange();g.selectNodeContents(document.getElementById("r"));s.removeAllRanges();s.addRange(g);document.execCommand("copy");o.textContent="✓ Markiert und kopiert";}};</script></body></html>
+</pre></section>
+<script>document.querySelectorAll("button[data-i]").forEach(b=>b.onclick=async()=>{const i=b.dataset.i,t=document.getElementById("p"+i).textContent,o=document.getElementById("st"+i);
+try{await navigator.clipboard.writeText(t);}catch(e){const s=getSelection(),g=document.createRange();g.selectNodeContents(document.getElementById("p"+i));s.removeAllRanges();s.addRange(g);document.execCommand("copy");}
+o.textContent="✓ Teil "+(+i+1)+" kopiert – jetzt einfügen";b.classList.add("ok");});</script></body></html>
