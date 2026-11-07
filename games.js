@@ -353,7 +353,7 @@
     if (n.length < 2) return tr("Mindestens 2 Zeichen, bitte.", "At least 2 characters, please.");
     if (n.length > 12) return tr("Höchstens 12 Zeichen.", "12 characters at most.");
     if (!/^[A-Za-zÄÖÜäöüß0-9 ._-]+$/.test(n)) return tr("Nur Buchstaben, Zahlen, Leerzeichen, Punkt und Strich.", "Only letters, numbers, spaces, dots and dashes.");
-    if (KloFilter.bad(n)) return tr("Such dir einen netteren Namen aus.", "Pick a nicer name.");
+    if (KloFilter.reason(n, typeof famBase === "undefined" || !famBase)) return tr("Such dir einen netteren Namen aus.", "Pick a nicer name.");
     return null;
   }
   function result(g, score) {

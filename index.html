@@ -176,7 +176,7 @@ html.bg-photo .legal a{color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.7)}
       <button type="button" id="chJoin" class="chjoin" aria-pressed="false" hidden>Für die Challenge</button>
     </div>
     <p class="live" id="liveRow" hidden>🔒 Alles, was du hier schreibst, sieht nur deine Familie.</p>
-    <label for="msg" class="mod" id="mod">Schreib was an die Wand. Keine Namen, keine Nummern.</label>
+    <label for="msg" class="mod" id="mod">Schreib was an die Wand. Bleib nett: keine Namen, Nummern oder Politik.</label>
     <textarea id="msg" maxlength="120" placeholder="Hier saß ich und dachte …"></textarea>
     <div class="pad" id="pad" hidden>
       <canvas id="canvas" aria-label="Zeichenfläche: mit dem Finger malen"></canvas>
@@ -386,7 +386,12 @@ function check(t) {
   if (/(\+?\d[\d\s\-\/]{6,}\d)/.test(t)) return tr("Keine Telefonnummern an der Wand.", "No phone numbers on the wall.");
   if (/\S+@\S+\.\S+/.test(t) || /@\w+/.test(t)) return tr("Keine Mails oder @Namen. Hier bleibt jeder anonym.", "No emails or @names. Everyone stays anonymous here.");
   if (/(https?:\/\/|www\.)/i.test(t)) return tr("Links sind hier nicht erlaubt.", "Links aren't allowed here.");
-  if (KloFilter.bad(t)) return tr("Das kommt nicht an die Wand. Witzig ja, schweinisch oder gemein nein.", "That's not going on the wall. Funny yes, dirty or mean no.");
+  const why = KloFilter.reason(t, !famBase);
+  if (why === "sorge") return tr("Das kommt nicht an die Wand. Aber wenn es dir nicht gut geht: Sprich mit einem Erwachsenen, dem du vertraust, oder ruf kostenlos an: Nummer gegen Kummer 116 111 · Telefonseelsorge 0800 111 0 111 · Im Notfall 112.", "That's not going on the wall. But if you're not okay, please talk to an adult you trust. In an emergency call 112 (Europe) or 911 (US).");
+  if (why === "kontakt") return tr("Hier wird nichts Privates ausgetauscht: keine Nummern, Profile, Fotos, Treffen oder Fragen nach Alter und Wohnort. So bleiben alle sicher.", "Nothing private here: no numbers, profiles, photos, meetups or questions about age or where someone lives. That keeps everyone safe.");
+  if (why === "politik") return tr("Keine Politik an der Wand. Hier geht's um Spaß.", "No politics on the wall. This is about fun.");
+  if (why === "gewalt") return tr("Gewalt und Drogen haben an der Wand nichts zu suchen.", "No violence or drugs on the wall.");
+  if (why) return tr("Das kommt nicht an die Wand. Witzig ja, schweinisch oder gemein nein.", "That's not going on the wall. Funny yes, dirty or mean no.");
   if (/\b(ist|sind|is|are)\s+(fett|hässlich|dumm|scheiße|fat|ugly|stupid|dumb)\b/i.test(t)) return tr("Klingt nach Lästern über jemanden. Lass das.", "Sounds like talking trash about someone. Don't.");
   return null;
 }
@@ -500,7 +505,7 @@ function setMode(m) {
   document.querySelectorAll(".modes button").forEach(b => b.setAttribute("aria-pressed", b.dataset.m === m));
   const draw = m === "draw";
   msg.hidden = draw; pad.hidden = !draw; $("fonts").hidden = draw; $("sizes").hidden = !draw; $("count").hidden = draw;
-  say(draw ? tr("Mal was an die Wand. Nichts Gemeines, keine Namen.", "Draw something on the wall. Nothing mean, no names.") : tr("Schreib was an die Wand. Keine Namen, keine Nummern.", "Write something on the wall. No names, no numbers."), false);
+  say(draw ? tr("Mal was an die Wand. Nichts Gemeines, keine Namen.", "Draw something on the wall. Nothing mean, no names.") : tr("Schreib was an die Wand. Bleib nett: keine Namen, Nummern oder Politik.", "Write something on the wall. Be nice: no names, numbers or politics."), false);
   mod.className = "mod";
   if (draw) requestAnimationFrame(sizeCanvas);
   fitWall();

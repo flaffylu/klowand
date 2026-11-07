@@ -34,6 +34,12 @@ service cloud.firestore {
         || t.lower().matches('(?s)(.*[^a-zäöüß])?(sex|anal|geil|arsch|schwanz|titte)([^a-zäöüß].*)?');
     }
 
+    // Kindersicher: auf öffentlichen Wänden keine Kontaktdaten, Politik, Drogen oder Gewalt
+    function unsafe(t) {
+      return t.lower().matches('(?s).*(snapchat|instagram|whatsapp|telegram|discord|handynummer|telefonnummer|meine nummer|deine nummer|wie alt bist|wo wohnst|wohnst du|bist du allein|allein zuhause|alleine zuhause|foto von dir|bild von dir|fotos von dir|zeig dich|webcam|lass uns treffen|treffen wir uns|unser geheimnis|sag es niemandem|nicht deinen eltern|how old are you|where do you live|send pic|our secret|politik|bundestag|bundesregierung|wahlkampf|kanzler|partei|flüchtling|migrant|remigration|volksverräter|lügenpresse|reichsbürger|sieg heil|weltkrieg|kokain|heroin|crystal meth|amoklauf|erschieß|abknallen|selbstmord|suizid).*')
+        || t.lower().matches('(?s)(.*[^a-zäöüß0-9])?(afd|cdu|csu|spd|fdp|bsw|npd|nsdap|merz|scholz|habeck|weidel|höcke|söder|putin|trump|biden|hamas|antifa|snap|insta|kik|adde mich|add mich|koks|meth|weed|kiffen)([^a-zäöüß0-9].*)?');
+    }
+
     function okText(t, max) {
       return t is string && t.size() >= 3 && t.size() <= max
         && !t.matches('(?s).*[0-9][0-9 /-]{6,}[0-9].*')
@@ -214,6 +220,7 @@ service cloud.firestore {
       allow read: if !famOn(wall) || canModerate(wall);
       allow create: if openWall(wall) && !famOn(wall)
         && (textPost(request.resource.data) || drawPost(request.resource.data))
+        && (!('t' in request.resource.data) || !unsafe(request.resource.data.t))
         && okWeek(request.resource.data)
         && request.resource.data.rot is number
         && request.resource.data.ts == request.time;
@@ -226,6 +233,7 @@ service cloud.firestore {
         && request.resource.data.keys().hasOnly(['p', 't', 'ts'])
         && request.resource.data.p is string
         && okText(request.resource.data.t, 60)
+        && !unsafe(request.resource.data.t)
         && request.resource.data.ts == request.time;
       allow delete: if canModerate(wall);
     }
@@ -262,7 +270,8 @@ service cloud.firestore {
 
     match /walls/{wall}/games/{game}/scores/{id} {
       allow read: if !famOn(wall) || canModerate(wall);
-      allow create: if openWall(wall) && !famOn(wall) && okScore(game, request.resource.data);
+      allow create: if openWall(wall) && !famOn(wall) && okScore(game, request.resource.data)
+        && !unsafe(request.resource.data.name);
       allow delete: if canModerate(wall);
     }
   }

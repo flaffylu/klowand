@@ -3,7 +3,7 @@
 <style>body{margin:0;font:16px/1.4 system-ui,sans-serif;background:#f4f7f5;color:#1d2321}.top{position:sticky;top:0;background:#1d2321;color:#fff;padding:14px 16px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
 button{font:700 18px system-ui;background:#b3261e;color:#fff;border:none;border-radius:10px;padding:14px 22px;min-height:52px}#ok{font-weight:700}
 pre{margin:0;padding:16px;font:12px/1.4 ui-monospace,monospace;white-space:pre-wrap;overflow-wrap:anywhere}</style></head><body>
-<div class="top"><button id="b">📋 Alle Regeln kopieren</button><span id="ok">269 Zeilen</span></div>
+<div class="top"><button id="b">📋 Alle Regeln kopieren</button><span id="ok">278 Zeilen</span></div>
 <pre id="r">rules_version = &#x27;2&#x27;;
 service cloud.firestore {
   match /databases/{database}/documents {
@@ -38,6 +38,12 @@ service cloud.firestore {
     function dirty(t) {
       return t.lower().matches(&#x27;(?s).*(fick|fuck|fotze|wichs|titten|pimmel|muschi|sperma|porn|penis|vagina|hure|nutte|schlampe|bums|vögeln|orgasm|dildo|blowjob|pussy|nackt|arschloch|arschfick|missgeburt|spast|schwuchtel|kanake|neger|nigger|nazi|hitler|bitch|umbringen|vergewaltig|sexy).*&#x27;)
         || t.lower().matches(&#x27;(?s)(.*[^a-zäöüß])?(sex|anal|geil|arsch|schwanz|titte)([^a-zäöüß].*)?&#x27;);
+    }
+
+    // Kindersicher: auf öffentlichen Wänden keine Kontaktdaten, Politik, Drogen oder Gewalt
+    function unsafe(t) {
+      return t.lower().matches(&#x27;(?s).*(snapchat|instagram|whatsapp|telegram|discord|handynummer|telefonnummer|meine nummer|deine nummer|wie alt bist|wo wohnst|wohnst du|bist du allein|allein zuhause|alleine zuhause|foto von dir|bild von dir|fotos von dir|zeig dich|webcam|lass uns treffen|treffen wir uns|unser geheimnis|sag es niemandem|nicht deinen eltern|how old are you|where do you live|send pic|our secret|politik|bundestag|bundesregierung|wahlkampf|kanzler|partei|flüchtling|migrant|remigration|volksverräter|lügenpresse|reichsbürger|sieg heil|weltkrieg|kokain|heroin|crystal meth|amoklauf|erschieß|abknallen|selbstmord|suizid).*&#x27;)
+        || t.lower().matches(&#x27;(?s)(.*[^a-zäöüß0-9])?(afd|cdu|csu|spd|fdp|bsw|npd|nsdap|merz|scholz|habeck|weidel|höcke|söder|putin|trump|biden|hamas|antifa|snap|insta|kik|adde mich|add mich|koks|meth|weed|kiffen)([^a-zäöüß0-9].*)?&#x27;);
     }
 
     function okText(t, max) {
@@ -220,6 +226,7 @@ service cloud.firestore {
       allow read: if !famOn(wall) || canModerate(wall);
       allow create: if openWall(wall) &amp;&amp; !famOn(wall)
         &amp;&amp; (textPost(request.resource.data) || drawPost(request.resource.data))
+        &amp;&amp; (!(&#x27;t&#x27; in request.resource.data) || !unsafe(request.resource.data.t))
         &amp;&amp; okWeek(request.resource.data)
         &amp;&amp; request.resource.data.rot is number
         &amp;&amp; request.resource.data.ts == request.time;
@@ -232,6 +239,7 @@ service cloud.firestore {
         &amp;&amp; request.resource.data.keys().hasOnly([&#x27;p&#x27;, &#x27;t&#x27;, &#x27;ts&#x27;])
         &amp;&amp; request.resource.data.p is string
         &amp;&amp; okText(request.resource.data.t, 60)
+        &amp;&amp; !unsafe(request.resource.data.t)
         &amp;&amp; request.resource.data.ts == request.time;
       allow delete: if canModerate(wall);
     }
@@ -268,7 +276,8 @@ service cloud.firestore {
 
     match /walls/{wall}/games/{game}/scores/{id} {
       allow read: if !famOn(wall) || canModerate(wall);
-      allow create: if openWall(wall) &amp;&amp; !famOn(wall) &amp;&amp; okScore(game, request.resource.data);
+      allow create: if openWall(wall) &amp;&amp; !famOn(wall) &amp;&amp; okScore(game, request.resource.data)
+        &amp;&amp; !unsafe(request.resource.data.name);
       allow delete: if canModerate(wall);
     }
   }

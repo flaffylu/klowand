@@ -50,9 +50,68 @@ const KloFilter = (() => {
     const spaced = n.match(/(?:^|[^a-z])((?:[a-z][^a-z]+){2,}[a-z])(?=$|[^a-z])/g) || [];
     return spaced.some(m => { const g = norm(m.replace(/[^a-z]/g, "")); return WORDS_N.includes(g) || STEMS_N.some(s => g.includes(s)); });
   }
-  function bad(text) {
-    const tries = /[*#_]/.test(text) ? ["a", "e", "i", "o", "u", ""].map(v => text.replace(/[*#_]/g, v)) : [text];
-    return tries.some(t => check(norm(t, true)) || check(norm(t, false)));
+  /* ---------- Kindersicher: zusätzliche Sperren für alle öffentlichen Wände ----------
+     Jede Gruppe hat STEMS (überall im Text, auch als Satzteil) und WORDS (nur als ganzes Wort). */
+  const GROUPS = {
+    // Kummer: wird nicht gepostet, aber das Kind bekommt Hilfe-Nummern angezeigt
+    sorge: {
+      STEMS: ["selbstmord", "suizid", "mich umbringen", "mich töten", "will sterben", "will nicht mehr leben", "nicht mehr leben",
+        "missbrauch", "fasst mich an", "fasst mich immer an", "schlägt mich", "schlagen mich", "haut mich", "ich ritze", "mich ritzen",
+        "kill myself", "suicide", "self harm", "selfharm", "want to die", "abused", "abuse", "hurts me"],
+      WORDS: ["ritzen", "ritze", "kys"],
+    },
+    // Schutz vor Fremden: keine Kontaktdaten, Treffen, Fotos oder Geheimnisse
+    kontakt: {
+      STEMS: ["snapchat", "instagram", "whatsapp", "telegram", "discord", "handynummer", "telefonnummer", "meine nummer", "deine nummer",
+        "ruf mich an", "ruf an unter", "schreib mir privat", "privat schreiben", "privatchat", "adde mich", "add mich", "folg mir", "folgt mir",
+        "wo wohnst du", "wohnst du", "wie alt bist du", "wie alt seid ihr", "bist du allein", "alleine zuhause", "allein zuhause",
+        "schick mir ein", "schickt mir ein", "schick mir bild", "schick mir foto", "schick mir pic", "schick mir deine", "schick mal ein", "schick ein bild", "schick ein foto", "foto von dir", "bild von dir", "fotos von dir", "zeig dich",
+        "webcam", "videochat", "treffen wir uns", "lass uns treffen", "lass uns mal treffen", "wollen wir uns treffen", "komm vorbei", "hol dich ab",
+        "unser geheimnis", "sag es niemandem", "sags niemandem", "nicht deinen eltern", "sag nichts deinen", "erzähl es keinem",
+        "how old are you", "where do you live", "send pic", "send me", "dm me", "snap me", "add me", "follow me", "meet up", "lets meet", "our secret",
+        "dont tell your", "are you alone", "home alone"],
+      WORDS: ["snap", "insta", "ig", "tiktok", "dm", "pn", "kik", "adresse"],
+    },
+    // Keine Politik an der Wand
+    politik: {
+      STEMS: ["politik", "bundestag", "bundesregierung", "wahlkampf", "bundestagswahl", "landtagswahl", "kanzler", "partei", "flüchtling",
+        "migrant", "remigration", "asylant", "ausländer raus", "volksverräter", "lügenpresse", "reichsbürger", "linksgrün", "faschist",
+        "kommunist", "zionist", "die grünen", "die linke", "bündnis 90", "sieg heil", "wagenknecht", "selenskyj", "selensky", "zelensky",
+        "netanjahu", "netanyahu", "weltkrieg", "im krieg", "der krieg", "krieg in", "kriegsverbrech", "geh wählen", "wahlplakat", "erdogan", "chrupalla", "baerbock", "election", "democrat", "republican", "make america"],
+      WORDS: ["afd", "cdu", "csu", "spd", "fdp", "bsw", "npd", "nsdap", "mlpd", "merz", "scholz", "habeck", "weidel", "söder", "lindner",
+        "höcke", "putin", "trump", "biden", "harris", "kickl", "orban", "regierung", "minister",
+        "antifa", "hamas", "gaza", "maga"],
+    },
+    // Gewalt und Drogen
+    gewalt: {
+      STEMS: ["erschieß", "erschiess", "abknallen", "erstechen", "erstech", "amoklauf", "terror", "kokain", "heroin", "crystal meth",
+        "kiffen", "drogen", "ecstasy", "mdma", "school shoot", "shoot you", "kill you", "töte dich", "bring dich um", "stech dich ab"],
+      WORDS: ["amok", "bombe", "koks", "meth", "weed", "joint", "kiffe", "kifft", "kiffer", "gekifft", "lsd", "xtc", "pep", "speed", "gun", "waffe", "knarre"],
+    },
+  };
+  const G = Object.fromEntries(Object.entries(GROUPS).map(([k, g]) => [k, { S: g.STEMS.map(t => norm(t)), W: g.WORDS.map(t => norm(t)) }]));
+  function inGroup(n, g) {
+    const words = n.split(/[^a-z0-9]+/).filter(Boolean);
+    if (words.some(w => g.W.includes(w))) return true;
+    // gesperrte Wörter mit Abstand zwischen den Buchstaben: „t r u m p“
+    const spaced = n.match(/(?:^|[^a-z0-9])((?:[a-z0-9][^a-z0-9]+){2,}[a-z0-9])(?=$|[^a-z0-9])/g) || [];
+    if (spaced.some(m => g.W.includes(m.replace(/[^a-z0-9]/g, "")))) return true;
+    const flat = n.replace(/[^a-z0-9]+/g, " ").trim();
+    return g.S.some(s => flat.includes(s.replace(/[^a-z0-9]+/g, " ").trim()));
   }
-  return { bad, norm };
+  const variants = text => /[*#_]/.test(text) ? ["a", "e", "i", "o", "u", ""].map(v => text.replace(/[*#_]/g, v)) : [text];
+
+  function bad(text) {
+    return variants(text).some(t => check(norm(t, true)) || check(norm(t, false)));
+  }
+  /* Grund, warum ein Text nicht an die Wand darf: "sorge", "kontakt", "politik", "gewalt", "bad" oder null.
+     strict = true auf allen öffentlichen Wänden; false nur in der privaten Familie (dort nur grobe Wörter). */
+  function reason(text, strict = true) {
+    if (strict) {
+      const ns = variants(text).map(t => norm(t, false).replace(/[^a-z0-9]+/g, " ") + " ").concat(variants(text).map(t => " " + norm(t, true)));
+      for (const k of ["sorge", "kontakt", "politik", "gewalt"]) if (ns.some(n => inGroup(n, G[k]))) return k;
+    }
+    return bad(text) ? "bad" : null;
+  }
+  return { bad, reason, norm };
 })();
