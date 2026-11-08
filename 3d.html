@@ -92,6 +92,11 @@ button:focus-visible,input:focus-visible{outline:3px solid var(--cyan);outline-o
 .ups p{margin:0;font:600 1.05rem/1.35 var(--f-ui)}
 .ups .price{font:400 1.5rem var(--f-sign);color:var(--lime);text-align:center}
 .ups .row a{flex:1;min-height:44px;border-radius:10px;background:var(--pink);color:var(--night);display:grid;place-items:center;font:700 1rem var(--f-ui);text-transform:uppercase;text-decoration:none;letter-spacing:.05em}
+/* Spiele-Fenster aus games.js: heller Look wie auf der normalen Wand */
+.kg{--door:#b9c7bf;--ink:#1d2321;--red:#b3261e;--blue:#1f4fa3;--green:#2f6b3a;--muted:#5d6a63;--plate:#d8ded9;
+  --f-hand:"Gochi Hand",cursive;--f-marker:"Permanent Marker",cursive;--f-scrawl:"Caveat",cursive;color:#1d2321;touch-action:pan-y;-webkit-user-select:text;user-select:text}
+.kg .card{position:static;transform:none;left:auto;bottom:auto;width:auto;z-index:auto;box-shadow:none}
+.kg .card .row{justify-content:flex-start}
 .loading{position:fixed;inset:0;display:grid;place-items:center;font:400 1.4rem var(--f-sign);color:var(--cyan);z-index:1}
 @media (prefers-reduced-motion:reduce){.sign{text-shadow:none}}
 </style>
@@ -109,6 +114,7 @@ button:focus-visible,input:focus-visible{outline:3px solid var(--cyan);outline-o
     <button type="button" id="bMusic" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 18V5l11-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="17" cy="16" r="3"/></svg>Musik</button>
     <button type="button" id="bTour" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 12a9 9 0 1 1-3-6.7L21 8M21 3v5h-5"/></svg>Rundgang</button>
     <button type="button" id="bDoor"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 21V3h11v18M3 21h18M13 12h.01"/></svg>Tür</button>
+    <button type="button" id="bGames"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="2" y="7" width="20" height="11" rx="5"/><path d="M7 11v3M5.5 12.5h3M16 12h.01M18 14h.01"/></svg>Spiele</button>
     <button type="button" id="bOracle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="11" r="7"/><path d="M8 21h8M10 18l-1 3M14 18l1 3"/></svg>Orakel</button>
     <button type="button" id="bPhoto"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>Foto</button>
   </div>
@@ -161,7 +167,7 @@ button:focus-visible,input:focus-visible{outline:3px solid var(--cyan);outline-o
 </div>
 <div class="sheet ups" id="ups" hidden role="dialog" aria-label="Vollversion">
   <div class="box"><h2 id="upsHead">Alles freischalten</h2><p id="upsText"></p>
-    <ul><li>Unbegrenzt schreiben und malen</li><li>Alle 3 Klo-Spiele mit Rangliste</li><li>Familien-Planner: Stundenplan, Fotos &amp; Notfall</li><li>Eigene Wand mit deinem Namen</li><li>QR-Sticker zum Ausdrucken</li><li>Du löschst, was nicht passt</li></ul>
+    <ul><li>Unbegrenzt schreiben und malen</li><li>Alle 8 Klo-Spiele mit Rangliste</li><li>Familien-Planner: Stundenplan, Fotos &amp; Notfall</li><li>Eigene Wand mit deinem Namen</li><li>QR-Sticker zum Ausdrucken</li><li>Du löschst, was nicht passt</li></ul>
     <div id="upsBuy"><div class="price">nur 4,99 € einmalig</div><div class="row"><a href="familie.html">Für zu Hause</a><a href="wirte.html">Für deine Bar</a></div></div>
     <div class="row"><button type="button" id="upsLater">Weiter testen</button></div></div>
 </div>
@@ -183,6 +189,14 @@ button:focus-visible,input:focus-visible{outline:3px solid var(--cyan);outline-o
 <script src="lang.js"></script>
 <script src="config.js"></script>
 <script src="filter.js"></script>
+<script src="music.js"></script>
+<script>
+/* Für games.js: dieselben Namen wie auf der normalen Wand */
+var fs = null;
+const WALL = "demo", info = { name: "Demo-Bar" };
+const esc = s => String(s).replace(/[&<>"]/g, m => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[m]));
+</script>
+<div hidden><div class="tabs"></div></div>
 <script>
 (async () => {
   const $ = id => document.getElementById(id);
@@ -204,7 +218,7 @@ button:focus-visible,input:focus-visible{outline:3px solid var(--cyan);outline-o
     used() { try { return Math.max(0, parseInt(localStorage.getItem("klowand-demo-n") || "0", 10) || 0); } catch (e) { return 0; } },
     left() { return Math.max(0, DEMO_FREI - this.used()); },
     locked() { return this.left() <= 0; },
-    use() { try { localStorage.setItem("klowand-demo-n", String(this.used() + 1)); } catch (e) {} freeLine(); }
+    use() { try { localStorage.setItem("klowand-demo-n", String(this.used() + 1)); } catch (e) {} freeLine(); window.dispatchEvent(new Event("klo-demo")); }
   };
   let device = null;
   try { device = localStorage.getItem("klowand-device"); if (!device) { device = crypto.randomUUID().replace(/-/g, ""); localStorage.setItem("klowand-device", device); } }
@@ -634,6 +648,8 @@ button:focus-visible,input:focus-visible{outline:3px solid var(--cyan);outline-o
   firebase.initializeApp(firebaseConfig);
   const fsdb = firebase.firestore();
   const base = fsdb.collection("walls").doc("demo");
+  window.fs = fsdb; window.kloDemo = kloDemo; window.kloUpsell = upsell;
+  $("bGames").onclick = () => { if (focus) closeCard(); setTour(false); const b = document.getElementById("kgOpen"); if (b) b.click(); };
   function now() { return firebase.firestore.FieldValue.serverTimestamp(); }
   const DAY = 864e5, since = firebase.firestore.Timestamp.fromMillis(Date.now() - 60 * DAY);
   const LEGACY = Date.now() < Date.parse("2027-01-10");
@@ -690,6 +706,7 @@ button:focus-visible,input:focus-visible{outline:3px solid var(--cyan);outline-o
   requestAnimationFrame(frame);
 })();
 </script>
+<script src="games.js"></script>
 <script>if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});</script>
 </body>
 </html>

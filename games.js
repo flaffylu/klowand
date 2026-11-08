@@ -5,6 +5,11 @@
     fang:   { title: tr("Klorollen-Fang", "Roll Catch"), desc: tr("30 Sekunden Rollen fangen. Gold zählt 5, der Pümpel kostet 3.", "Catch rolls for 30 seconds. Gold counts 5, the plunger costs 3."), better: "desc" },
     reflex: { title: tr("Spül-Reflex", "Flush Reflex"), desc: tr("Tipp, sobald die Kabine frei wird. 3 Runden, der Schnitt zählt.", "Tap as soon as the stall is free. 3 rounds, the average counts."), better: "asc" },
     stapel: { title: tr("Klopapier-Stapeln", "Paper Tower"), desc: tr("Tippen lässt die Rolle fallen. Was übersteht, fällt ab. Wie hoch wird dein Turm?", "Tap to drop the roll. Whatever hangs over falls off. How high can you build?"), better: "desc" },
+    fliege: { title: tr("Fliegen-Klatsche", "Fly Swatter"), desc: tr("30 Sekunden Fliegen wegtippen. Gold zählt 3, die Biene kostet 3.", "Swat flies for 30 seconds. Gold counts 3, the bee costs 3."), better: "desc" },
+    memory: { title: tr("Klo-Memory", "Loo Memory"), desc: tr("8 Paare finden – mit möglichst wenigen Zügen.", "Find 8 pairs in as few moves as possible."), better: "asc" },
+    ente:   { title: tr("Rohr-Ente", "Pipe Duck"), desc: tr("Tippen lässt die Gummiente hochschwimmen. Wie viele Rohre schaffst du?", "Tap to make the rubber duck swim up. How many pipes can you pass?"), better: "desc" },
+    simon:  { title: tr("Spül-Simon", "Flush Simon"), desc: tr("Merk dir die Reihenfolge und tipp sie nach. Jede Runde wird sie länger.", "Remember the order and tap it back. It gets longer every round."), better: "desc" },
+    zahlen: { title: tr("Kabinen-Zahlen", "Stall Numbers"), desc: tr("Tipp 1 bis 25 der Reihe nach, so schnell du kannst.", "Tap 1 to 25 in order as fast as you can."), better: "asc" },
   };
   const C = { door: "#b9c7bf", ink: "#1d2321", red: "#b3261e", gold: "#e0a92e", paper: "#fbfbf7", core: "#c9cfc9", green: "#2f6b3a", wood: "#8a5a2b", muted: "#46524b" };
   const $ = id => document.getElementById(id);
@@ -13,14 +18,18 @@
   const scoreBase = () => (typeof famBase !== "undefined" && famBase) ? famBase : fs.collection("walls").doc(WALL);
   const scores = g => scoreBase().collection("games").doc(g).collection("scores");
   const rolls = n => JA ? `${n}個` : `${n} ${n === 1 ? tr("Rolle", "roll") : tr("Rollen", "rolls")}`;
-  const fmt = (g, s) => g === "reflex" ? `${s} ms` : rolls(s);
+  const fmt = (g, s) => g === "reflex" ? `${s} ms` : g === "zahlen" ? `${(s / 1000).toFixed(1).replace(".", EN ? "." : ",")} s`
+    : g === "memory" ? `${s} ${tr("Züge", "moves")}` : g === "fliege" ? `${s} ${tr("Fliegen", "flies")}` : g === "ente" ? `${s} ${tr("Rohre", "pipes")}`
+    : g === "simon" ? `${s} ${tr("Runden", "rounds")}` : rolls(s);
+  const DONE = { fang: tr("gefangen", "caught"), reflex: tr("Schnitt aus 3 Runden", "average of 3 rounds"), stapel: tr("gestapelt", "stacked"), fliege: tr("erwischt", "swatted"),
+    memory: tr("bis alle Paare gefunden waren", "to find all pairs"), ente: tr("geschafft", "passed"), simon: tr("richtig nachgetippt", "repeated correctly"), zahlen: tr("für 1 bis 25", "for 1 to 25") };
   const sortRows = (g, rows) => rows.sort((a, b) => GAMES[g].better === "desc" ? b.score - a.score : a.score - b.score);
   let myName = ""; try { myName = localStorage.getItem("klowand-name") || ""; } catch (e) {}
   let lastId = null, stopGame = () => {};
   /* Demo-Wand: nur ein Spiel und keine Musik, der Rest zeigt auf die Vollversion */
   // Demo: nach den 20 Gratis-Nachrichten sind Musik und 2 Spiele gesperrt
   const isDemoLocked = () => typeof kloDemo !== "undefined" && kloDemo.locked();
-  const locked = () => isDemoLocked() ? ["reflex", "stapel"] : [];
+  const locked = () => isDemoLocked() ? ["reflex", "stapel", "fliege", "memory", "ente", "simon", "zahlen"] : [];
   const upsell = r => { if (window.kloUpsell) kloUpsell(r); };
 
   /* ---------- Styles ---------- */
@@ -40,7 +49,7 @@
   .extras button[aria-pressed="true"] .eq i{animation:kgEq 1s ease-in-out infinite}
   .extras button[aria-pressed="true"] .eq i:nth-child(2){animation-delay:.2s}.extras button[aria-pressed="true"] .eq i:nth-child(3){animation-delay:.4s}
   @keyframes kgEq{0%,100%{height:4px}50%{height:14px}}
-  .kg{position:fixed;inset:0;z-index:30;background:var(--door);overflow-y:auto;overscroll-behavior:contain;
+  .kg{--muted:#5d6a63;position:fixed;inset:0;z-index:30;background:var(--door);overflow-y:auto;overscroll-behavior:contain;
     padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
   .kg .gw{max-width:460px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:14px 32px}
   .kg header{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}
@@ -83,6 +92,19 @@
   .kg li.me{background:#fff;border-color:var(--red);border-width:2px}
   .kg .gap{text-align:center;color:var(--muted);font:700 1.2rem var(--f-ui)}
   .kg .empty{text-align:center;padding:24px 0;font:1.3rem var(--f-hand);color:var(--muted)}
+  .kg .mem,.kg .simon,.kg .zahl{display:grid;gap:8px;max-width:380px;margin:0 auto}
+  .kg .mem{grid-template-columns:repeat(4,minmax(0,1fr))}
+  .kg .mem button{aspect-ratio:1;border-radius:10px;border:2px solid var(--ink);background:var(--ink);cursor:pointer;font-size:clamp(1.6rem,9vw,2.4rem);padding:0;touch-action:manipulation}
+  .kg .mem button span{visibility:hidden}
+  .kg .mem button.up{background:var(--plate)}.kg .mem button.up span{visibility:visible}
+  .kg .mem button.ok{background:#dff0e2;border-color:var(--green)}
+  .kg .simon{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .kg .simon button{aspect-ratio:1;border-radius:18px;border:3px solid var(--ink);background:var(--c);opacity:.55;font-size:clamp(2.4rem,14vw,3.6rem);cursor:pointer;touch-action:manipulation;transition:opacity .08s,transform .08s}
+  .kg .simon button.lit{opacity:1;transform:scale(1.04);box-shadow:0 0 0 4px #fff,0 0 24px var(--c)}
+  .kg .zahl{grid-template-columns:repeat(5,minmax(0,1fr))}
+  .kg .zahl button{aspect-ratio:1;border-radius:8px;border:2px solid var(--ink);background:var(--plate);color:var(--ink);font:400 clamp(1.2rem,6vw,1.7rem) var(--f-marker);cursor:pointer;padding:0;touch-action:manipulation}
+  .kg .zahl button.ok{background:var(--green);border-color:var(--green);color:#fff;opacity:.55}
+  .kg .zahl button.bad{background:var(--red);color:#fff}
   @media (prefers-reduced-motion:reduce){.extras button .eq i{animation:none!important}}
   `;
   document.head.appendChild(css);
@@ -127,7 +149,7 @@
     const [what, g, tab] = b.dataset.go.split(":");
     if (what === "menu") menu();
     if ((what === "play" || what === "board") && locked().includes(g)) { upsell("limit"); return; }
-    if (what === "play") ({ fang: playFang, reflex: playReflex, stapel: playStapel })[g]();
+    if (what === "play") ({ fang: playFang, reflex: playReflex, stapel: playStapel, fliege: playFliege, memory: playMemory, ente: playEnte, simon: playSimon, zahlen: playZahlen })[g]();
     if (what === "board") board(g, tab || "heute");
   });
 
@@ -350,6 +372,210 @@
     document.addEventListener("keydown", onKey);
   }
 
+
+  /* ---------- Gemeinsame Helfer für die neuen Spiele ---------- */
+  function canvasView(label, hint) {
+    view(`<canvas id="kgCanvas" aria-label="${label}"></canvas><p class="hint">${hint}</p><button type="button" class="ghost" data-go="menu">${tr("Abbrechen", "Cancel")}</button>`);
+    const cv = $("kgCanvas"), W = 360, H = 520, dpr = Math.min(window.devicePixelRatio || 1, 2);
+    cv.width = W * dpr; cv.height = H * dpr;
+    const c = cv.getContext("2d"); c.scale(dpr, dpr);
+    const toXY = e => { const r = cv.getBoundingClientRect(); return [(e.clientX - r.left) * W / r.width, (e.clientY - r.top) * H / r.height]; };
+    return { cv, c, W, H, toXY };
+  }
+  function hud(c, W, left, score, label) {
+    c.fillStyle = C.ink; c.font = `700 20px "Barlow Condensed", sans-serif`; c.textBaseline = "top";
+    c.textAlign = "left"; c.fillText(`${label}: ${score}`, 14, 12);
+    if (left != null) { c.textAlign = "right"; c.fillText(`${Math.ceil(left)} s`, W - 14, 12); }
+    c.textAlign = "left";
+  }
+  function bigText(c, W, H, a, b) {
+    c.fillStyle = "rgba(29,35,33,.78)"; c.fillRect(30, H / 2 - 70, W - 60, 130);
+    c.fillStyle = "#fff"; c.textAlign = "center"; c.textBaseline = "middle";
+    c.font = `400 34px "Permanent Marker", cursive`; c.fillText(a, W / 2, H / 2 - 22);
+    c.font = `600 18px "Barlow Condensed", sans-serif`; c.fillText(b, W / 2, H / 2 + 26); c.textAlign = "left";
+  }
+  let toneCtx = null;
+  function tone(f, dur) {
+    try {
+      toneCtx ||= new (window.AudioContext || window.webkitAudioContext)();
+      if (toneCtx.state === "suspended") toneCtx.resume();
+      const t = toneCtx.currentTime, o = toneCtx.createOscillator(), g = toneCtx.createGain();
+      o.type = "triangle"; o.frequency.value = f; g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(.18, t + .02); g.gain.exponentialRampToValueAtTime(.0001, t + dur);
+      o.connect(g).connect(toneCtx.destination); o.start(t); o.stop(t + dur + .05);
+    } catch (e) {}
+  }
+
+  /* ---------- Spiel 4: Fliegen-Klatsche ---------- */
+  function playFliege() {
+    const { cv, c, W, H, toXY } = canvasView(tr("Spielfeld: Fliegen antippen", "Game area: tap the flies"), tr("Tipp die Fliegen weg. Goldene zählen 3, die Biene kostet 3.", "Swat the flies. Gold ones count 3, the bee costs 3."));
+    const DUR = 30; let bugs = [], pops = [], score = 0, running = true, started = false, t0 = 0, last = 0, acc = 0, raf = 0;
+    stopGame = () => { running = false; cancelAnimationFrame(raf); };
+    cv.addEventListener("pointerdown", e => {
+      e.preventDefault();
+      if (!started) { started = true; t0 = last = performance.now(); return; }
+      const [x, y] = toXY(e);
+      let hit = null, best = 40;
+      bugs.forEach(b => { const d = Math.hypot(b.x - x, b.y - y); if (d < best) { best = d; hit = b; } });
+      if (!hit) return;
+      bugs = bugs.filter(b => b !== hit);
+      if (hit.k === "bee") { score = Math.max(0, score - 3); KloMusik.blip("bad"); pops.push({ x: hit.x, y: hit.y, txt: "−3", col: C.red, t: .7 }); }
+      else { const g = hit.k === "gold"; score += g ? 3 : 1; KloMusik.blip(g ? "gold" : "good"); pops.push({ x: hit.x, y: hit.y, txt: g ? "+3" : "+1", col: g ? "#a8761a" : C.green, t: .7 }); }
+    });
+    function bug(b) {
+      c.save(); c.translate(b.x, b.y); c.rotate(Math.sin(b.ph) * .4);
+      const flap = Math.sin(b.ph * 6) * .35;
+      c.fillStyle = "rgba(220,235,245,.85)"; c.strokeStyle = "rgba(29,35,33,.5)"; c.lineWidth = 1;
+      [[-1, flap], [1, -flap]].forEach(([s, f]) => { c.beginPath(); c.ellipse(s * 11, -9, 11, 6, s * (.6 + f), 0, 7); c.fill(); c.stroke(); });
+      if (b.k === "bee") { c.fillStyle = "#f2c230"; c.beginPath(); c.ellipse(0, 0, 10, 15, 0, 0, 7); c.fill(); c.fillStyle = C.ink; c.fillRect(-10, -4, 20, 4); c.fillRect(-9, 4, 18, 4); }
+      else { c.fillStyle = b.k === "gold" ? C.gold : C.ink; c.beginPath(); c.ellipse(0, 0, 9, 13, 0, 0, 7); c.fill(); }
+      c.fillStyle = b.k === "bee" ? C.ink : "#b3261e"; c.beginPath(); c.arc(-4, -11, 3, 0, 7); c.arc(4, -11, 3, 0, 7); c.fill();
+      c.restore();
+    }
+    function draw(left) {
+      c.fillStyle = C.door; c.fillRect(0, 0, W, H);
+      c.strokeStyle = "rgba(29,35,33,.08)"; c.lineWidth = 2; for (let y = 60; y < H; y += 60) { c.beginPath(); c.moveTo(0, y); c.lineTo(W, y); c.stroke(); }
+      bugs.forEach(bug);
+      pops.forEach(p => { c.globalAlpha = Math.min(1, p.t * 2); c.fillStyle = p.col; c.font = `700 24px "Barlow Condensed", sans-serif`; c.fillText(p.txt, p.x - 10, p.y); c.globalAlpha = 1; });
+      hud(c, W, left, score, tr("Fliegen", "Flies"));
+      if (!started) bigText(c, W, H, tr("Fliegen-Alarm!", "Fly alert!"), tr("Tippen zum Starten", "Tap to start"));
+    }
+    function loop(now) {
+      if (!running) return;
+      if (!started) { draw(DUR); raf = requestAnimationFrame(loop); return; }
+      const dt = Math.min(.05, (now - last) / 1000); last = now;
+      const el = (now - t0) / 1000, left = Math.max(0, DUR - el), prog = Math.min(1, el / DUR);
+      acc += dt; const every = .75 - .4 * prog;
+      while (acc > every) { acc -= every; const r = Math.random(); bugs.push({ x: 30 + Math.random() * (W - 60), y: 70 + Math.random() * (H - 110), vx: (Math.random() - .5) * 120, vy: (Math.random() - .5) * 120, life: 1.6 - .7 * prog, ph: Math.random() * 6, k: r < .1 ? "gold" : r < .24 ? "bee" : "fly" }); }
+      bugs.forEach(b => { b.ph += dt * 3; b.life -= dt; b.x += b.vx * dt; b.y += b.vy * dt; if (b.x < 20 || b.x > W - 20) b.vx *= -1; if (b.y < 60 || b.y > H - 20) b.vy *= -1; });
+      bugs = bugs.filter(b => b.life > 0);
+      pops.forEach(p => { p.t -= dt; p.y -= 40 * dt; }); pops = pops.filter(p => p.t > 0);
+      draw(left);
+      if (left <= 0) { running = false; KloMusik.blip("flush"); setTimeout(() => result("fliege", Math.min(300, score)), 500); return; }
+      raf = requestAnimationFrame(loop);
+    }
+    raf = requestAnimationFrame(loop);
+  }
+
+  /* ---------- Spiel 5: Klo-Memory ---------- */
+  function playMemory() {
+    const ICONS = ["🧻", "🚽", "🧼", "🦆", "🚿", "🛁", "🧽", "🐸"];
+    const deck = ICONS.concat(ICONS).map((e, i) => ({ e, i })).sort(() => Math.random() - .5);
+    view(`<div class="mem" id="kgMem">${deck.map((d, k) => `<button type="button" data-k="${k}" aria-label="${tr("Karte", "Card")} ${k + 1}"><span>${d.e}</span></button>`).join("")}</div>
+      <p class="hint" id="kgMemInfo">${tr("Finde alle 8 Paare mit möglichst wenigen Zügen.", "Find all 8 pairs in as few moves as possible.")}</p><button type="button" class="ghost" data-go="menu">${tr("Abbrechen", "Cancel")}</button>`);
+    let open = [], moves = 0, found = 0, busy = false, alive = true;
+    stopGame = () => { alive = false; };
+    $("kgMem").addEventListener("click", e => {
+      const b = e.target.closest("button[data-k]"); if (!b || busy || b.classList.contains("up")) return;
+      b.classList.add("up"); open.push(b); tone(520 + open.length * 120, .12);
+      if (open.length < 2) return;
+      moves++; $("kgMemInfo").textContent = tr(`Züge: ${moves} · Paare: ${found}/8`, `Moves: ${moves} · Pairs: ${found}/8`);
+      const [a, d] = open; open = [];
+      if (deck[a.dataset.k].e === deck[d.dataset.k].e) {
+        a.classList.add("ok"); d.classList.add("ok"); found++; KloMusik.blip("good");
+        $("kgMemInfo").textContent = tr(`Züge: ${moves} · Paare: ${found}/8`, `Moves: ${moves} · Pairs: ${found}/8`);
+        if (found === 8) { KloMusik.blip("flush"); setTimeout(() => alive && result("memory", Math.max(8, Math.min(300, moves))), 700); }
+      } else { busy = true; setTimeout(() => { a.classList.remove("up"); d.classList.remove("up"); busy = false; }, 750); }
+    });
+  }
+
+  /* ---------- Spiel 6: Rohr-Ente ---------- */
+  function playEnte() {
+    const { cv, c, W, H } = canvasView(tr("Spielfeld: Tippen lässt die Ente hochschwimmen", "Game area: tap to make the duck swim up"), tr("Tippen = hoch. Schwimm durch die Lücken in den Rohren.", "Tap = up. Swim through the gaps in the pipes."));
+    let y = H / 2, v = 0, pipes = [], score = 0, running = true, started = false, dead = false, last = 0, dist = 0, raf = 0;
+    const X = 90, R = 16, GAP = 150;
+    const flap = () => { if (dead) return; if (!started) { started = true; last = performance.now(); } v = -330; tone(660, .08); };
+    cv.addEventListener("pointerdown", e => { e.preventDefault(); flap(); });
+    const onKey = e => { if (e.code === "Space" || e.key === "ArrowUp") { e.preventDefault(); flap(); } };
+    document.addEventListener("keydown", onKey);
+    stopGame = () => { running = false; cancelAnimationFrame(raf); document.removeEventListener("keydown", onKey); };
+    function pipe(x, top, h) {
+      const g = c.createLinearGradient(x, 0, x + 56, 0); g.addColorStop(0, "#5b6a63"); g.addColorStop(.5, "#c9d2cd"); g.addColorStop(1, "#5b6a63");
+      c.fillStyle = g; c.fillRect(x, top, 56, h);
+      c.fillRect(x - 6, top === 0 ? h - 18 : top, 68, 18);
+    }
+    function duck() {
+      c.save(); c.translate(X, y); c.rotate(Math.max(-.5, Math.min(.8, v / 600)));
+      c.fillStyle = "#f2c230"; c.beginPath(); c.ellipse(0, 4, 18, 13, 0, 0, 7); c.fill();
+      c.beginPath(); c.arc(9, -9, 10, 0, 7); c.fill();
+      c.fillStyle = "#e07a1f"; c.beginPath(); c.moveTo(17, -9); c.lineTo(28, -6); c.lineTo(17, -3); c.fill();
+      c.fillStyle = C.ink; c.beginPath(); c.arc(12, -12, 2.2, 0, 7); c.fill();
+      c.restore();
+    }
+    function draw() {
+      c.fillStyle = "#cfe3ea"; c.fillRect(0, 0, W, H);
+      c.fillStyle = "rgba(255,255,255,.5)"; for (let i = 0; i < 6; i++) { const bx = ((i * 83 - dist * .3) % (W + 40) + W + 40) % (W + 40) - 20; c.beginPath(); c.arc(bx, 80 + (i * 97) % 380, 6 + i % 3 * 3, 0, 7); c.fill(); }
+      pipes.forEach(p => { pipe(p.x, 0, p.g); pipe(p.x, p.g + GAP, H - p.g - GAP); });
+      duck();
+      hud(c, W, null, score, tr("Rohre", "Pipes"));
+      if (!started) bigText(c, W, H, tr("Rohr-Ente", "Pipe Duck"), tr("Tippen zum Schwimmen", "Tap to swim"));
+    }
+    function loop(now) {
+      if (!running) return;
+      if (started && !dead) {
+        const dt = Math.min(.04, (now - last) / 1000); last = now;
+        const speed = 140 + Math.min(110, score * 4);
+        v += 900 * dt; y += v * dt; dist += speed * dt;
+        if (!pipes.length || pipes[pipes.length - 1].x < W - 190) pipes.push({ x: W + 20, g: 70 + Math.random() * (H - GAP - 140), done: false });
+        pipes.forEach(p => { p.x -= speed * dt; if (!p.done && p.x + 56 < X - R) { p.done = true; score++; KloMusik.blip("good"); } });
+        pipes = pipes.filter(p => p.x > -80);
+        const hitPipe = pipes.some(p => X + R > p.x - 6 && X - R < p.x + 62 && (y - R < p.g || y + R > p.g + GAP));
+        if (hitPipe || y > H - R || y < R) {
+          dead = true; KloMusik.blip("bad"); draw();
+          setTimeout(() => running && result("ente", Math.min(500, score)), 700); return;
+        }
+      }
+      draw(); raf = requestAnimationFrame(loop);
+    }
+    raf = requestAnimationFrame(loop);
+  }
+
+  /* ---------- Spiel 7: Spül-Simon ---------- */
+  function playSimon() {
+    const PADS = [["🧻", "#b3261e", 330], ["🚽", "#1f4fa3", 392], ["🧼", "#2f6b3a", 494], ["🦆", "#e0a92e", 587]];
+    view(`<div class="simon" id="kgSimon">${PADS.map(([e, col], i) => `<button type="button" data-i="${i}" style="--c:${col}" aria-label="${tr("Feld", "Pad")} ${i + 1}">${e}</button>`).join("")}</div>
+      <p class="hint" id="kgSimonInfo">${tr("Merk dir die Reihenfolge und tipp sie nach.", "Remember the order and tap it back.")}</p>
+      <div class="row" style="justify-content:center"><button type="button" class="btn go" id="kgSimonGo">${tr("Start", "Start")}</button></div>
+      <button type="button" class="ghost" data-go="menu">${tr("Abbrechen", "Cancel")}</button>`);
+    const btns = [...document.querySelectorAll("#kgSimon button")], info = $("kgSimonInfo");
+    let seq = [], pos = 0, input = false, alive = true, timers = [];
+    stopGame = () => { alive = false; timers.forEach(clearTimeout); };
+    const later = (f, ms) => timers.push(setTimeout(() => alive && f(), ms));
+    const lit = (i, ms) => { btns[i].classList.add("lit"); tone(PADS[i][2], ms / 1000); later(() => btns[i].classList.remove("lit"), ms); };
+    function next() {
+      seq.push(Math.floor(Math.random() * 4)); pos = 0; input = false;
+      info.textContent = tr(`Runde ${seq.length} – gut zuschauen …`, `Round ${seq.length} – watch closely …`);
+      const step = Math.max(260, 620 - seq.length * 25);
+      seq.forEach((p, k) => later(() => lit(p, step * .7), 500 + k * step));
+      later(() => { input = true; info.textContent = tr("Jetzt du!", "Your turn!"); }, 500 + seq.length * step);
+    }
+    $("kgSimonGo").onclick = e => { e.target.hidden = true; next(); };
+    $("kgSimon").addEventListener("pointerdown", e => {
+      const b = e.target.closest("button[data-i]"); if (!b || !input) return;
+      const i = Number(b.dataset.i); lit(i, 220);
+      if (i !== seq[pos]) { input = false; KloMusik.blip("bad"); info.textContent = tr("Falsch gespült!", "Wrong flush!"); later(() => result("simon", Math.min(100, seq.length - 1)), 900); return; }
+      pos++;
+      if (pos === seq.length) { input = false; KloMusik.blip("good"); later(next, 700); }
+    });
+  }
+
+  /* ---------- Spiel 8: Kabinen-Zahlen ---------- */
+  function playZahlen() {
+    const nums = Array.from({ length: 25 }, (_, i) => i + 1).sort(() => Math.random() - .5);
+    view(`<div class="zahl" id="kgZahl">${nums.map(n => `<button type="button" data-n="${n}">${n}</button>`).join("")}</div>
+      <p class="hint" id="kgZahlInfo">${tr("Tipp die Kabinen von 1 bis 25 der Reihe nach. Falsch tippen kostet 1 Sekunde.", "Tap the stalls from 1 to 25 in order. A wrong tap costs 1 second.")}</p><button type="button" class="ghost" data-go="menu">${tr("Abbrechen", "Cancel")}</button>`);
+    let want = 1, t0 = 0, pen = 0, alive = true, tick = 0;
+    stopGame = () => { alive = false; clearInterval(tick); };
+    const info = $("kgZahlInfo");
+    $("kgZahl").addEventListener("pointerdown", e => {
+      const b = e.target.closest("button[data-n]"); if (!b || b.disabled) return;
+      if (!t0) { t0 = performance.now(); tick = setInterval(() => { info.textContent = `${((performance.now() - t0 + pen) / 1000).toFixed(1)} s · ${tr("nächste", "next")}: ${want}`; }, 100); }
+      if (Number(b.dataset.n) === want) {
+        b.disabled = true; b.classList.add("ok"); tone(400 + want * 25, .08); want++;
+        if (want > 25) { clearInterval(tick); const ms = Math.round(performance.now() - t0 + pen); KloMusik.blip("flush"); info.textContent = `${(ms / 1000).toFixed(1)} s`; setTimeout(() => alive && result("zahlen", Math.max(2000, Math.min(600000, ms))), 600); }
+      } else { pen += 1000; b.classList.add("bad"); KloMusik.blip("bad"); setTimeout(() => b.classList.remove("bad"), 300); }
+    });
+  }
+
   /* ---------- Ergebnis und Eintragen ---------- */
   function checkName(n) {
     if (n.length < 2) return tr("Mindestens 2 Zeichen, bitte.", "At least 2 characters, please.");
@@ -360,7 +586,7 @@
   }
   function result(g, score) {
     view(`<div class="score"><span>${GAMES[g].title}</span><big>${fmt(g, score)}</big>
-        <span>${g === "reflex" ? tr("Schnitt aus 3 Runden", "average of 3 rounds") : g === "stapel" ? tr("gestapelt", "stacked") : tr("gefangen", "caught")}</span></div>
+        <span>${DONE[g]}</span></div>
       <form id="kgForm" autocomplete="off">
         <label for="kgName">${tr("Dein Name für die Rangliste", "Your name for the leaderboard")}</label>
         <input id="kgName" maxlength="12" placeholder="${tr("z. B. Klokönig", "e.g. LooKing")}" value="${esc(myName)}">

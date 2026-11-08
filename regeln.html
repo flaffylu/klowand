@@ -6,11 +6,11 @@ button{font:700 18px system-ui;background:#b3261e;color:#fff;border:none;border-
 .ph{position:sticky;top:0;background:#e3ebe7;padding:10px 16px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;border-top:3px solid #1d2321}.st{font-weight:700}
 .ok{background:#1f7a4d}pre{margin:0;padding:16px;font:12px/1.4 ui-monospace,monospace;white-space:pre-wrap;overflow-wrap:anywhere}
 ol{margin:8px 0 0;padding-left:20px;font-size:15px;color:#e8efec}</style></head><body>
-<div class="top"><b>Firebase-Regeln · 278 Zeilen in 4 Teilen</b>
+<div class="top"><b>Firebase-Regeln · 283 Zeilen in 4 Teilen</b>
 <ol><li>In Firebase: lange drücken → <b>Alles auswählen</b> → <b>Ausschneiden</b>. Das Feld muss <b>leer</b> sein.</li>
 <li>Hier <b>Teil 1</b> kopieren → in Firebase lange drücken → <b>Einfügen</b>.</li>
 <li>Ganz nach unten ins Feld tippen (hinter die letzte Zeile) → <b>Teil 2</b> einfügen. Dann Teil 3 und Teil 4 genauso.</li>
-<li>Prüfen: Zeile 1 = <code>rules_version = '2';</code>, letzte Zeile = <code>}</code>, insgesamt 278 Zeilen. Dann <b>Veröffentlichen</b>.</li></ol>
+<li>Prüfen: Zeile 1 = <code>rules_version = '2';</code>, letzte Zeile = <code>}</code>, insgesamt 283 Zeilen. Dann <b>Veröffentlichen</b>.</li></ol>
 <p>Tipp: Nicht über die Zwischenablage der Tastatur einfügen, sondern über „Einfügen“ beim langen Drücken.</p></div>
 <section><div class="ph"><button data-i="0">📋 Teil 1 von 4 kopieren</button><span class="st" id="st0">Zeile 1–81</span></div><pre id="p0">rules_version = &#x27;2&#x27;;
 service cloud.firestore {
@@ -229,7 +229,7 @@ service cloud.firestore {
       allow delete: if isOwner(wall) &amp;&amp; famOk(wall, key);
     }
 
-</pre></section><section><div class="ph"><button data-i="3">📋 Teil 4 von 4 kopieren</button><span class="st" id="st3">Zeile 218–278</span></div><pre id="p3">    /* ---------- Inhalte einer Wand ---------- */
+</pre></section><section><div class="ph"><button data-i="3">📋 Teil 4 von 4 kopieren</button><span class="st" id="st3">Zeile 218–283</span></div><pre id="p3">    /* ---------- Inhalte einer Wand ---------- */
     match /walls/{wall}/posts/{id} {
       allow read: if !famOn(wall) || canModerate(wall);
       allow create: if openWall(wall) &amp;&amp; !famOn(wall)
@@ -279,7 +279,12 @@ service cloud.firestore {
         &amp;&amp; d.ts == request.time
         &amp;&amp; ((game == &#x27;fang&#x27; &amp;&amp; d.score &gt;= 0 &amp;&amp; d.score &lt;= 300)
           || (game == &#x27;reflex&#x27; &amp;&amp; d.score &gt;= 100 &amp;&amp; d.score &lt;= 3000)
-          || (game == &#x27;stapel&#x27; &amp;&amp; d.score &gt;= 0 &amp;&amp; d.score &lt;= 500));
+          || (game == &#x27;stapel&#x27; &amp;&amp; d.score &gt;= 0 &amp;&amp; d.score &lt;= 500)
+          || (game == &#x27;fliege&#x27; &amp;&amp; d.score &gt;= 0 &amp;&amp; d.score &lt;= 300)
+          || (game == &#x27;memory&#x27; &amp;&amp; d.score &gt;= 8 &amp;&amp; d.score &lt;= 300)
+          || (game == &#x27;ente&#x27; &amp;&amp; d.score &gt;= 0 &amp;&amp; d.score &lt;= 500)
+          || (game == &#x27;simon&#x27; &amp;&amp; d.score &gt;= 0 &amp;&amp; d.score &lt;= 100)
+          || (game == &#x27;zahlen&#x27; &amp;&amp; d.score &gt;= 2000 &amp;&amp; d.score &lt;= 600000));
     }
 
     match /walls/{wall}/games/{game}/scores/{id} {

@@ -229,7 +229,7 @@
     el.innerHTML = `<div class="box"><span class="k">${KLO_APP ? tr("Eigene Wand", "Own wall", "自分のウォール") : tr("Vollversion", "Full version", "フルバージョン")}</span>
       <h2>${KLO_APP ? tr("Nur auf eigenen Wänden", "Only on own walls", "自分のウォールのみ") : tr("Alles freischalten", "Unlock everything", "すべて解放")}</h2>
       <p>${what[reason] || what.all}</p>
-      <ul><li>${tr("Malen mit dem Finger", "Drawing with your finger", "指でお絵かき")}</li><li>${tr("Alle 3 Klo-Spiele mit Rangliste", "All 3 loo games with leaderboard", "トイレゲーム3種＋ランキング")}</li>
+      <ul><li>${tr("Malen mit dem Finger", "Drawing with your finger", "指でお絵かき")}</li><li>${tr("Alle 8 Klo-Spiele mit Rangliste", "All 8 loo games with leaderboard", "トイレゲーム8種＋ランキング")}</li>
         <li>${tr("Familien-Planner: Stundenplan, Fotos & Notfall", "Family Planner: timetable, photos & emergency", "ファミリープランナー：時間割・写真・緊急")}</li><li>${tr("Gemütliche Musik", "Cozy music", "ゆったり音楽")}</li><li>${tr("Eigene Wand mit deinem Namen", "Your own wall with your name", "名前入りの自分専用ウォール")}</li>
         <li>${tr("QR-Sticker zum Ausdrucken", "Printable QR sticker", "印刷できるQRステッカー")}</li><li>${tr("Du löschst, was nicht passt", "You delete anything unwanted", "不適切な投稿は自分で削除")}</li></ul>
       ${KLO_APP ? `<div class="price" style="font-size:1rem">${tr("Auf dieser Wand nicht freigeschaltet.", "Not unlocked on this wall.", "このウォールでは未解放です。")}</div>`

@@ -265,7 +265,12 @@ service cloud.firestore {
         && d.ts == request.time
         && ((game == 'fang' && d.score >= 0 && d.score <= 300)
           || (game == 'reflex' && d.score >= 100 && d.score <= 3000)
-          || (game == 'stapel' && d.score >= 0 && d.score <= 500));
+          || (game == 'stapel' && d.score >= 0 && d.score <= 500)
+          || (game == 'fliege' && d.score >= 0 && d.score <= 300)
+          || (game == 'memory' && d.score >= 8 && d.score <= 300)
+          || (game == 'ente' && d.score >= 0 && d.score <= 500)
+          || (game == 'simon' && d.score >= 0 && d.score <= 100)
+          || (game == 'zahlen' && d.score >= 2000 && d.score <= 600000));
     }
 
     match /walls/{wall}/games/{game}/scores/{id} {
