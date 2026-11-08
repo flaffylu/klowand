@@ -82,6 +82,9 @@
     bar(true);
     const up = () => window.kloUpsell && kloUpsell("familie");
     document.getElementById("famPlan").onclick = up; document.getElementById("famFoto").onclick = up;
+    // Notfall-Hilfe gibt's nur im eigenen Familien-Planner; der Hinweis nennt trotzdem die 112
+    const sos = document.getElementById("famSos"); sos.classList.add("locked");
+    sos.onclick = () => window.kloUpsell && kloUpsell("notfall");
     return;
   }
   if (typeof FIXED !== "undefined" && FIXED) return;

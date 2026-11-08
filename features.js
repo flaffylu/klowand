@@ -198,6 +198,7 @@
     draw: KLO_APP ? tr("Malen geht auf eigenen Wänden.", "Drawing works on own walls.", "お絵かきは自分のウォールで。") : tr("Malen ist in der Vollversion frei.", "Drawing is unlocked in the full version.", "お絵かきはフルバージョンで使えます。"),
     music: KLO_APP ? tr("Musik gibt's auf eigenen Wänden.", "Music is on own walls.", "音楽は自分のウォールで。") : tr("Musik gibt's in der Vollversion.", "Music comes with the full version.", "音楽はフルバージョンで使えます。"),
     game: KLO_APP ? tr("Dieses Spiel gibt's auf eigenen Wänden.", "This game is on own walls.", "このゲームは自分のウォールで。") : tr("Dieses Spiel gibt's in der Vollversion.", "This game comes with the full version.", "このゲームはフルバージョンで遊べます。"),
+    notfall: tr("Die Notfall-Hilfe mit Bildern gibt's im eigenen Familien-Planner. Im echten Notfall: sofort 112 anrufen!", "The picture-based emergency help comes with your own Family Planner. In a real emergency: call 112 (911 in the US) right away!", "絵で分かる緊急ヘルプは自分のファミリープランナーで。本当の緊急時はすぐ119へ！"),
     familie: tr("Stundenplan und Familienfotos gibt's mit eurem eigenen Familien-Planner, nur für euch sichtbar.", "Timetable and family photos come with your own family wall, visible only to you.", "時間割と家族の写真は、自分たちのファミリーウォールで。家族だけが見られます。"),
     all: tr("Das alles bekommst du mit deiner eigenen Klo-Wand:", "All this comes with your own Klo-Wand:", "自分のKlo-Wandなら全部使えます："),
   };
