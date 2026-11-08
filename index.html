@@ -188,6 +188,126 @@ html.th-neon .extras button{background:rgba(255,255,255,.06);color:#f5f0ff;borde
 html.th-neon .extras button[aria-pressed="true"]{background:var(--neon-lime);color:#0b0716;border-color:var(--neon-lime)}
 html.th-neon .bar{background:#0b0716}
 html.th-neon .empty{background:rgba(11,7,22,.7);color:var(--muted)}
+
+/* Stile Kreidetafel, Papier & Sticker, Retro-Fliesen (unter 🎨 Hintergrund) */
+html.th-kreide.bg-photo{--muted:#cfe3d4}
+html.th-kreide.bg-photo body{color:#fdfbf2}
+html.th-kreide.bg-photo .plate{background:linear-gradient(180deg,#8a5a33,#6b4120);border:none;border-radius:6px;box-shadow:inset 0 0 0 3px #5c3519,0 4px 0 #4a2a12}
+html.th-kreide.bg-photo .plate::before,.plate::after{background:radial-gradient(circle at 35% 35%,#f5e0c8,#9a6a40 70%)}
+html.th-kreide.bg-photo .plate h1{font:400 1.45rem/1.1 var(--f-scratch);letter-spacing:0;text-transform:none;color:#fdfbf2}
+html.th-kreide.bg-photo .plate small{color:#f1d9c4}
+html.th-kreide.bg-photo .occ{background:#fdfbf2;color:#2a4134}
+html.th-kreide.bg-photo .tabs button{background:transparent;color:#fdfbf2;border:2px dashed rgba(253,251,242,.7)}
+html.th-kreide.bg-photo .tabs button[aria-pressed="true"]{background:#fdfbf2;color:#2a4134;border-style:solid}
+html.th-kreide.bg-photo .tabs .hint,.legal a{color:#cfe3d4;text-shadow:none}
+html.th-kreide.bg-photo .extras button{background:transparent;color:#fdfbf2;border:2px dashed rgba(253,251,242,.7);border-radius:8px}
+html.th-kreide.bg-photo .extras button[aria-pressed="true"]{background:#f6e27a;color:#2a4134;border-style:solid}
+html.th-kreide.bg-photo .post{background:rgba(255,255,255,.04);border:2px dashed rgba(253,251,242,.35);border-radius:8px;box-shadow:none;-webkit-backdrop-filter:none;backdrop-filter:none}
+html.th-kreide.bg-photo .post::before{display:none}
+html.th-kreide.bg-photo .post .txt{font-family:var(--f-hand)}
+html.th-kreide.bg-photo .c-ink{color:#fdfbf2}
+html.th-kreide.bg-photo .c-red{color:#ffb3b3}
+html.th-kreide.bg-photo .c-blue{color:#b3dcff}
+html.th-kreide.bg-photo .c-green{color:#d8ffb3}
+html.th-kreide.bg-photo .c-silver,html.th-kreide.bg-photo .post.c-silver .txt{color:#f6e27a;text-shadow:none}
+html.th-kreide.bg-photo .tally,.meta button.on{color:#fdfbf2}
+html.th-kreide.bg-photo .reply{color:#e8efe9}
+html.th-kreide.bg-photo .rform input{color:#fdfbf2;border-bottom-color:#fdfbf2}
+html.th-kreide.bg-photo .rform button{background:#fdfbf2;color:#2a4134}
+html.th-kreide.bg-photo .post .drawing{background:#fdfbf2;border-radius:6px}
+html.th-kreide.bg-photo .champ{background:rgba(0,0,0,.12);border:2.5px dashed #f6e27a;border-radius:40px;box-shadow:none;text-align:center}
+html.th-kreide.bg-photo .champ .post{background:none;border:none}
+html.th-kreide.bg-photo .champ .crown{background:transparent;color:#f6e27a;letter-spacing:.2em}
+html.th-kreide.bg-photo .chcard{background:rgba(0,0,0,.15);color:#fdfbf2;border:2px dashed rgba(253,251,242,.6);border-radius:10px}
+html.th-kreide.bg-photo .chcard .k{color:#f6e27a}
+html.th-kreide.bg-photo .chcard .m{color:#cfe3d4}
+html.th-kreide.bg-photo .chcard button{background:#fdfbf2;color:#2a4134}
+html.th-kreide.bg-photo .chtag{background:transparent;color:#f6e27a;border:1px dashed #f6e27a}
+html.th-kreide.bg-photo .bar{background:#5c3519;border-top:3px solid #4a2a12}
+html.th-kreide.bg-photo .bar textarea{background:#2f4a3a;color:#fdfbf2;border:2px solid #8a5a33}
+html.th-kreide.bg-photo .modes button[aria-pressed="true"]{background:#fdfbf2;color:#2a4134}
+html.th-kreide.bg-photo .send{background:#fdfbf2;color:#2a4134}
+html.th-kreide.bg-photo .empty{background:rgba(0,0,0,.15);color:#cfe3d4}
+html.th-papier.bg-photo{--muted:#6b5a48}
+html.th-papier.bg-photo body{color:#2b2118}
+html.th-papier.bg-photo .plate{background:#fff;border:2px solid #2b2118;border-radius:12px;box-shadow:4px 5px 0 #2b2118;transform:rotate(-.6deg)}
+html.th-papier.bg-photo .plate::before,.plate::after{display:none}
+html.th-papier.bg-photo .plate h1{font:800 1.5rem/1 var(--f-ui);letter-spacing:.02em;color:#2b2118}
+html.th-papier.bg-photo .occ{background:#ff5a5f;border-radius:999px}
+html.th-papier.bg-photo .tabs button{background:#fff;color:#2b2118;border:2px solid #2b2118}
+html.th-papier.bg-photo .tabs button[aria-pressed="true"]{background:#2b2118;color:#fff}
+html.th-papier.bg-photo .tabs .hint,.legal a{color:#2b2118;text-shadow:none}
+html.th-papier.bg-photo .extras button{background:#fff;color:#2b2118;border:2px solid #2b2118;border-radius:12px;box-shadow:2px 3px 0 #2b2118}
+html.th-papier.bg-photo .extras button[aria-pressed="true"]{background:#ffe066;color:#2b2118}
+html.th-papier.bg-photo .post{background:#ffe066;border:none;border-radius:2px;box-shadow:0 8px 14px rgba(60,40,20,.22);padding-top:20px;-webkit-backdrop-filter:none;backdrop-filter:none}
+html.th-papier.bg-photo .post:nth-child(4n+2){background:#9ee6c4}
+html.th-papier.bg-photo .post:nth-child(4n+3){background:#ffc2d1}
+html.th-papier.bg-photo .post:nth-child(4n){background:#a5d8ff}
+html.th-papier.bg-photo .post::before{top:-8px;left:50%;width:58px;height:18px;margin-left:-29px;border-radius:0;background:rgba(255,255,255,.65);box-shadow:none;transform:rotate(-4deg)}
+html.th-papier.bg-photo .c-ink{color:#2b2118}
+html.th-papier.bg-photo .c-red{color:#c2185b}
+html.th-papier.bg-photo .c-blue{color:#1d4ed8}
+html.th-papier.bg-photo .c-green{color:#1f6b45}
+html.th-papier.bg-photo .c-silver,html.th-papier.bg-photo .post.c-silver .txt{color:#7a4a00;text-shadow:none}
+html.th-papier.bg-photo .tally,.meta button.on{color:#2b2118}
+html.th-papier.bg-photo .meta,.meta button{color:#4a3b2c}
+html.th-papier.bg-photo .post .drawing{background:#fff;border-radius:2px}
+html.th-papier.bg-photo .champ{background:#fff;border:2px solid #2b2118;border-radius:4px;box-shadow:6px 7px 0 #2b2118}
+html.th-papier.bg-photo .champ .post{background:none;box-shadow:none}
+html.th-papier.bg-photo .champ .post::before{display:none}
+html.th-papier.bg-photo .champ .crown{background:#ff5a5f;border-radius:999px}
+html.th-papier.bg-photo .chcard{background:#2b2118;color:#fff6e5;border-radius:14px}
+html.th-papier.bg-photo .chcard .k{color:#ffd666}
+html.th-papier.bg-photo .chcard button{background:#ffd666;color:#2b2118;border-radius:12px}
+html.th-papier.bg-photo .chtag{background:#2b2118;color:#ffd666}
+html.th-papier.bg-photo .bar{background:#fff;color:#2b2118;border-top:2px solid #2b2118;box-shadow:0 -6px 20px rgba(60,40,20,.2)}
+html.th-papier.bg-photo .bar textarea{background:#fffaf0;color:#2b2118;border:2px solid #d9c8a8;border-radius:12px}
+html.th-papier.bg-photo .modes button,.fonts button{color:#2b2118;border-color:#2b2118}
+html.th-papier.bg-photo .modes button[aria-pressed="true"],.fonts button[aria-pressed="true"]{background:#2b2118;color:#fff}
+html.th-papier.bg-photo .pen{box-shadow:inset 0 0 0 2px #fff}
+html.th-papier.bg-photo .pen[aria-pressed="true"]{border-color:#2b2118}
+html.th-papier.bg-photo .count{color:#6b5a48}
+html.th-papier.bg-photo .mod{color:#b3261e}
+html.th-papier.bg-photo .mod.ok{color:#1f6b45}
+html.th-papier.bg-photo .send{background:#ff5a5f;color:#fff;border-radius:12px}
+html.th-papier.bg-photo .empty{background:#fff;color:#6b5a48}
+html.th-retro.bg-photo{--muted:#7a4e30}
+html.th-retro.bg-photo body{color:#3b2314}
+html.th-retro.bg-photo .plate{background:#d9622b;border:none;border-radius:18px;border-bottom:6px solid #f2a33a;box-shadow:0 6px 0 #8a3a14}
+html.th-retro.bg-photo .plate::before,.plate::after{display:none}
+html.th-retro.bg-photo .plate h1{font:400 1.7rem/1 var(--f-marker);letter-spacing:0;text-transform:none;color:#fff3dc;text-shadow:3px 3px 0 #8a3a14}
+html.th-retro.bg-photo .plate small{color:#ffe2bf}
+html.th-retro.bg-photo .occ{background:#fff3dc;color:#8a3a14;border-radius:999px}
+html.th-retro.bg-photo .tabs button{background:#fff3dc;color:#3b2314;border:2px solid #d9622b}
+html.th-retro.bg-photo .tabs button[aria-pressed="true"]{background:#d9622b;color:#fff3dc}
+html.th-retro.bg-photo .tabs .hint,.legal a{color:#7a4e30;text-shadow:none}
+html.th-retro.bg-photo .extras button{background:#f2a33a;color:#3b2314;border:none;border-radius:999px;box-shadow:0 4px 0 #b06a14}
+html.th-retro.bg-photo .extras button[aria-pressed="true"]{background:#3b6e5a;color:#fff3dc;box-shadow:0 4px 0 #24473a}
+html.th-retro.bg-photo .post{background:#fff3dc;border:none;border-radius:18px;box-shadow:0 5px 0 #e0c79a;-webkit-backdrop-filter:none;backdrop-filter:none}
+html.th-retro.bg-photo .post::before{background:radial-gradient(circle at 35% 35%,#ffd08a,#d9622b 65%)}
+html.th-retro.bg-photo .c-ink{color:#3b2314}
+html.th-retro.bg-photo .c-red{color:#c2410c}
+html.th-retro.bg-photo .c-blue{color:#1e5b8a}
+html.th-retro.bg-photo .c-green{color:#2f6b52}
+html.th-retro.bg-photo .c-silver,html.th-retro.bg-photo .post.c-silver .txt{color:#9a5b00;text-shadow:none}
+html.th-retro.bg-photo .tally,.meta button.on{color:#3b2314}
+html.th-retro.bg-photo .champ{background:#fff3dc;border:4px solid #d9622b;border-radius:24px;box-shadow:0 6px 0 #8a3a14}
+html.th-retro.bg-photo .champ .post{background:none;box-shadow:none}
+html.th-retro.bg-photo .champ .post::before{display:none}
+html.th-retro.bg-photo .champ .crown{background:#d9622b;color:#fff3dc;border-radius:999px}
+html.th-retro.bg-photo .chcard{background:#3b6e5a;color:#fff3dc;border-radius:22px;box-shadow:0 5px 0 #24473a}
+html.th-retro.bg-photo .chcard .k{color:#f2c46d}
+html.th-retro.bg-photo .chcard .m{color:#d6eadf}
+html.th-retro.bg-photo .chcard button{background:#f2a33a;color:#3b2314;border-radius:999px}
+html.th-retro.bg-photo .chtag{background:#3b6e5a;color:#f2c46d}
+html.th-retro.bg-photo .bar{background:#8a3a14}
+html.th-retro.bg-photo .bar textarea{background:#fff3dc;color:#3b2314;border-radius:16px}
+html.th-retro.bg-photo .modes button[aria-pressed="true"]{background:#f2a33a;color:#3b2314;border-color:#f2a33a}
+html.th-retro.bg-photo .send{background:#f2a33a;color:#3b2314;border-radius:999px}
+html.th-retro.bg-photo .empty{background:#fff3dc;color:#7a4e30}
+html.th-kreide.bg-photo .fonts button,html.th-kreide.bg-photo .modes button,html.th-retro.bg-photo .fonts button,html.th-retro.bg-photo .modes button{color:#fff3dc;border-color:rgba(255,243,220,.55)}
+html.th-kreide.bg-photo .fonts button[aria-pressed="true"],html.th-retro.bg-photo .fonts button[aria-pressed="true"]{background:#fff3dc;color:#3b2314}
+html.th-kreide.bg-photo .count,html.th-retro.bg-photo .count{color:#f1d9c4}
 </style>
 </head>
 <body>
@@ -267,7 +387,7 @@ translateStatic([
 /* Hintergrund: eigene Wahl auf diesem Handy (Knopf „Hintergrund“), sonst der aus config.js */
 window.kloApplyBg = function (css, light, theme) {
   const r = document.documentElement;
-  r.classList.toggle("th-neon", theme === "neon");
+  ["neon", "kreide", "papier", "retro"].forEach(t => r.classList.toggle("th-" + t, theme === t));
   r.classList.toggle("bg-photo", !!css); r.classList.toggle("bg-light", !!css && !!light);
   if (css) r.style.setProperty("--bg-url", css); else r.style.removeProperty("--bg-url");
 };

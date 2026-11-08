@@ -13,6 +13,9 @@
     { id: "himmel", n: tr("Himmel", "Sky", "空"), css: img("himmel"), mini: "bilder/mini/himmel.jpg", light: true },
     { id: "weltall", n: tr("Weltall", "Space", "宇宙"), css: STARS, light: false },
     { id: "wasser", n: tr("Unterwasser", "Underwater", "海の中"), css: img("wasser"), mini: "bilder/mini/wasser.jpg", light: false },
+    { id: "kreide", n: tr("Kreidetafel", "Chalkboard", "黒板"), css: "radial-gradient(90% 70% at 30% 20%,#3c5a46 0%,#2a4134 60%,#23362b 100%)", light: false, theme: "kreide" },
+    { id: "papier", n: tr("Papier & Sticker", "Paper & stickers", "紙とシール"), css: "radial-gradient(rgba(120,90,50,.2) 1px,transparent 1.3px) 0 0/14px 14px repeat,#e9d9bd", light: true, theme: "papier" },
+    { id: "retro", n: tr("Retro-Fliesen", "Retro tiles", "レトロタイル"), css: "linear-gradient(#e5cfa6 2px,transparent 2px) 0 0/48px 48px repeat,linear-gradient(90deg,#e5cfa6 2px,transparent 2px) 0 0/48px 48px repeat,#f2e3c6", light: true, theme: "retro" },
     { id: "neonnacht", n: tr("Neon-Nacht", "Neon night", "ネオンの夜"), css: "radial-gradient(120% 70% at 100% 0%,#3a0b4d 0%,#0b0716 55%)", light: false, theme: "neon" },
     { id: "neon", n: "Neon", css: img("neon"), mini: "bilder/mini/neon.jpg", light: false },
     { id: "holz", n: tr("Holz", "Wood", "木"), css: img("holz"), mini: "bilder/mini/holz.jpg", light: true },
@@ -53,7 +56,7 @@
       <p>${tr("Tipp auf ein Bild. Das siehst nur du auf deinem Handy.", "Tap a picture. Only you see it on your phone.", "好きな絵をタップ。自分のスマホだけに表示されます。")}</p>
       <div class="tiles">
         <label class="tile own" aria-pressed="${cur === "own"}"><i>📷</i>${tr("Eigenes Foto", "Own photo", "自分の写真")}<input type="file" accept="image/*" hidden></label>
-        ${STILE.map(s => `<button type="button" class="tile" data-id="${s.id}" aria-pressed="${cur === s.id}"><i style="background-image:${s.mini ? `url('${s.mini}')` : (s.css ? s.css.replace(/"/g, "'") : "none")};${s.css ? "" : "background-color:#b9c7bf"}"></i>${s.n}</button>`).join("")}
+        ${STILE.map(s => `<button type="button" class="tile" data-id="${s.id}" aria-pressed="${cur === s.id}"><i style="background:${s.mini ? `url('${s.mini}') center/cover` : (s.css ? s.css.replace(/"/g, "'") : "#b9c7bf")}"></i>${s.n}</button>`).join("")}
       </div><p class="msg" id="stilMsg"></p></div>`;
     document.body.appendChild(el);
     const close = () => el.remove();
