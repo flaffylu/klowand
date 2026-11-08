@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Konto löschen · Klo-Wand</title>
+<link rel="icon" href="icon-192.png">
+<link rel="stylesheet" href="fonts.css">
+<link rel="stylesheet" href="legal.css">
+</head>
+<body>
+<main class="doc">
+  <a class="back" href="./">← Zur Klo-Wand</a>
+  <h1>Konto und Daten löschen</h1>
+  <p class="sub">Klo-Wand &amp; Familien-Planner (Web und Android-App)</p>
+
+  <h2>Besucher der Wand</h2>
+  <p>Wer an einer Wand schreibt, malt oder spielt, hat <b>kein Konto</b>. Es gibt also nichts zu löschen. Einen einzelnen Beitrag kann der Besitzer der Wand jederzeit löschen. Melde ihn dafür mit dem Knopf „Melden“ oder schreib uns.</p>
+
+  <h2>Besitzer einer Wand (Anmeldung mit Google)</h2>
+  <p>So beantragst du die Löschung deines Kontos:</p>
+  <ol>
+    <li>Schreib eine E-Mail an <a data-k="email" id="mail" href="#"></a> mit dem Betreff <b>„Konto löschen“</b>.</li>
+    <li>Schick sie von der Google-Adresse, mit der du dich bei „Meine Wand“ anmeldest, damit wir dich zuordnen können.</li>
+    <li>Wir bestätigen die Löschung innerhalb von 30 Tagen.</li>
+  </ol>
+
+  <h2>Was gelöscht wird</h2>
+  <ul>
+    <li>deine Anmeldung (Nutzerkennung bei Firebase Authentication)</li>
+    <li>deine Wände mit allen Beiträgen, Antworten, Strichen und Ranglisten</li>
+    <li>der Familien-Planner: Stundenpläne, Familienfotos und der Familien-Code</li>
+  </ul>
+
+  <h2>Was aufbewahrt wird</h2>
+  <p>Kaufbelege (Payhip) bewahren wir so lange auf, wie es das Steuerrecht verlangt (bis zu 10 Jahre). Darin stehen keine Inhalte deiner Wand.</p>
+
+  <p class="foot"><a href="datenschutz.html">Datenschutzerklärung</a> · <a href="impressum.html">Impressum</a></p>
+</main>
+<script src="config.js"></script>
+<script src="legal.js"></script>
+<script>
+  // E-Mail-Link mit Betreff (Adresse kommt wie im Impressum aus config.js)
+  setTimeout(() => { const a = document.getElementById("mail"); const m = (a.textContent || "").trim(); if (m) a.href = "mailto:" + m + "?subject=" + encodeURIComponent("Konto löschen"); }, 0);
+</script>
+</body>
+</html>
