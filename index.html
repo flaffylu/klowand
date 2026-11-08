@@ -424,7 +424,16 @@ if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catc
 const FIXED = !!WAENDE[WALL];
 /* Demo-Wand: Malen, Musik und zwei Spiele sind gesperrt und zeigen, was die Vollversion kann */
 const DEMO = WALL === "demo";
-if (DEMO && !KLO_APP) document.querySelector("[data-m=draw]").classList.add("locked");
+/* Demo: 20 Gratis-Nachrichten pro Handy mit allem freigeschaltet, danach nur noch lesen und Striche setzen. */
+const DEMO_FREI = 20;
+window.kloDemo = {
+  used() { try { return Math.max(0, parseInt(localStorage.getItem("klowand-demo-n") || "0", 10) || 0); } catch (e) { return 0; } },
+  left() { return Math.max(0, DEMO_FREI - this.used()); },
+  locked() { return DEMO && this.left() <= 0; },
+  use() { if (!DEMO) return; try { localStorage.setItem("klowand-demo-n", String(this.used() + 1)); } catch (e) {} window.dispatchEvent(new Event("klo-demo")); }
+};
+function demoLocks() { document.querySelector("[data-m=draw]").classList.toggle("locked", kloDemo.locked()); }
+demoLocks(); window.addEventListener("klo-demo", demoLocks);
 const info = WAENDE[WALL] ? { ...WAENDE[WALL], sub: (JA && WAENDE[WALL].subJa) || (EN && WAENDE[WALL].subEn) || WAENDE[WALL].sub } : { name: "Klo-Wand", sub: "" };
 function showInfo() {
   document.getElementById("venue").textContent = info.name;
@@ -629,10 +638,11 @@ wall.addEventListener("click", e => {
 });
 wall.addEventListener("submit", e => {
   e.preventDefault();
+  if (kloDemo.locked()) { if (window.kloUpsell) kloUpsell("limit"); return; }
   const f = e.target, v = f.querySelector("input").value.trim(), err = check(v);
   if (err) { say(err); return; }
   const fp = posts.find(x => x.id === f.dataset.id);
-  ((fp && fp.fam && famBase) ? famBase : base).collection("replies").add({ p: f.dataset.id, t: v, ts: now() }).catch(fail);
+  ((fp && fp.fam && famBase) ? famBase : base).collection("replies").add({ p: f.dataset.id, t: v, ts: now() }).then(() => kloDemo.use()).catch(fail);
   openReply = null; render();
 });
 
@@ -676,7 +686,7 @@ function exportDrawing() {
 
 /* ---------- Schreiben oder Malen ---------- */
 function setMode(m) {
-  if (m === "draw" && DEMO && !KLO_APP) { if (window.kloUpsell) kloUpsell("draw"); return; }
+  if (m === "draw" && kloDemo.locked()) { if (window.kloUpsell) kloUpsell("limit"); return; }
   mode = m;
   document.querySelectorAll(".modes button").forEach(b => b.setAttribute("aria-pressed", b.dataset.m === m));
   const draw = m === "draw";
@@ -698,6 +708,7 @@ if (CH_NOW) { $("chJoin").hidden = false; $("chJoin").onclick = () => setChJoin(
 
 composer.addEventListener("submit", e => {
   e.preventDefault();
+  if (kloDemo.locked()) { if (window.kloUpsell) kloUpsell("limit"); return; }
   const target = (famOnly && famBase ? famBase : base).collection("posts");
   const okMsg = famOnly && famBase ? tr("Hängt jetzt an der Wand – nur für die Familie 🔒", "It's on the wall – family only 🔒", "家族だけに貼りました 🔒") : tr("Hängt jetzt an der Wand.", "It's on the wall now.");
   const rot = Number((Math.random() * 6 - 3).toFixed(1));
@@ -706,12 +717,12 @@ composer.addEventListener("submit", e => {
     const img = exportDrawing();
     if (!img) { say(tr("Mal erst was, dann kritzeln.", "Draw something first, then scribble.")); return; }
     if (img.length > 150000) { say(tr("Die Zeichnung ist zu groß. Mal etwas einfacher.", "The drawing is too big. Try something simpler.")); return; }
-    target.add(Object.assign({ img, rot, ts: now() }, chJoin ? { ch: THIS_WEEK } : {})).then(() => say(okMsg, true)).catch(fail);
+    target.add(Object.assign({ img, rot, ts: now() }, chJoin ? { ch: THIS_WEEK } : {})).then(() => { say(okMsg, true); kloDemo.use(); }).catch(fail);
     clearPad();
   } else {
     const t = msg.value.trim(), err = check(t);
     if (err) { say(err); return; }
-    target.add(Object.assign({ t, color: pen, font, rot, ts: now() }, chJoin ? { ch: THIS_WEEK } : {})).then(() => say(okMsg, true)).catch(fail);
+    target.add(Object.assign({ t, color: pen, font, rot, ts: now() }, chJoin ? { ch: THIS_WEEK } : {})).then(() => { say(okMsg, true); kloDemo.use(); }).catch(fail);
     msg.value = ""; $("count").textContent = "0/120";
   }
   setChJoin(false);

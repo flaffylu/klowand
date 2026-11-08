@@ -18,8 +18,9 @@
   let myName = ""; try { myName = localStorage.getItem("klowand-name") || ""; } catch (e) {}
   let lastId = null, stopGame = () => {};
   /* Demo-Wand: nur ein Spiel und keine Musik, der Rest zeigt auf die Vollversion */
-  const IS_DEMO = typeof DEMO !== "undefined" && DEMO && !(typeof KLO_APP !== "undefined" && KLO_APP); // Android-Tester: alles frei
-  const LOCKED = IS_DEMO ? ["reflex", "stapel"] : [];
+  // Demo: nach den 20 Gratis-Nachrichten sind Musik und 2 Spiele gesperrt
+  const isDemoLocked = () => typeof kloDemo !== "undefined" && kloDemo.locked();
+  const locked = () => isDemoLocked() ? ["reflex", "stapel"] : [];
   const upsell = r => { if (window.kloUpsell) kloUpsell(r); };
 
   /* ---------- Styles ---------- */
@@ -93,16 +94,17 @@
     <button type="button" id="kgMusic" aria-pressed="false"><span class="eq" aria-hidden="true"><i></i><i></i><i></i></span><span id="kgMusicTxt">${tr("Musik an", "Music on")}</span></button>
     <button type="button" id="kgTrack" title="${tr("Lied wechseln", "Change song")}">${tr("Lied", "Song")}: <span id="kgTrackTxt"></span></button>`;
   document.querySelector(".tabs").before(extras);
-  if (IS_DEMO) $("kgMusic").classList.add("locked");
+  const musicLock = () => { $("kgMusic").classList.toggle("locked", isDemoLocked()); $("kgTrack").hidden = isDemoLocked() || !(KloMusik.trackCount > 1); };
+  window.addEventListener("klo-demo", musicLock);
   $("kgMusic").onclick = async () => {
-    if (IS_DEMO) { upsell("music"); return; }
+    if (isDemoLocked()) { upsell("limit"); return; }
     await KloMusik.toggle();
     const on = KloMusik.isOn();
     $("kgMusic").setAttribute("aria-pressed", on);
     $("kgMusicTxt").textContent = on ? tr("Musik aus", "Music off") : tr("Musik an", "Music on");
   };
   $("kgTrackTxt").textContent = KloMusik.trackName();
-  $("kgTrack").hidden = IS_DEMO || !(KloMusik.trackCount > 1);
+  musicLock();
   $("kgTrack").onclick = async () => { $("kgTrackTxt").textContent = await KloMusik.next(); };
 
   /* ---------- Spiele-Fenster ---------- */
@@ -124,14 +126,14 @@
     const b = e.target.closest("[data-go]"); if (!b) return;
     const [what, g, tab] = b.dataset.go.split(":");
     if (what === "menu") menu();
-    if ((what === "play" || what === "board") && LOCKED.includes(g)) { upsell("game"); return; }
+    if ((what === "play" || what === "board") && locked().includes(g)) { upsell("limit"); return; }
     if (what === "play") ({ fang: playFang, reflex: playReflex, stapel: playStapel })[g]();
     if (what === "board") board(g, tab || "heute");
   });
 
   /* ---------- Menü ---------- */
   function menu() {
-    view(Object.entries(GAMES).map(([g, x]) => LOCKED.includes(g)
+    view(Object.entries(GAMES).map(([g, x]) => locked().includes(g)
       ? `<div class="card locked"><h3>🔒 ${x.title}</h3><p>${x.desc}</p>
       <div class="lead">${KLO_APP ? tr("Nur auf eigenen Wänden", "Own walls only", "自分のウォール限定") : tr("Nur in der Vollversion", "Full version only", "フルバージョン限定")}</div>
       <div class="row"><button type="button" class="btn go" data-go="play:${g}">${tr("Freischalten", "Unlock", "解放する")}</button></div></div>`
@@ -139,7 +141,7 @@
       <div class="lead" id="lead-${g}">&nbsp;</div>
       <div class="row"><button type="button" class="btn go" data-go="play:${g}">${tr("Spielen", "Play")}</button><button type="button" class="btn" data-go="board:${g}:heute">${tr("Rangliste", "Leaderboard")}</button></div></div>`).join("")
       + `<p class="hint">${tr("Die Tages-Rangliste startet jeden Tag um Mitternacht neu.", "The daily leaderboard resets every night at midnight.")}</p>`);
-    Object.keys(GAMES).filter(g => !LOCKED.includes(g)).forEach(async g => {
+    Object.keys(GAMES).filter(g => !locked().includes(g)).forEach(async g => {
       try {
         const rows = sortRows(g, (await scores(g).where("day", "==", today()).limit(500).get()).docs.map(d => d.data()).filter(r => typeof r.name === "string" && typeof r.score === "number"));
         const el = $("lead-" + g); if (!el) return;
@@ -384,7 +386,7 @@
   /* ---------- Rangliste ---------- */
   async function board(g, tab) {
     const chip = (go, label, on) => `<button type="button" class="chip" data-go="${go}" aria-pressed="${on}">${label}</button>`;
-    view(`<div class="chips">${Object.entries(GAMES).filter(([k]) => !LOCKED.includes(k)).map(([k, x]) => chip(`board:${k}:${tab}`, x.title, k === g)).join("")}</div>
+    view(`<div class="chips">${Object.entries(GAMES).filter(([k]) => !locked().includes(k)).map(([k, x]) => chip(`board:${k}:${tab}`, x.title, k === g)).join("")}</div>
       <div class="chips">${chip(`board:${g}:heute`, tr("Heute", "Today"), tab === "heute")}${chip(`board:${g}:rekord`, tr("Rekorde", "Records"), tab === "rekord")}</div>
       <div id="kgList"><p class="empty">${tr("Rangliste lädt …", "Loading leaderboard …")}</p></div>
       <div class="row" style="justify-content:center"><button type="button" class="btn go" data-go="play:${g}">${tr(`${GAMES[g].title} spielen`, `Play ${GAMES[g].title}`, `${GAMES[g].title}で遊ぶ`)}</button></div>
