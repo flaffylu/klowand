@@ -1,0 +1,695 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Klo-Wand 3D · Demo-Bar</title>
+<meta name="theme-color" content="#0b0716">
+<link rel="icon" href="icon-192.png">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="stylesheet" href="fonts.css">
+<style>
+/* Dunkler Neon-Raum: Kabine füllt das Fenster; oben Schild + Schalter, unten Werkzeugleiste. */
+:root{
+  --night:#0b0716; --panel:rgba(11,7,22,.88); --line:rgba(255,255,255,.14); --ink:#f5f0ff; --muted:#b3abd6;
+  --pink:#ff3ea5; --cyan:#22e4ff; --lime:#b7ff4a; --gold:#ffc43d;
+  --f-sign:"Permanent Marker","Comic Sans MS",cursive;
+  --f-hand:"Caveat","Segoe Print",cursive;
+  --f-ui:"Barlow Condensed","Arial Narrow",system-ui,sans-serif;
+  color-scheme:dark;
+}
+[hidden]{display:none!important}
+html,body{height:100%}
+body{background:var(--night);color:var(--ink);font-family:var(--f-ui);overflow:hidden;touch-action:none;-webkit-user-select:none;user-select:none}
+#stage{position:fixed;inset:0;display:block;width:100%;height:100%}
+button{font:700 1rem var(--f-ui);letter-spacing:.05em;text-transform:uppercase;cursor:pointer;color:inherit}
+button:focus-visible,input:focus-visible{outline:3px solid var(--cyan);outline-offset:2px}
+.top{position:fixed;top:0;left:0;right:0;z-index:2;display:flex;flex-direction:column;gap:8px;
+  padding-top:calc(env(safe-area-inset-top,0px) + 12px);padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));pointer-events:none}
+.top .head{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.sign{font:400 1.6rem/1 var(--f-sign);color:var(--pink);text-shadow:0 0 6px var(--pink),0 0 18px rgba(255,62,165,.7)}
+.stats{font:600 .95rem var(--f-ui);color:var(--muted)}
+.tools{display:flex;gap:6px;flex-wrap:wrap;pointer-events:auto}
+.tools button{min-height:40px;padding:0 12px;border-radius:999px;border:1.5px solid var(--line);background:var(--panel);font-size:.9rem;display:inline-flex;align-items:center;gap:6px}
+.tools button[aria-pressed="true"]{border-color:var(--cyan);color:var(--cyan);box-shadow:0 0 12px rgba(34,228,255,.4)}
+.tools svg{width:16px;height:16px;flex:none}
+.toast{position:fixed;left:50%;top:calc(env(safe-area-inset-top,0px) + 120px);transform:translateX(-50%);z-index:4;background:var(--panel);border:1.5px solid var(--lime);color:var(--lime);
+  border-radius:999px;padding:8px 18px;font:700 1rem var(--f-ui);letter-spacing:.05em;text-transform:uppercase;box-shadow:0 0 18px rgba(183,255,74,.35)}
+.bar{position:fixed;left:0;right:0;bottom:0;z-index:2;background:var(--panel);border-top:1px solid var(--line);
+  padding-block:10px calc(env(safe-area-inset-bottom,0px) + 12px);padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.inner{max-width:640px;margin:0 auto;display:flex;flex-direction:column;gap:8px}
+.modes{display:flex;gap:6px}
+.modes button{flex:1;min-height:42px;border-radius:10px;border:1.5px solid var(--line);background:transparent}
+.modes button[aria-pressed="true"]{background:var(--pink);border-color:var(--pink);color:var(--night)}
+.pens{display:flex;gap:10px;align-items:center}
+.pens button{width:30px;height:30px;min-height:30px;border-radius:50%;border:2px solid transparent;padding:0}
+.pens button[aria-pressed="true"]{border-color:var(--ink);box-shadow:0 0 0 3px var(--night) inset}
+.pens .lbl{margin-left:auto;font:600 .9rem var(--f-ui);color:var(--muted)}
+.write{display:flex;gap:8px}
+.write label,.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+.write input{flex:1;min-width:0;min-height:46px;border-radius:12px;border:1.5px solid var(--line);background:rgba(255,255,255,.07);color:var(--ink);padding:0 14px;font:700 1.35rem var(--f-hand)}
+.write input::placeholder{color:#8f86b5}
+.go{min-height:46px;padding:0 16px;border-radius:12px;border:none;background:var(--lime);color:var(--night)}
+.hintline{font:600 .95rem/1.3 var(--f-ui);color:var(--muted);text-align:center;padding:6px 0}
+.card{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 190px);transform:translateX(-50%);z-index:3;width:min(360px,calc(100% - 32px));
+  background:var(--panel);border:1.5px solid var(--cyan);border-radius:16px;padding:14px 16px;box-shadow:0 0 24px rgba(34,228,255,.35)}
+.card p{margin:0;font:700 1.7rem/1.1 var(--f-hand)}
+.card img{display:block;width:100%;border-radius:10px}
+.card .row{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:10px;flex-wrap:wrap}
+.card .tally{font:700 1.4rem var(--f-hand);color:var(--lime)}
+.card .btns{display:flex;gap:6px}
+.card button{min-height:44px;padding:0 12px;border-radius:10px;border:1.5px solid var(--cyan);background:transparent;color:var(--cyan)}
+.card button.hot{background:var(--pink);border-color:var(--pink);color:var(--night)}
+.card button.warn{border-color:var(--gold);color:var(--gold)}
+.sheet{position:fixed;inset:0;z-index:5;background:rgba(5,3,10,.72);display:grid;place-items:center;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.sheet .box{width:min(420px,100%);background:#120c1f;border:1.5px solid var(--pink);border-radius:18px;padding:14px;box-shadow:0 0 30px rgba(255,62,165,.3);display:flex;flex-direction:column;gap:10px}
+.sheet h2{margin:0;font:400 1.4rem var(--f-sign);color:var(--pink)}
+.sheet canvas{width:100%;aspect-ratio:512/420;border-radius:12px;background:#0e091a;touch-action:none;border:1.5px solid var(--line)}
+.sheet .row{display:flex;gap:8px}
+.sheet .row button{flex:1;min-height:44px;border-radius:10px;border:1.5px solid var(--line);background:transparent}
+.sheet .row button.go{background:var(--lime);color:var(--night);border:none}
+.sheet .oracle{font:700 2rem/1.1 var(--f-hand);color:var(--gold);text-align:center;padding:14px 4px;text-shadow:0 0 12px rgba(255,196,61,.5)}
+.sheet img{width:100%;border-radius:12px}
+.sheet small{color:var(--muted);font:600 .95rem var(--f-ui);text-align:center}
+.sheet .box.wide{width:min(560px,100%)}
+.vids{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.vids video{width:100%;aspect-ratio:9/16;max-height:62vh;border-radius:12px;background:#000;object-fit:contain;border:1.5px solid var(--line)}
+.sub{display:flex;gap:8px;align-items:center;flex-wrap:wrap;pointer-events:auto;font:600 .9rem var(--f-ui);color:var(--muted)}
+.sub .live{color:var(--lime)}
+.sub a,.sub button.lnk{color:var(--cyan);background:none;border:none;padding:6px 2px;font:700 .9rem var(--f-ui);text-transform:none;letter-spacing:0;text-decoration:underline;min-height:32px}
+.sub button.own{min-height:32px;padding:0 12px;border-radius:999px;border:none;background:var(--pink);color:var(--night);font-size:.85rem}
+.mod{font:600 .95rem/1.25 var(--f-ui);color:var(--muted)}
+.mod.bad{color:var(--gold)}
+.card .reps{margin:8px 0 0;padding:0;list-style:none;display:flex;flex-direction:column;gap:2px;max-height:96px;overflow:auto}
+.card .reps li{font:700 1.2rem/1.1 var(--f-hand);color:var(--muted)}
+.card .reps li::before{content:"↳ "}
+.card form{display:flex;gap:6px;margin-top:8px}
+.card form input{flex:1;min-width:0;min-height:44px;border-radius:10px;border:1.5px solid var(--line);background:rgba(255,255,255,.07);color:var(--ink);padding:0 10px;font:700 1.2rem var(--f-hand)}
+.card button:disabled{opacity:.6}
+.card .lnk2{border:none;padding:0 6px;color:var(--muted);text-transform:none;letter-spacing:0;font-weight:600}
+.ai{font:600 .8rem var(--f-ui);color:var(--muted);text-align:center}
+.ups ul{margin:0;padding-left:20px;font:600 1rem/1.4 var(--f-ui)}
+.ups p{margin:0;font:600 1.05rem/1.35 var(--f-ui)}
+.ups .price{font:400 1.5rem var(--f-sign);color:var(--lime);text-align:center}
+.ups .row a{flex:1;min-height:44px;border-radius:10px;background:var(--pink);color:var(--night);display:grid;place-items:center;font:700 1rem var(--f-ui);text-transform:uppercase;text-decoration:none;letter-spacing:.05em}
+.loading{position:fixed;inset:0;display:grid;place-items:center;font:400 1.4rem var(--f-sign);color:var(--cyan);z-index:1}
+@media (prefers-reduced-motion:reduce){.sign{text-shadow:none}}
+</style>
+
+</head>
+<body>
+<canvas id="stage" aria-label="3D-Klokabine mit Sprüchen an den Wänden"></canvas>
+<div class="loading" id="loading">Kabine wird aufgebaut …</div>
+
+<div class="top">
+  <div class="head"><div class="sign">Klo-Wand 3D</div><div class="stats" id="stats"></div></div>
+  <div class="sub"><span class="live" id="status">Verbinde …</span><span id="free"></span><button type="button" class="own" id="bOwn" hidden>Eigene Wand</button><a href="index.html?wand=demo&amp;2d=1">2D-Ansicht</a></div>
+  <div class="tools">
+    <button type="button" id="bLight" aria-label="Licht wechseln"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-4 10.5c.8.8 1 1.5 1 2.5h6c0-1 .2-1.7 1-2.5A6 6 0 0 0 12 3z"/></svg><span id="lightName">Neon</span></button>
+    <button type="button" id="bMusic" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 18V5l11-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="17" cy="16" r="3"/></svg>Musik</button>
+    <button type="button" id="bTour" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 12a9 9 0 1 1-3-6.7L21 8M21 3v5h-5"/></svg>Rundgang</button>
+    <button type="button" id="bDoor"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 21V3h11v18M3 21h18M13 12h.01"/></svg>Tür</button>
+    <button type="button" id="bOracle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="11" r="7"/><path d="M8 21h8M10 18l-1 3M14 18l1 3"/></svg>Orakel</button>
+    <button type="button" id="bPhoto"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>Foto</button>
+  </div>
+</div>
+<div class="toast" id="toast" hidden></div>
+
+<div class="card" id="card" hidden>
+  <p id="cardText"></p><img id="cardImg" alt="Gemalter Zettel" hidden>
+  <ul class="reps" id="cardReps" hidden></ul>
+  <div class="row">
+    <span class="tally" id="cardTally"></span>
+    <span class="btns">
+      <button type="button" class="hot" id="strich">Strich +1</button>
+      <button type="button" id="replyBtn">Antworten</button>
+      <button type="button" id="close">Zurück</button>
+    </span>
+  </div>
+  <form id="replyForm" hidden><label class="sr" for="replyMsg">Antwort</label><input id="replyMsg" maxlength="60" placeholder="Drunterkritzeln …" autocomplete="off"><button type="submit" class="hot">OK</button></form>
+  <div class="row"><span class="mod" id="cardAgo"></span><button type="button" class="lnk2" id="report">Melden</button></div>
+</div>
+
+<div class="bar">
+  <div class="inner">
+    <div class="modes" role="group" aria-label="Werkzeug">
+      <button type="button" data-m="write" aria-pressed="true">Schreiben</button>
+      <button type="button" data-m="draw" aria-pressed="false">Malen</button>
+      <button type="button" data-m="spray" aria-pressed="false">Sprayen</button>
+    </div>
+    <div class="mod" id="mod">Schreib was an die Wand. Keine Namen, Nummern oder Politik.</div>
+    <div class="pens" role="group" aria-label="Farbe" id="pens"><span class="lbl" id="penLbl">Farbe</span></div>
+    <form class="write" id="form">
+      <label for="msg">Dein Spruch</label>
+      <input id="msg" maxlength="120" placeholder="Hier saß ich und dachte …" autocomplete="off">
+      <button type="submit" class="go">An die Wand</button>
+    </form>
+    <button type="button" class="go" id="openPad" hidden>Malblock öffnen</button>
+    <div class="hintline" id="sprayHint" hidden>Tipp auf eine Wand, um zu sprayen. Graffiti siehst nur du.</div>
+  </div>
+</div>
+
+<div class="sheet" id="pad" hidden>
+  <div class="box">
+    <h2>Malblock</h2>
+    <canvas id="padCanvas" width="512" height="420" aria-label="Malfläche"></canvas>
+    <div class="row"><button type="button" id="padClear">Wegwischen</button><button type="button" id="padCancel">Abbrechen</button><button type="button" class="go" id="padStick">Ankleben</button></div>
+  </div>
+</div>
+<div class="sheet" id="oracle" hidden>
+  <div class="box"><h2>Das Klo-Orakel sagt</h2><div class="oracle" id="oracleText"></div><div class="row"><button type="button" id="oracleAgain">Nochmal fragen</button><button type="button" class="go" id="oracleStick">An die Wand</button></div><div class="row"><button type="button" id="oracleClose">Schließen</button></div></div>
+</div>
+<div class="sheet ups" id="ups" hidden role="dialog" aria-label="Vollversion">
+  <div class="box"><h2 id="upsHead">Alles freischalten</h2><p id="upsText"></p>
+    <ul><li>Unbegrenzt schreiben und malen</li><li>Alle 3 Klo-Spiele mit Rangliste</li><li>Familien-Planner: Stundenplan, Fotos &amp; Notfall</li><li>Eigene Wand mit deinem Namen</li><li>QR-Sticker zum Ausdrucken</li><li>Du löschst, was nicht passt</li></ul>
+    <div id="upsBuy"><div class="price">nur 4,99 € einmalig</div><div class="row"><a href="familie.html">Für zu Hause</a><a href="wirte.html">Für deine Bar</a></div></div>
+    <div class="row"><button type="button" id="upsLater">Weiter testen</button></div></div>
+</div>
+<div class="sheet" id="photo" hidden>
+  <div class="box"><h2>Schnappschuss</h2><img id="photoImg" alt="Foto der Kabine"><small>Lange auf das Bild drücken, um es zu speichern</small><div class="row"><button type="button" id="photoClose">Schließen</button></div></div>
+</div>
+
+<div class="sheet" id="kino" hidden>
+  <div class="box wide"><h2>Hinter der Tür</h2>
+    <div class="vids"><video src="assets/kino-leo.mp4" poster="assets/kino-leo.jpg" controls playsinline preload="none" aria-label="Video: Leo"></video><video src="assets/kino-pia.mp4" poster="assets/kino-pia.jpg" controls playsinline preload="none" aria-label="Video: Pia"></video></div>
+    <div class="ai">KI-Stimme &amp; KI-Figur</div>
+    <div class="row"><button type="button" id="kinoClose">Tür zu</button></div>
+  </div>
+</div>
+
+<script src="three.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="lang.js"></script>
+<script src="config.js"></script>
+<script src="filter.js"></script>
+<script>
+(async () => {
+  const $ = id => document.getElementById(id);
+  /* Farben: Schlüssel wie auf der normalen Wand, hier in Neon gezeigt */
+  const PENS = [["red", "#ff3ea5", "Pink"], ["blue", "#22e4ff", "Türkis"], ["green", "#b7ff4a", "Grün"], ["silver", "#ffc43d", "Gold"], ["ink", "#f5f0ff", "Weiß"]];
+  const NEON = { red: "#ff3ea5", blue: "#22e4ff", green: "#b7ff4a", silver: "#ffc43d", ink: "#f5f0ff" };
+  const ORAKEL = ["Heute wird ein guter Tag. Spätestens nach dem Spülen.", "Wer zuletzt spült, spült am besten.", "Das Klopapier ist dir heute wohlgesonnen.", "Eine große Idee kommt dir … genau hier.", "Du wirst heute einen Strich bekommen. Mindestens.", "Die Rangliste ruft deinen Namen.", "Vertrau dem Plan. Und der Spülung.", "Ein alter Freund schreibt dir bald an die Wand.", "Heute lieber zwei Lagen.", "Das Glück sitzt in Kabine 3."];
+  let pen = PENS[0][1], penKey = PENS[0][0], mode = "write";
+  const IN_APP = typeof KLO_APP !== "undefined" && KLO_APP;
+
+  /* Graffiti bleibt nur auf diesem Handy */
+  const store = { sprays: [] };
+  try { Object.assign(store, JSON.parse(localStorage.getItem("klowand3d-live") || "{}")); } catch (e) {}
+  const save = () => { try { localStorage.setItem("klowand3d-live", JSON.stringify(store)); } catch (e) {} };
+
+  /* 20 Gratis-Nachrichten – derselbe Zähler wie auf der normalen Demo-Wand */
+  const DEMO_FREI = 20;
+  const kloDemo = {
+    used() { try { return Math.max(0, parseInt(localStorage.getItem("klowand-demo-n") || "0", 10) || 0); } catch (e) { return 0; } },
+    left() { return Math.max(0, DEMO_FREI - this.used()); },
+    locked() { return this.left() <= 0; },
+    use() { try { localStorage.setItem("klowand-demo-n", String(this.used() + 1)); } catch (e) {} freeLine(); }
+  };
+  let device = null;
+  try { device = localStorage.getItem("klowand-device"); if (!device) { device = crypto.randomUUID().replace(/-/g, ""); localStorage.setItem("klowand-device", device); } }
+  catch (e) { device = device || ("d" + Math.random().toString(36).slice(2, 14)); }
+  try { localStorage.setItem("klowand-last", "demo"); } catch (e) {}
+
+  try { await Promise.all([document.fonts.load('400 60px "Permanent Marker"'), document.fonts.load('700 60px "Caveat"')]); } catch (e) {}
+
+  // ---------- Szene ----------
+  const canvas = $("stage");
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, preserveDrawingBuffer: true });
+  renderer.setPixelRatio(Math.min(2, window.devicePixelRatio || 1));
+  const scene = new THREE.Scene();
+  scene.background = new THREE.Color("#0b0716");
+  scene.fog = new THREE.Fog("#0b0716", 4, 9);
+  const camera = new THREE.PerspectiveCamera(70, 1, 0.05, 50);
+  const HOME = new THREE.Vector3(0, 1.45, .8);
+  camera.position.copy(HOME);
+  const W = 2.4, D = 3, H = 2.6;
+
+  function tileTex(base, line, n) {
+    const c = document.createElement("canvas"); c.width = c.height = 512; const x = c.getContext("2d");
+    x.fillStyle = base; x.fillRect(0, 0, 512, 512); x.strokeStyle = line; x.lineWidth = 6;
+    for (let i = 0; i <= n; i++) { const p = i * 512 / n; x.beginPath(); x.moveTo(p, 0); x.lineTo(p, 512); x.stroke(); x.beginPath(); x.moveTo(0, p); x.lineTo(512, p); x.stroke(); }
+    const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; return t;
+  }
+  const wallTex = tileTex("#2a1d3a", "#1a1226", 4); wallTex.repeat.set(3, 3);
+  const floorTex = tileTex("#1b1426", "#0d0915", 3); floorTex.repeat.set(4, 5);
+  const wallMat = new THREE.MeshStandardMaterial({ map: wallTex, roughness: .55, metalness: .1 });
+  const plane = (w, h, mat) => new THREE.Mesh(new THREE.PlaneGeometry(w, h), mat);
+  const walls = [];
+  const back = plane(W, H, wallMat); back.position.set(0, H / 2, -D / 2); scene.add(back); walls.push(back);
+  const left = plane(D, H, wallMat); left.rotation.y = Math.PI / 2; left.position.set(-W / 2, H / 2, 0); scene.add(left); walls.push(left);
+  const right = plane(D, H, wallMat); right.rotation.y = -Math.PI / 2; right.position.set(W / 2, H / 2, 0); scene.add(right); walls.push(right);
+  const DW = .9, DH = 2.1, side = (W - DW) / 2;
+  [[side, H, -(DW + side) / 2, H / 2], [side, H, (DW + side) / 2, H / 2], [DW, H - DH, 0, DH + (H - DH) / 2]].forEach(([w, h, x, y]) => {
+    const m = plane(w, h, wallMat); m.rotation.y = Math.PI; m.position.set(x, y, D / 2); scene.add(m); walls.push(m);
+  });
+  const floor = plane(W, D, new THREE.MeshStandardMaterial({ map: floorTex, roughness: .35, metalness: .2 })); floor.rotation.x = -Math.PI / 2; scene.add(floor);
+  const ceil = plane(W, D, new THREE.MeshStandardMaterial({ color: "#120c1d" })); ceil.rotation.x = Math.PI / 2; ceil.position.y = H; scene.add(ceil);
+
+  const strips = [];
+  function neon(color, len, pos, rotY) {
+    const mat = new THREE.MeshBasicMaterial({ color });
+    const m = new THREE.Mesh(new THREE.BoxGeometry(len, .035, .035), mat); m.position.copy(pos); m.rotation.y = rotY || 0; scene.add(m);
+    const l = new THREE.PointLight(color, 1.4, 4.5, 2); l.position.copy(pos); scene.add(l);
+    strips.push({ mat, l, base: new THREE.Color(color) });
+  }
+  neon("#ff3ea5", W - .1, new THREE.Vector3(0, H - .12, -D / 2 + .05));
+  neon("#22e4ff", D - .2, new THREE.Vector3(-W / 2 + .05, H - .12, -.1), Math.PI / 2);
+  neon("#b7ff4a", D - .2, new THREE.Vector3(W / 2 - .05, H - .12, -.1), Math.PI / 2);
+  const amb = new THREE.AmbientLight("#6a5a9a", .55); scene.add(amb);
+  const fill = new THREE.PointLight("#ffffff", .5, 6); fill.position.set(0, 2.2, .8); scene.add(fill);
+
+  // Discokugel (nur im Disco-Licht sichtbar)
+  const ballTex = (() => { const c = document.createElement("canvas"); c.width = c.height = 128; const x = c.getContext("2d"); for (let i = 0; i < 16; i++) for (let j = 0; j < 16; j++) { const v = 140 + Math.random() * 115; x.fillStyle = `rgb(${v},${v},${v + 10})`; x.fillRect(i * 8, j * 8, 7, 7); } return new THREE.CanvasTexture(c); })();
+  const ball = new THREE.Mesh(new THREE.SphereGeometry(.16, 24, 16), new THREE.MeshStandardMaterial({ map: ballTex, metalness: .9, roughness: .15, emissive: "#333333" }));
+  ball.position.set(0, H - .35, -.2); ball.visible = false; scene.add(ball);
+
+  (function sign() {
+    const c = document.createElement("canvas"); c.width = 1024; c.height = 256; const x = c.getContext("2d");
+    x.font = '400 150px "Permanent Marker", cursive'; x.textAlign = "center"; x.textBaseline = "middle";
+    x.shadowColor = "#ff3ea5"; x.shadowBlur = 40; x.fillStyle = "#ff8ccb"; x.fillText("Klo-Wand", 512, 135);
+    x.shadowBlur = 12; x.fillStyle = "#ffffff"; x.fillText("Klo-Wand", 512, 135);
+    const m = plane(1.5, .375, new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(c), transparent: true })); m.position.set(0, 2.2, -D / 2 + .02); scene.add(m);
+  })();
+
+  // Klo
+  const white = new THREE.MeshStandardMaterial({ color: "#eae6f2", roughness: .2, metalness: .05 });
+  const toilet = new THREE.Group();
+  const bowl = new THREE.Mesh(new THREE.CylinderGeometry(.21, .15, .38, 32), white); bowl.position.y = .19; bowl.scale.z = 1.25; toilet.add(bowl);
+  const seat = new THREE.Mesh(new THREE.TorusGeometry(.17, .045, 16, 40), white); seat.rotation.x = Math.PI / 2; seat.scale.y = 1.25; seat.position.y = .4; toilet.add(seat);
+  const swirlTex = (() => { const c = document.createElement("canvas"); c.width = c.height = 256; const x = c.getContext("2d"); const g = x.createRadialGradient(128, 128, 10, 128, 128, 128); g.addColorStop(0, "#0b5560"); g.addColorStop(1, "#22e4ff"); x.fillStyle = g; x.fillRect(0, 0, 256, 256); x.strokeStyle = "rgba(255,255,255,.55)"; x.lineWidth = 6; for (let a = 0; a < 3; a++) { x.beginPath(); for (let k = 0; k < 120; k++) { const r = k, ang = k * .08 + a * 2.1; x.lineTo(128 + Math.cos(ang) * r, 128 + Math.sin(ang) * r); } x.stroke(); } const t = new THREE.CanvasTexture(c); t.center.set(.5, .5); return t; })();
+  const water = new THREE.Mesh(new THREE.CircleGeometry(.13, 32), new THREE.MeshStandardMaterial({ map: swirlTex, emissive: "#0b5560", roughness: .1 })); water.rotation.x = -Math.PI / 2; water.scale.y = 1.25; water.position.y = .35; toilet.add(water);
+  const tank = new THREE.Mesh(new THREE.BoxGeometry(.44, .42, .18), white); tank.position.set(0, .62, -.27); toilet.add(tank);
+  const flushBtn = new THREE.Mesh(new THREE.CylinderGeometry(.045, .045, .025, 20), new THREE.MeshStandardMaterial({ color: "#22e4ff", emissive: "#22e4ff", emissiveIntensity: .6, metalness: .5, roughness: .2 })); flushBtn.position.set(0, .845, -.27); toilet.add(flushBtn);
+  toilet.position.set(0, 0, -D / 2 + .38); scene.add(toilet);
+  flushBtn.userData.kind = "flush"; tank.userData.kind = "flush"; bowl.userData.kind = "flush"; seat.userData.kind = "flush";
+
+  // Klopapier
+  const paper = new THREE.Group();
+  const holder = new THREE.Mesh(new THREE.CylinderGeometry(.012, .012, .2, 10), new THREE.MeshStandardMaterial({ color: "#c9c4d6", metalness: .8, roughness: .25 })); holder.rotation.z = Math.PI / 2; paper.add(holder);
+  const roll = new THREE.Mesh(new THREE.CylinderGeometry(.06, .06, .11, 28), new THREE.MeshStandardMaterial({ color: "#ffffff", roughness: .9 })); roll.rotation.z = Math.PI / 2; paper.add(roll);
+  const sheetGeo = new THREE.PlaneGeometry(.1, 1); sheetGeo.translate(0, -.5, 0);
+  const sheet = new THREE.Mesh(sheetGeo, new THREE.MeshStandardMaterial({ color: "#ffffff", side: THREE.DoubleSide, roughness: .9 })); sheet.position.set(0, -.02, .06); sheet.scale.y = .16; paper.add(sheet);
+  paper.rotation.y = -Math.PI / 2; paper.position.set(W / 2 - .08, .75, -.7); scene.add(paper);
+  roll.userData.kind = "paper"; sheet.userData.kind = "paper";
+  let sheetGoal = .16;
+
+  // Tür (vorne) – dahinter warten die Videos
+  const doorTex = (() => {
+    const c = document.createElement("canvas"); c.width = 400; c.height = 940; const x = c.getContext("2d");
+    x.fillStyle = "#1c1030"; x.fillRect(0, 0, 400, 940);
+    x.strokeStyle = "#3a2656"; x.lineWidth = 10; x.strokeRect(40, 60, 320, 360); x.strokeRect(40, 480, 320, 400);
+    x.textAlign = "center"; x.textBaseline = "middle";
+    x.shadowColor = "#22e4ff"; x.shadowBlur = 24; x.fillStyle = "#22e4ff"; x.font = '400 92px "Permanent Marker", cursive'; x.fillText("KINO", 200, 170);
+    x.beginPath(); x.moveTo(160, 250); x.lineTo(160, 350); x.lineTo(250, 300); x.closePath(); x.fillStyle = "#ff3ea5"; x.shadowColor = "#ff3ea5"; x.fill();
+    x.shadowBlur = 8; x.fillStyle = "#f5f0ff"; x.font = '700 64px "Caveat", cursive'; x.fillText("2 Videos", 200, 600); x.fillText("drück mich", 200, 680);
+    return new THREE.CanvasTexture(c);
+  })();
+  const doorPivot = new THREE.Group(); doorPivot.position.set(-DW / 2, 0, D / 2 - .03); scene.add(doorPivot);
+  const door = new THREE.Mesh(new THREE.BoxGeometry(DW - .02, DH - .02, .05), [
+    new THREE.MeshStandardMaterial({ color: "#1c1030" }), new THREE.MeshStandardMaterial({ color: "#1c1030" }), new THREE.MeshStandardMaterial({ color: "#1c1030" }),
+    new THREE.MeshStandardMaterial({ color: "#1c1030" }), new THREE.MeshStandardMaterial({ color: "#1c1030" }),
+    new THREE.MeshStandardMaterial({ map: doorTex, emissive: "#ffffff", emissiveMap: doorTex, emissiveIntensity: .35, roughness: .5 })]);
+  door.position.set(DW / 2, DH / 2, 0); doorPivot.add(door);
+  const knob = new THREE.Mesh(new THREE.SphereGeometry(.035, 16, 12), new THREE.MeshStandardMaterial({ color: "#ffc43d", metalness: .9, roughness: .2 }));
+  knob.position.set(DW - .12, 1.0, -.05); doorPivot.add(knob);
+  door.userData.kind = "door"; knob.userData.kind = "door";
+  const doorFrame = new THREE.MeshBasicMaterial({ color: "#22e4ff" });
+  [[DW + .06, .03, 0, DH + .015], [.03, DH, -DW / 2 - .015, DH / 2], [.03, DH, DW / 2 + .015, DH / 2]].forEach(([w, h, x, y]) => { const f = new THREE.Mesh(new THREE.BoxGeometry(w, h, .03), doorFrame); f.position.set(x, y, D / 2 - .01); scene.add(f); });
+  const beyond = plane(DW + .4, DH + .3, new THREE.MeshBasicMaterial({ color: "#ff3ea5" })); beyond.rotation.y = Math.PI; beyond.position.set(0, DH / 2, D / 2 + .5); scene.add(beyond);
+  const doorLight = new THREE.PointLight("#22e4ff", .9, 3, 2); doorLight.position.set(0, 2.25, D / 2 - .3); scene.add(doorLight);
+  let doorGoal = 0;
+
+  // ---------- Zettel ----------
+  function frameNote(x, color) {
+    x.clearRect(0, 0, 512, 420); x.fillStyle = "rgba(14,9,26,.92)"; x.strokeStyle = color; x.lineWidth = 8;
+    const r = 34; x.beginPath(); x.moveTo(r, 6); x.arcTo(506, 6, 506, 414, r); x.arcTo(506, 414, 6, 414, r); x.arcTo(6, 414, 6, 6, r); x.arcTo(6, 6, 506, 6, r); x.closePath(); x.fill();
+    x.shadowColor = color; x.shadowBlur = 18; x.stroke(); x.shadowBlur = 0;
+  }
+  function noteTex(d, cb) {
+    const c = document.createElement("canvas"); c.width = 512; c.height = 420; const x = c.getContext("2d");
+    const tex = new THREE.CanvasTexture(c);
+    const strokesLine = () => { x.shadowBlur = 0; x.fillStyle = "#f5f0ff"; x.font = '700 52px "Caveat", cursive'; x.textBaseline = "top"; if (d.s) x.fillText("/".repeat(Math.min(d.s, 12)), 36, 344); };
+    if (d.img) {
+      const im = new Image(); im.onload = () => { frameNote(x, d.c); const k = Math.min(440 / im.width, 300 / im.height, 2.5), w = im.width * k, h = im.height * k; x.drawImage(im, 256 - w / 2, 30 + (300 - h) / 2, w, h); strokesLine(); tex.needsUpdate = true; cb && cb(); }; im.src = d.img;
+      frameNote(x, d.c);
+    } else {
+      const fz = d.t.length <= 40 ? 64 : d.t.length <= 80 ? 50 : 40, lh = fz * 1.08, maxL = Math.floor(290 / lh);
+      frameNote(x, d.c); x.fillStyle = d.c; x.font = `700 ${fz}px "Caveat", cursive`; x.textBaseline = "top";
+      const lines = []; let line = "";
+      for (const w of d.t.split(" ")) { const t = line ? line + " " + w : w; if (x.measureText(t).width > 440 && line) { lines.push(line); line = w; } else line = t; }
+      if (line) lines.push(line);
+      let y = 36; lines.slice(0, maxL).forEach(l => { x.shadowColor = d.c; x.shadowBlur = 10; x.fillText(l, 36, y); y += lh; });
+      strokesLine();
+    }
+    return tex;
+  }
+  const slots = [];
+  [[-.72, 1.55], [.72, 1.55], [-.75, 1.05], [.75, 1.05], [0, 1.28]].forEach(([x, y]) => slots.push({ p: new THREE.Vector3(x, y, -D / 2 + .012), ry: 0 }));
+  [[-.9, 1.6], [-.25, 1.75], [.4, 1.55], [-.55, 1.05], [.15, 1.08], [.8, 1.0]].forEach(([z, y]) => slots.push({ p: new THREE.Vector3(-W / 2 + .012, y, z), ry: Math.PI / 2 }));
+  [[-.25, 1.6], [.45, 1.75], [.25, 1.12], [.95, 1.2]].forEach(([z, y]) => slots.push({ p: new THREE.Vector3(W / 2 - .012, y, z), ry: -Math.PI / 2 }));
+  const notes = [], byId = new Map(); let wantFocus = null, firstSync = true;
+  function place(m, i) {
+    const sl = slots[i % slots.length], layer = Math.floor(i / slots.length);
+    const n = new THREE.Vector3(0, 0, 1).applyAxisAngle(new THREE.Vector3(0, 1, 0), sl.ry);
+    m.position.copy(sl.p).addScaledVector(n, .004 * (layer + 1)); if (layer) m.position.y += (layer % 2 ? -.12 : .12);
+    m.rotation.y = sl.ry; m.userData.normal = n;
+  }
+  function makeNote(d, animate) {
+    const m = plane(.56, .46, new THREE.MeshBasicMaterial({ map: noteTex(d), transparent: true }));
+    m.rotation.z = (Math.random() - .5) * .14;
+    m.userData = { kind: "note", d, born: animate ? performance.now() : 0 };
+    if (animate) m.scale.setScalar(.01);
+    scene.add(m); return m;
+  }
+  const sig = d => d.s + "|" + (d.img ? "img" : d.t) + "|" + d.c;
+  function sync(list) {
+    const keep = new Set(list.map(d => d.id));
+    for (const [id, m] of byId) if (!keep.has(id)) { if (focus === m) closeCard(); scene.remove(m); m.material.map.dispose(); byId.delete(id); }
+    list.forEach((d, i) => {
+      let m = byId.get(d.id);
+      if (!m) { m = makeNote(d, !firstSync); m.userData.sig = sig(d); byId.set(d.id, m); }
+      else if (m.userData.sig !== sig(d)) { const old = m.material.map; m.material.map = noteTex(d, () => { m.material.needsUpdate = true; }); m.material.needsUpdate = true; old.dispose(); m.userData.sig = sig(d); }
+      m.userData.d = d; place(m, i);
+      if (wantFocus === d.id) { wantFocus = null; setTimeout(() => openCard(m), 350); }
+    });
+    firstSync = false;
+    notes.length = 0; notes.push(...byId.values()); stats(); if (focus) showCard();
+  }
+
+  // ---------- Graffiti ----------
+  const TAGS = ["KW", "LOL", "!!!", "★", "♥", "KLO", "WOW", "HI"];
+  function sprayTex(color, tag) {
+    const c = document.createElement("canvas"); c.width = c.height = 256; const x = c.getContext("2d");
+    for (let i = 0; i < 260; i++) { const a = Math.random() * Math.PI * 2, r = Math.pow(Math.random(), 1.6) * 110; x.fillStyle = color; x.globalAlpha = .08 + Math.random() * .25; x.beginPath(); x.arc(128 + Math.cos(a) * r, 128 + Math.sin(a) * r, 2 + Math.random() * 6, 0, 7); x.fill(); }
+    x.globalAlpha = .85; for (let i = 0; i < 4; i++) { const px = 70 + Math.random() * 116; x.fillRect(px, 150, 4, 30 + Math.random() * 70); }
+    x.globalAlpha = 1; x.font = '400 92px "Permanent Marker", cursive'; x.textAlign = "center"; x.textBaseline = "middle"; x.shadowColor = color; x.shadowBlur = 16; x.fillStyle = color; x.fillText(tag, 128, 120);
+    return new THREE.CanvasTexture(c);
+  }
+  const sprays = [];
+  function addSpray(sp) {
+    const m = plane(.5, .5, new THREE.MeshBasicMaterial({ map: sprayTex(sp.c, sp.tag), transparent: true, depthWrite: false }));
+    m.position.set(sp.p[0], sp.p[1], sp.p[2]); m.rotation.set(0, sp.ry, sp.rz); m.renderOrder = 1; scene.add(m); sprays.push(m); return m;
+  }
+  store.sprays.forEach(addSpray);
+
+  // ---------- Bedienung ----------
+  const toastEl = $("toast"); let toastT;
+  function toast(t) { toastEl.textContent = t; toastEl.hidden = false; clearTimeout(toastT); toastT = setTimeout(() => toastEl.hidden = true, 1800); }
+  function stats() { $("stats").textContent = notes.length === 1 ? "1 Spruch" : `${notes.length} Sprüche`; }
+  function freeLine() {
+    const left = kloDemo.left();
+    $("free").textContent = left > 0 ? `🎁 Noch ${left} von 20 gratis` : "🔒 20 Gratis-Nachrichten aufgebraucht";
+    $("bOwn").hidden = IN_APP;
+  }
+  freeLine();
+  stats();
+
+  const pensEl = $("pens");
+  PENS.forEach(([k, c, n], i) => { const b = document.createElement("button"); b.type = "button"; b.style.background = c; b.setAttribute("aria-label", n); b.setAttribute("aria-pressed", i === 0); b.onclick = () => { pen = c; penKey = k; pensEl.querySelectorAll("button").forEach(x => x.setAttribute("aria-pressed", x === b)); $("penLbl").textContent = n; }; pensEl.insertBefore(b, $("penLbl")); });
+  $("penLbl").textContent = PENS[0][2];
+  document.querySelectorAll(".modes button").forEach(b => b.onclick = () => {
+    if (b.dataset.m === "draw" && kloDemo.locked()) { upsell("limit"); return; }
+    mode = b.dataset.m; document.querySelectorAll(".modes button").forEach(x => x.setAttribute("aria-pressed", x === b));
+    $("form").hidden = mode !== "write"; $("openPad").hidden = mode !== "draw"; $("sprayHint").hidden = mode !== "spray";
+    if (mode === "draw") openPad();
+  });
+
+  let yaw = 0, pitch = -.05, tYaw = 0, tPitch = -.05, tour = false, shake = 0;
+  let focus = null; const camGoal = HOME.clone(); const lookGoal = new THREE.Vector3();
+  let down = null, moved = 0;
+  canvas.addEventListener("pointerdown", e => { down = { x: e.clientX, y: e.clientY }; moved = 0; canvas.setPointerCapture(e.pointerId); });
+  canvas.addEventListener("pointermove", e => {
+    if (!down || focus) return;
+    const dx = e.clientX - down.x, dy = e.clientY - down.y; moved += Math.abs(dx) + Math.abs(dy);
+    if (moved > 8 && tour) setTour(false);
+    tYaw -= dx * .005; tPitch = Math.max(-.6, Math.min(.5, tPitch - dy * .004));
+    down = { x: e.clientX, y: e.clientY };
+  });
+  const ray = new THREE.Raycaster(), ndc = new THREE.Vector2();
+  canvas.addEventListener("pointerup", e => {
+    const wasDrag = moved > 8; down = null; if (wasDrag) return;
+    const r = canvas.getBoundingClientRect(); ndc.set(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1);
+    ray.setFromCamera(ndc, camera);
+    const hit = ray.intersectObjects([...notes, door, knob, flushBtn, tank, bowl, seat, roll, sheet, ...walls])[0];
+    if (!hit) { if (focus) closeCard(); return; }
+    const k = hit.object.userData.kind;
+    if (mode === "spray" && (walls.includes(hit.object) || k === "note")) { spray(hit); return; }
+    if (k === "note") openCard(hit.object);
+    else if (k === "door") openDoor();
+    else if (k === "flush") flush();
+    else if (k === "paper") { sheetGoal = sheetGoal > .5 ? .16 : .72; toast(sheetGoal > .5 ? "Abgerollt" : "Aufgerollt"); }
+    else if (focus) closeCard();
+  });
+
+  function spray(hit) {
+    const n = hit.face.normal.clone().transformDirection(hit.object.matrixWorld);
+    const p = hit.point.clone().addScaledVector(n, .006 + sprays.length * .0004);
+    const ry = Math.atan2(n.x, n.z);
+    const sp = { p: [p.x, p.y, p.z], ry, rz: (Math.random() - .5) * .5, c: pen, tag: TAGS[Math.floor(Math.random() * TAGS.length)] };
+    store.sprays.push(sp); save(); addSpray(sp); stats(); hiss();
+  }
+
+  const card = $("card");
+  const tallyTxt = n => n ? "卌 ".repeat(Math.floor(Math.min(n, 20) / 5)) + "|".repeat(Math.min(n, 20) % 5) + (n > 20 ? ` +${n - 20}` : "") : "noch kein Strich";
+  const agoTxt = ts => { const h = (Date.now() - ts) / 36e5; if (h < 1) return "gerade eben"; if (h < 24) return `vor ${Math.floor(h)} Std.`; const d = Math.floor(h / 24); return d === 1 ? "gestern" : `vor ${d} Tagen`; };
+  function showCard() {
+    const d = focus.userData.d;
+    $("cardText").hidden = !!d.img; $("cardImg").hidden = !d.img;
+    if (d.img) $("cardImg").src = d.img; else $("cardText").textContent = d.t;
+    $("cardTally").textContent = tallyTxt(d.s);
+    const mine = likes[d.id] && likes[d.id].has(device);
+    $("strich").disabled = !!mine; $("strich").textContent = mine ? "Strich gesetzt" : "Strich +1";
+    const rs = (replies[d.id] || []).slice().sort((a, b) => a.ts - b.ts);
+    const ul = $("cardReps"); ul.hidden = !rs.length; ul.replaceChildren(...rs.map(r => { const li = document.createElement("li"); li.textContent = r.t; return li; }));
+    $("cardAgo").textContent = agoTxt(d.ts);
+  }
+  function openCard(m) { focus = m; setTour(false); $("replyForm").hidden = true; showCard(); card.hidden = false; camGoal.copy(m.position).addScaledVector(m.userData.normal, .85); camGoal.y = Math.max(.9, camGoal.y); lookGoal.copy(m.position); }
+  function closeCard() { focus = null; card.hidden = true; camGoal.copy(HOME); }
+  $("close").onclick = closeCard;
+  $("strich").onclick = () => {
+    if (!focus) return; const id = focus.userData.d.id;
+    (likes[id] ||= new Set()).add(device); showCard(); blip(660);
+    base.collection("likes").doc(id + "_" + device).set({ p: id, ts: now() }).catch(fail);
+  };
+  $("replyBtn").onclick = () => {
+    if (kloDemo.locked()) { upsell("limit"); return; }
+    const f = $("replyForm"); f.hidden = !f.hidden; if (!f.hidden) $("replyMsg").focus();
+  };
+  $("replyForm").addEventListener("submit", e => {
+    e.preventDefault(); if (!focus) return;
+    if (kloDemo.locked()) { upsell("limit"); return; }
+    const v = $("replyMsg").value.trim(), err = check(v); if (err) { say(err); toast("Geht so nicht"); return; }
+    const id = focus.userData.d.id;
+    base.collection("replies").add({ p: id, t: v, ts: now() }).then(() => { kloDemo.use(); blip(880); say("Drunter gekritzelt.", true); }).catch(fail);
+    $("replyMsg").value = ""; $("replyForm").hidden = true;
+  });
+  $("report").onclick = () => {
+    if (!focus) return; const id = focus.userData.d.id;
+    base.collection("reports").doc(id + "_" + device).set({ p: id, ts: now() }).then(() => toast("Gemeldet")).catch(fail);
+  };
+
+  /* Schneller Vorab-Check wie auf der normalen Wand. Die Regeln in Firebase prüfen nochmal. */
+  const modEl = $("mod");
+  function say(t, ok) { modEl.textContent = t; modEl.className = ok ? "mod" : "mod bad"; }
+  function check(t) {
+    if (t.trim().length < 3) return "Bisschen mehr als das, bitte.";
+    if (/(\+?\d[\d\s\-\/]{6,}\d)/.test(t)) return "Keine Telefonnummern an der Wand.";
+    if (/\S+@\S+\.\S+/.test(t) || /@\w+/.test(t)) return "Keine Mails oder @Namen. Hier bleibt jeder anonym.";
+    if (/(https?:\/\/|www\.)/i.test(t)) return "Links sind hier nicht erlaubt.";
+    const why = KloFilter.reason(t, true);
+    if (why === "sorge") return "Das kommt nicht an die Wand. Aber wenn es dir nicht gut geht: Sprich mit einem Erwachsenen, dem du vertraust, oder ruf kostenlos an: Nummer gegen Kummer 116 111 · Telefonseelsorge 0800 111 0 111 · Im Notfall 112.";
+    if (why === "kontakt") return "Hier wird nichts Privates ausgetauscht: keine Nummern, Profile, Fotos, Treffen oder Fragen nach Alter und Wohnort.";
+    if (why === "politik") return "Keine Politik an der Wand. Hier geht's um Spaß.";
+    if (why === "gewalt") return "Gewalt und Drogen haben an der Wand nichts zu suchen.";
+    if (why) return "Das kommt nicht an die Wand. Witzig ja, schweinisch oder gemein nein.";
+    if (/\b(ist|sind|is|are)\s+(fett|hässlich|dumm|scheiße|fat|ugly|stupid|dumb)\b/i.test(t)) return "Klingt nach Lästern über jemanden. Lass das.";
+    return null;
+  }
+  function fail(e) { say(e && e.code === "permission-denied" ? "Die Wand hat das abgelehnt. Prüf deinen Text oder versuch es gleich nochmal." : "Hat nicht geklappt. Versuch es gleich nochmal."); toast("Hat nicht geklappt"); }
+  function postIt(fields) {
+    if (kloDemo.locked()) { upsell("limit"); return; }
+    const rot = Number((Math.random() * 6 - 3).toFixed(1));
+    base.collection("posts").add(Object.assign(fields, { rot, ts: now() })).then(ref => {
+      kloDemo.use(); wantFocus = ref.id; say("Hängt jetzt an der Wand – live für alle.", true); blip(880); tYaw = Math.round(tYaw / (2 * Math.PI)) * 2 * Math.PI;
+    }).catch(fail);
+  }
+  $("form").addEventListener("submit", e => {
+    e.preventDefault(); if (kloDemo.locked()) { upsell("limit"); return; }
+    const inp = $("msg"); const t = inp.value.trim().slice(0, 120); if (!t) return;
+    const err = check(t); if (err) { say(err); return; }
+    inp.value = ""; inp.blur(); postIt({ t, color: penKey, font: "marker" });
+  });
+
+  // Vollversion
+  function upsell(reason) {
+    $("upsHead").textContent = IN_APP ? "Nur auf eigenen Wänden" : "Alles freischalten";
+    $("upsText").textContent = reason === "limit"
+      ? (IN_APP ? "Die 20 Gratis-Nachrichten auf der Demo-Wand sind aufgebraucht. Lesen und Striche setzen geht weiter." : "Deine 20 Gratis-Nachrichten sind aufgebraucht. Mit deiner eigenen Klo-Wand schreibst und malst du unbegrenzt. Lesen und Striche setzen geht hier weiter.")
+      : "Das alles bekommst du mit deiner eigenen Klo-Wand:";
+    $("upsBuy").hidden = IN_APP; $("ups").hidden = false;
+  }
+  $("upsLater").onclick = () => $("ups").hidden = true;
+  $("bOwn").onclick = () => upsell(kloDemo.locked() ? "limit" : "all");
+
+  // Malblock
+  const pc = $("padCanvas"), px = pc.getContext("2d"); let drawing = false;
+  function clearPad() { px.clearRect(0, 0, 512, 420); padDirty = false; }
+  let padDirty = false;
+  function openPad() { if (kloDemo.locked()) { upsell("limit"); return; } clearPad(); $("pad").hidden = false; }
+  $("openPad").onclick = openPad;
+  const pt = e => { const r = pc.getBoundingClientRect(); return [(e.clientX - r.left) * 512 / r.width, (e.clientY - r.top) * 420 / r.height]; };
+  pc.addEventListener("pointerdown", e => { drawing = true; pc.setPointerCapture(e.pointerId); const [x, y] = pt(e); px.strokeStyle = pen; px.lineWidth = 10; px.lineCap = px.lineJoin = "round"; px.shadowColor = pen; px.shadowBlur = 10; px.beginPath(); px.moveTo(x, y); px.lineTo(x + .1, y); px.stroke(); padDirty = true; });
+  pc.addEventListener("pointermove", e => { if (!drawing) return; const [x, y] = pt(e); px.lineTo(x, y); px.stroke(); });
+  pc.addEventListener("pointerup", () => drawing = false);
+  $("padClear").onclick = clearPad;
+  $("padCancel").onclick = () => $("pad").hidden = true;
+  $("padStick").onclick = () => {
+    if (!padDirty) { toast("Mal erst was"); return; }
+    const out = document.createElement("canvas"); out.width = 384; out.height = 315; out.getContext("2d").drawImage(pc, 0, 0, 384, 315);
+    const img = out.toDataURL("image/png");
+    if (img.length > 150000) { toast("Zu groß – mal etwas einfacher"); return; }
+    $("pad").hidden = true; postIt({ img });
+  };
+
+  // Tür & Videos
+  const vids = [...document.querySelectorAll("#kino video")];
+  vids.forEach(v => v.addEventListener("play", () => vids.forEach(o => o !== v && o.pause())));
+  let kinoT;
+  function openDoor() { if (focus) closeCard(); setTour(false); doorGoal = -1.7; creak(); clearTimeout(kinoT); kinoT = setTimeout(() => $("kino").hidden = false, 650); }
+  function closeDoor() { vids.forEach(v => v.pause()); $("kino").hidden = true; doorGoal = 0; setTimeout(() => blip(180), 450); }
+  $("kinoClose").onclick = closeDoor;
+  function faceDoor() { const k = Math.round((tYaw - Math.PI) / (2 * Math.PI)); return k * 2 * Math.PI + Math.PI; }
+  $("bDoor").onclick = () => {
+    if (focus) closeCard(); setTour(false);
+    const ang = ((tYaw % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI); const atDoor = Math.abs(ang - Math.PI) < .6;
+    if (atDoor) openDoor(); else { tYaw = faceDoor(); tPitch = -.05; toast("Tipp auf die Tür"); }
+  };
+
+  // Orakel
+  let orakel = "";
+  function ask() { orakel = ORAKEL[Math.floor(Math.random() * ORAKEL.length)]; $("oracleText").textContent = orakel; blip(520); }
+  $("bOracle").onclick = () => { ask(); $("oracle").hidden = false; };
+  $("oracleAgain").onclick = ask;
+  $("oracleClose").onclick = () => $("oracle").hidden = true;
+  $("oracleStick").onclick = () => { $("oracle").hidden = true; postIt({ t: orakel, color: "silver", font: "marker" }); };
+
+  // Foto
+  $("bPhoto").onclick = () => { renderer.render(scene, camera); $("photoImg").src = canvas.toDataURL("image/jpeg", .9); $("photo").hidden = false; blip(1200); };
+  $("photoClose").onclick = () => $("photo").hidden = true;
+
+  // Licht
+  const LIGHTS = ["Neon", "Hell", "Disco", "Dunkel"]; let li = 0;
+  function applyLight() {
+    const n = LIGHTS[li]; $("lightName").textContent = n; ball.visible = n === "Disco";
+    amb.intensity = n === "Hell" ? 1.1 : n === "Dunkel" ? .12 : .55; amb.color.set(n === "Hell" ? "#fff6e8" : "#6a5a9a");
+    fill.intensity = n === "Hell" ? 1.2 : n === "Dunkel" ? 0 : .5;
+    strips.forEach(s => { s.l.intensity = n === "Dunkel" ? .9 : 1.4; s.mat.color.copy(s.base); s.l.color.copy(s.base); });
+    scene.fog.color.set(n === "Hell" ? "#2a2238" : "#0b0716"); scene.background.set(n === "Hell" ? "#2a2238" : "#0b0716");
+  }
+  $("bLight").onclick = () => { li = (li + 1) % LIGHTS.length; applyLight(); toast("Licht: " + LIGHTS[li]); };
+
+  // Rundgang
+  function setTour(on) { tour = on; $("bTour").setAttribute("aria-pressed", on); }
+  $("bTour").onclick = () => { if (focus) closeCard(); setTour(!tour); };
+
+  // ---------- Ton (alles selbst erzeugt) ----------
+  let ac = null;
+  const audio = () => { if (!ac) { try { ac = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {} } if (ac && ac.state === "suspended") ac.resume(); return ac; };
+  function blip(f) { const a = audio(); if (!a) return; const o = a.createOscillator(), g = a.createGain(); o.type = "triangle"; o.frequency.value = f; g.gain.setValueAtTime(.12, a.currentTime); g.gain.exponentialRampToValueAtTime(.001, a.currentTime + .18); o.connect(g).connect(a.destination); o.start(); o.stop(a.currentTime + .2); }
+  function noise(dur, from, to, vol) {
+    const a = audio(); if (!a) return; const len = a.sampleRate * dur, buf = a.createBuffer(1, len, a.sampleRate), ch = buf.getChannelData(0);
+    for (let i = 0; i < len; i++) ch[i] = Math.random() * 2 - 1;
+    const s = a.createBufferSource(); s.buffer = buf; const f = a.createBiquadFilter(); f.type = "bandpass"; f.Q.value = .8;
+    f.frequency.setValueAtTime(from, a.currentTime); f.frequency.exponentialRampToValueAtTime(to, a.currentTime + dur);
+    const g = a.createGain(); g.gain.setValueAtTime(0, a.currentTime); g.gain.linearRampToValueAtTime(vol, a.currentTime + .15); g.gain.linearRampToValueAtTime(0, a.currentTime + dur);
+    s.connect(f).connect(g).connect(a.destination); s.start();
+  }
+  const creak = () => noise(.7, 300, 900, .18);
+  const hiss = () => noise(.45, 4000, 6000, .25);
+  let flushing = 0;
+  function flush() { flushing = performance.now(); shake = .03; noise(2.2, 1800, 300, .45); toast("Gespült!"); }
+
+  let music = null;
+  function startMusic() {
+    const a = audio(); if (!a) return;
+    const out = a.createGain(); out.gain.value = .07; const lp = a.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.value = 1400; lp.connect(out).connect(a.destination);
+    const chords = [[220, 261.6, 329.6], [174.6, 220, 261.6], [196, 246.9, 293.7], [164.8, 196, 246.9]];
+    let step = 0;
+    const tick = () => {
+      const t = a.currentTime, ch = chords[Math.floor(step / 8) % 4];
+      const f = ch[step % 3] * (step % 4 === 3 ? 2 : 1);
+      const o = a.createOscillator(), g = a.createGain(); o.type = "triangle"; o.frequency.value = f;
+      g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(1, t + .02); g.gain.exponentialRampToValueAtTime(.0001, t + .5);
+      o.connect(g).connect(lp); o.start(t); o.stop(t + .55);
+      if (step % 4 === 0) { const k = a.createOscillator(), kg = a.createGain(); k.frequency.setValueAtTime(120, t); k.frequency.exponentialRampToValueAtTime(45, t + .15); kg.gain.setValueAtTime(1.6, t); kg.gain.exponentialRampToValueAtTime(.001, t + .2); k.connect(kg).connect(out); k.start(t); k.stop(t + .22); }
+      step++;
+    };
+    tick(); const id = setInterval(tick, 300);
+    music = { stop() { clearInterval(id); out.gain.setTargetAtTime(0, a.currentTime, .1); } };
+  }
+  $("bMusic").onclick = () => { if (music) { music.stop(); music = null; } else startMusic(); $("bMusic").setAttribute("aria-pressed", !!music); };
+
+  // ---------- Live: echte Demo-Wand ----------
+  firebase.initializeApp(firebaseConfig);
+  const fsdb = firebase.firestore();
+  const base = fsdb.collection("walls").doc("demo");
+  function now() { return firebase.firestore.FieldValue.serverTimestamp(); }
+  const DAY = 864e5, since = firebase.firestore.Timestamp.fromMillis(Date.now() - 60 * DAY);
+  const LEGACY = Date.now() < Date.parse("2027-01-10");
+  const tsOf = x => (x && x.ts && x.ts.toMillis) ? x.ts.toMillis() : Date.now();
+  let posts = [], likes = {}, reports = {}, replies = {}, queued = false;
+  function refresh() {
+    if (queued) return; queued = true;
+    requestAnimationFrame(() => {
+      queued = false;
+      const list = posts.filter(p => (reports[p.id] || 0) < 3).map(p => ({ ...p, s: (likes[p.id] || new Set()).size, c: NEON[p.color] || (p.img ? "#22e4ff" : "#f5f0ff") }));
+      list.sort((a, b) => b.ts - a.ts);
+      sync(list.slice(0, 30));
+    });
+  }
+  const isDrawing = v => typeof v === "string" && v.startsWith("data:image/png;base64,");
+  base.collection("posts").where("ts", ">", since).orderBy("ts", "desc").limit(300).onSnapshot(sn => {
+    posts = sn.docs.map(d => { const x = d.data(); return { id: d.id, t: typeof x.t === "string" ? x.t : "", img: isDrawing(x.img) ? x.img : null, color: x.color, ts: tsOf(x) }; }).filter(p => p.img || p.t);
+    $("status").textContent = "● Live"; refresh();
+  }, () => { $("status").textContent = "Offline"; say("Die Wand ist gerade nicht erreichbar. Lade die Seite neu."); });
+  const recent = c => LEGACY ? base.collection(c).limit(5000) : base.collection(c).where("ts", ">", since).limit(5000);
+  recent("likes").onSnapshot(sn => { likes = {}; sn.docs.forEach(d => { const p = d.data().p; (likes[p] ||= new Set()).add(d.id.slice(p.length + 1)); }); refresh(); }, () => {});
+  recent("reports").onSnapshot(sn => { reports = {}; sn.docs.forEach(d => { const p = d.data().p; reports[p] = (reports[p] || 0) + 1; }); refresh(); }, () => {});
+  (LEGACY ? base.collection("replies").limit(2000) : base.collection("replies").where("ts", ">", since).limit(2000)).onSnapshot(sn => {
+    replies = {}; sn.docs.forEach(d => { const x = d.data(); if (typeof x.t === "string") (replies[x.p] ||= []).push({ t: x.t, ts: tsOf(x) }); }); if (focus) showCard();
+  }, () => {});
+
+  // ---------- Schleife ----------
+  function resize() { const w = window.innerWidth, h = window.innerHeight; renderer.setSize(w, h, false); camera.aspect = w / h; camera.fov = w < h ? 78 : 62; camera.updateProjectionMatrix(); }
+  window.addEventListener("resize", resize); resize();
+  const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const look = new THREE.Vector3(0, 1.4, -1), tmp = new THREE.Vector3(), hue = new THREE.Color();
+  $("loading").hidden = true;
+  function frame(now) {
+    if (tour && !focus) { tYaw += .0035; tPitch = -.05 + Math.sin(now / 3700) * .12; }
+    if (!focus) camGoal.set(HOME.x, HOME.y, HOME.z - 1.15 * Math.max(0, -Math.cos(yaw)));
+    camera.position.lerp(camGoal, .08);
+    if (shake > .001 && !reduce) { camera.position.x += (Math.random() - .5) * shake; camera.position.y += (Math.random() - .5) * shake; shake *= .94; }
+    if (focus) { look.lerp(lookGoal, .1); camera.lookAt(look); }
+    else {
+      yaw += (tYaw - yaw) * .12; pitch += (tPitch - pitch) * .12;
+      tmp.set(Math.sin(yaw) * Math.cos(pitch), Math.sin(pitch), -Math.cos(yaw) * Math.cos(pitch)).add(camera.position);
+      look.lerp(tmp, .25); camera.lookAt(look);
+    }
+    for (const m of notes) { const b = m.userData.born; if (b) { const k = Math.min(1, (now - b) / 500); const s = 1 + 1.7 * Math.pow(k - 1, 3) + .7 * Math.pow(k - 1, 2); m.scale.setScalar(Math.max(.01, s)); if (k >= 1) m.userData.born = 0; } }
+    // Spülung: Strudel dreht schnell, Wasser leuchtet
+    const fl = flushing ? Math.min(1, (now - flushing) / 2200) : 1;
+    if (fl < 1) { swirlTex.rotation -= .25 * (1 - fl); water.material.emissiveIntensity = 1.6 - fl; flushBtn.position.y = .835; }
+    else { flushing = 0; flushBtn.position.y = .845; if (!reduce) { swirlTex.rotation -= .004; water.material.emissiveIntensity = .8 + .2 * Math.sin(now / 600); } }
+    sheet.scale.y += (sheetGoal - sheet.scale.y) * .1;
+    doorPivot.rotation.y += (doorGoal - doorPivot.rotation.y) * .08;
+    if (LIGHTS[li] === "Disco") { ball.rotation.y += .01; strips.forEach((s, i) => { hue.setHSL(((now / 2500) + i / 3) % 1, 1, .55); s.mat.color.copy(hue); s.l.color.copy(hue); }); }
+    renderer.render(scene, camera); requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+})();
+</script>
+<script>if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});</script>
+</body>
+</html>

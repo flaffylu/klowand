@@ -380,6 +380,18 @@ html.th-kreide.bg-photo .count,html.th-retro.bg-photo .count{color:#f1d9c4}
 <script src="config.js"></script>
 <script src="filter.js"></script>
 <script>
+/* Flyer-QR (?wand=demo) im Browser: direkt in die 3D-Kabine. Die App und englische/japanische Handys bleiben in 2D.
+   Mit ?2d=1 kommt man zurück zur normalen Ansicht. */
+(function () {
+  try {
+    const q = new URLSearchParams(location.search);
+    if (q.get("wand") !== "demo" || q.has("2d") || KLO_APP || EN) return;
+    const c = document.createElement("canvas");
+    if (!(c.getContext("webgl") || c.getContext("experimental-webgl"))) return;
+    document.documentElement.style.visibility = "hidden";
+    location.replace("3d.html");
+  } catch (e) {}
+})();
 translateStatic([
   [".occ", "text", "Occupied"], [".tabs", "aria-label", "Sort"], ["#sNew", "text", "New"], ["#sTop", "text", "Popular"], ["#status", "text", "Connecting …"],
   [".modes", "aria-label", "What do you want to do?"], ["#liveRow", "text", "🔒 Everything you write here is only seen by your family."], ["[data-m=text]", "text", "✏️ Write"], ["[data-m=draw]", "text", "🖍️ Draw"], ["#chJoin", "text", "For the challenge"],
