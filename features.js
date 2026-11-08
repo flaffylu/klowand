@@ -175,6 +175,10 @@
   .demobar{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin:12px 0 0;padding:10px 12px;border-radius:8px;
     background:#fff6d6;border:1.5px solid #e0a92e;font:600 .95rem/1.3 var(--f-ui);color:var(--ink)}
   .demobar button{font:700 .85rem var(--f-ui);letter-spacing:.06em;text-transform:uppercase;background:var(--red);color:#fff;border:none;border-radius:6px;padding:8px 12px;min-height:38px;cursor:pointer}
+  .leoclip{display:flex;gap:12px;align-items:center;margin:10px 0 0;padding:10px;border-radius:12px;background:rgba(11,7,22,.82);border:1.5px solid rgba(34,228,255,.55);color:#f5f0ff}
+  .leoclip video{flex:none;width:96px;aspect-ratio:9/16;border-radius:10px;background:#0b0716;object-fit:cover}
+  .leoclip b{display:block;font:400 1.15rem/1.15 var(--f-marker);color:#ff8ccb}
+  .leoclip span{display:block;font:600 .9rem/1.3 var(--f-ui);color:#d6d0f0;margin-top:4px}
   .ups{position:fixed;inset:0;z-index:45;background:rgba(20,24,22,.8);display:flex;align-items:center;justify-content:center;padding:20px max(16px,env(safe-area-inset-left,0px))}
   .ups .box{width:min(420px,100%);background:var(--plate);border:3px solid var(--ink);border-radius:14px;padding:20px 18px 16px;text-align:center;box-shadow:0 18px 40px rgba(0,0,0,.45)}
   .ups .k{display:inline-block;background:var(--red);color:#fff;font:700 .8rem var(--f-ui);letter-spacing:.14em;text-transform:uppercase;padding:4px 10px;border-radius:3px}
@@ -194,6 +198,10 @@
       ? "🎉 " + tr("Tester-Version: Malen, Musik und alle Spiele sind für dich freigeschaltet. Danke fürs Testen!", "Tester version: drawing, music and all games are unlocked for you. Thanks for testing!", "テスター版：お絵かき・音楽・全ゲームが使えます。ありがとう！")
       : "🔒 " + tr("Malen, Musik und 2 Spiele gibt's in der Vollversion.", "Drawing, music and 2 games are in the full version.", "お絵かき・音楽・2つのゲームはフルバージョンで。")}</span>
     <button type="button" id="demoMore">${KLO_APP ? tr("Was geht noch?", "What else?", "他には？") : tr("Alles freischalten", "Unlock all", "すべて解放")}</button></div>`);
+  const db = document.querySelector(".demobar");
+  if (db) db.insertAdjacentHTML("afterend", `<div class="leoclip"><video src="assets/leo-clip.mp4" poster="assets/leo-poster.jpg" controls playsinline preload="none" aria-label="${tr("Video: Leo erklärt die Klo-Wand", "Video: Leo explains the Klo-Wand", "動画：レオがKlo-Wandを説明")}"></video>
+    <div><b>${tr("Leo erklärt die Klo-Wand", "Leo explains the Klo-Wand", "レオが説明します")}</b><span>${tr("In 48 Sekunden: live schreiben, malen, spielen und deine eigene Wand. Tippen zum Abspielen.", "In 48 seconds: write live, draw, play and get your own wall. Tap to play.", "48秒で分かる：ライブで書く・描く・遊ぶ。タップで再生。")}</span>
+    <span style="font-size:.75rem;opacity:.75">${tr("KI-Stimme & KI-Figur", "AI voice & AI character", "AI音声・AIキャラクター")}</span></div></div>`);
   const what = {
     draw: KLO_APP ? tr("Malen geht auf eigenen Wänden.", "Drawing works on own walls.", "お絵かきは自分のウォールで。") : tr("Malen ist in der Vollversion frei.", "Drawing is unlocked in the full version.", "お絵かきはフルバージョンで使えます。"),
     music: KLO_APP ? tr("Musik gibt's auf eigenen Wänden.", "Music is on own walls.", "音楽は自分のウォールで。") : tr("Musik gibt's in der Vollversion.", "Music comes with the full version.", "音楽はフルバージョンで使えます。"),
