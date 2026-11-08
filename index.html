@@ -395,6 +395,14 @@ window.kloApplyBg = function (css, light, theme) {
   let css = typeof HINTERGRUND !== "undefined" && HINTERGRUND ? `url("${HINTERGRUND.replace(/["\\]/g, "")}")` : "";
   let light = typeof HINTERGRUND_HELL !== "undefined" && HINTERGRUND_HELL;
   let theme = "";
+  /* Start-Look: Neon-Nacht für Bar- und Demo-Wände, solange niemand selbst einen Stil gewählt hat.
+     Familien-Handys behalten den hellen Look. */
+  try {
+    const q = new URLSearchParams(location.search);
+    const w0 = (q.get("wand") || localStorage.getItem("klowand-last") || "").toLowerCase();
+    const fam = w0 === "zuhause" || /^[A-Za-z0-9]{24,40}$/.test(q.get("k") || "") || (w0 && localStorage.getItem("klowand-fam-" + w0));
+    if (!fam) { css = "radial-gradient(120% 70% at 100% 0%,#3a0b4d 0%,#0b0716 55%)"; light = false; theme = "neon"; }
+  } catch (e) {}
   try {
     const w = JSON.parse(localStorage.getItem("klowand-stil") || "null");
     if (w && w.own) { const f = localStorage.getItem("klowand-stil-foto"); if (f && f.startsWith("data:image/jpeg")) { css = `url("${f}")`; light = !!w.light; } }
