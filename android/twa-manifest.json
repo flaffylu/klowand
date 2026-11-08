@@ -1,0 +1,43 @@
+{
+  "packageId": "io.github.flaffylu.klowand",
+  "host": "flaffylu.github.io",
+  "name": "Klo-Wand & Familien-Planner",
+  "launcherName": "Klo-Wand",
+  "display": "standalone",
+  "themeColor": "#1D2321",
+  "themeColorDark": "#000000",
+  "navigationColor": "#1D2321",
+  "navigationColorDark": "#000000",
+  "navigationDividerColor": "#000000",
+  "navigationDividerColorDark": "#000000",
+  "backgroundColor": "#1D2321",
+  "enableNotifications": false,
+  "startUrl": "/klowand/?app=android",
+  "iconUrl": "http://localhost:8765/icon-512.png",
+  "maskableIconUrl": "http://localhost:8765/icon-maskable-512.png",
+  "splashScreenFadeOutDuration": 300,
+  "signingKey": {
+    "path": "./upload.keystore",
+    "alias": "upload"
+  },
+  "appVersionName": "1.0.0",
+  "appVersionCode": 1,
+  "shortcuts": [],
+  "generatorApp": "unknown",
+  "fallbackType": "customtabs",
+  "features": {},
+  "alphaDependencies": {
+    "enabled": false
+  },
+  "enableSiteSettingsShortcut": false,
+  "isChromeOSOnly": false,
+  "isMetaQuest": false,
+  "fullScopeUrl": "https://flaffylu.github.io/klowand/",
+  "minSdkVersion": 21,
+  "orientation": "portrait",
+  "fingerprints": [],
+  "additionalTrustedOrigins": [],
+  "retainedBundles": [],
+  "displayOverride": [],
+  "appVersion": "1.0.0"
+}
