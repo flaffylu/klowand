@@ -18,7 +18,7 @@
   let myName = ""; try { myName = localStorage.getItem("klowand-name") || ""; } catch (e) {}
   let lastId = null, stopGame = () => {};
   /* Demo-Wand: nur ein Spiel und keine Musik, der Rest zeigt auf die Vollversion */
-  const IS_DEMO = typeof DEMO !== "undefined" && DEMO;
+  const IS_DEMO = typeof DEMO !== "undefined" && DEMO && !(typeof KLO_APP !== "undefined" && KLO_APP); // Android-Tester: alles frei
   const LOCKED = IS_DEMO ? ["reflex", "stapel"] : [];
   const upsell = r => { if (window.kloUpsell) kloUpsell(r); };
 

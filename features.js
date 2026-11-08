@@ -190,7 +190,9 @@
   document.head.appendChild(css);
 
   const plate = document.querySelector(".plate");
-  if (plate) plate.insertAdjacentHTML("afterend", `<div class="demobar"><span>💬 <b>${tr("Hier schreibst du live mit allen zusammen, die gerade die Demo testen!", "Here you write live with everyone who's trying the demo right now!", "ここでは今デモを試しているみんなと一緒に書けます！")}</b><br>🔒 ${(KLO_APP ? tr("Malen, Musik und 2 Spiele gibt's auf eigenen Wänden.", "Drawing, music and 2 games are on own walls.", "お絵かき・音楽・2つのゲームは自分のウォールで。") : tr("Malen, Musik und 2 Spiele gibt's in der Vollversion.", "Drawing, music and 2 games are in the full version.", "お絵かき・音楽・2つのゲームはフルバージョンで。"))}</span>
+  if (plate) plate.insertAdjacentHTML("afterend", `<div class="demobar"><span>💬 <b>${tr("Hier schreibst du live mit allen zusammen, die gerade die Demo testen!", "Here you write live with everyone who's trying the demo right now!", "ここでは今デモを試しているみんなと一緒に書けます！")}</b><br>${KLO_APP
+      ? "🎉 " + tr("Tester-Version: Malen, Musik und alle Spiele sind für dich freigeschaltet. Danke fürs Testen!", "Tester version: drawing, music and all games are unlocked for you. Thanks for testing!", "テスター版：お絵かき・音楽・全ゲームが使えます。ありがとう！")
+      : "🔒 " + tr("Malen, Musik und 2 Spiele gibt's in der Vollversion.", "Drawing, music and 2 games are in the full version.", "お絵かき・音楽・2つのゲームはフルバージョンで。")}</span>
     <button type="button" id="demoMore">${KLO_APP ? tr("Was geht noch?", "What else?", "他には？") : tr("Alles freischalten", "Unlock all", "すべて解放")}</button></div>`);
   const what = {
     draw: KLO_APP ? tr("Malen geht auf eigenen Wänden.", "Drawing works on own walls.", "お絵かきは自分のウォールで。") : tr("Malen ist in der Vollversion frei.", "Drawing is unlocked in the full version.", "お絵かきはフルバージョンで使えます。"),

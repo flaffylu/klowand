@@ -248,7 +248,7 @@ if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catc
 const FIXED = !!WAENDE[WALL];
 /* Demo-Wand: Malen, Musik und zwei Spiele sind gesperrt und zeigen, was die Vollversion kann */
 const DEMO = WALL === "demo";
-if (DEMO) document.querySelector("[data-m=draw]").classList.add("locked");
+if (DEMO && !KLO_APP) document.querySelector("[data-m=draw]").classList.add("locked");
 const info = WAENDE[WALL] ? { ...WAENDE[WALL], sub: (JA && WAENDE[WALL].subJa) || (EN && WAENDE[WALL].subEn) || WAENDE[WALL].sub } : { name: "Klo-Wand", sub: "" };
 function showInfo() {
   document.getElementById("venue").textContent = info.name;
@@ -500,7 +500,7 @@ function exportDrawing() {
 
 /* ---------- Schreiben oder Malen ---------- */
 function setMode(m) {
-  if (m === "draw" && DEMO) { if (window.kloUpsell) kloUpsell("draw"); return; }
+  if (m === "draw" && DEMO && !KLO_APP) { if (window.kloUpsell) kloUpsell("draw"); return; }
   mode = m;
   document.querySelectorAll(".modes button").forEach(b => b.setAttribute("aria-pressed", b.dataset.m === m));
   const draw = m === "draw";
