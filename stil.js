@@ -13,6 +13,7 @@
     { id: "himmel", n: tr("Himmel", "Sky", "空"), css: img("himmel"), mini: "bilder/mini/himmel.jpg", light: true },
     { id: "weltall", n: tr("Weltall", "Space", "宇宙"), css: STARS, light: false },
     { id: "wasser", n: tr("Unterwasser", "Underwater", "海の中"), css: img("wasser"), mini: "bilder/mini/wasser.jpg", light: false },
+    { id: "neonnacht", n: tr("Neon-Nacht", "Neon night", "ネオンの夜"), css: "radial-gradient(120% 70% at 100% 0%,#3a0b4d 0%,#0b0716 55%)", light: false, theme: "neon" },
     { id: "neon", n: "Neon", css: img("neon"), mini: "bilder/mini/neon.jpg", light: false },
     { id: "holz", n: tr("Holz", "Wood", "木"), css: img("holz"), mini: "bilder/mini/holz.jpg", light: true },
     { id: "fliesen", n: tr("Fliesen", "Tiles", "タイル"), css: img("fliesen"), mini: "bilder/mini/fliesen.jpg", light: true },
@@ -60,8 +61,8 @@
       if (e.target === el || e.target.closest(".x")) { close(); return; }
       const t = e.target.closest("[data-id]"); if (!t) return;
       const s = STILE.find(x => x.id === t.dataset.id); if (!s) return;
-      kloApplyBg(s.css, s.light);
-      try { localStorage.setItem("klowand-stil", JSON.stringify({ id: s.id, css: s.css, light: s.light })); localStorage.removeItem("klowand-stil-foto"); } catch (x) {}
+      kloApplyBg(s.css, s.light, s.theme);
+      try { localStorage.setItem("klowand-stil", JSON.stringify({ id: s.id, css: s.css, light: s.light, theme: s.theme || "" })); localStorage.removeItem("klowand-stil-foto"); } catch (x) {}
       close();
     });
     el.querySelector("input[type=file]").addEventListener("change", async e => {

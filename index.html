@@ -148,6 +148,46 @@ html.bg-photo .legal a{color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.7)}
 .nowall a{display:inline-block;margin-top:14px;background:var(--red);color:#fff;padding:10px 18px;border-radius:6px;text-decoration:none;font-weight:700;letter-spacing:.05em;text-transform:uppercase}
 .live{margin:8px 0 0;font:700 .95rem var(--f-ui);color:#f2c14e}
 .famtag{display:inline-block;font:700 .7rem var(--f-ui);letter-spacing:.08em;text-transform:uppercase;background:#1d2321;color:#f2c14e;padding:2px 7px;border-radius:4px;margin-bottom:4px}
+
+/* Stil „Neon-Nacht“: dunkel mit Leuchtreklame-Farben (wird unter 🎨 Hintergrund gewählt) */
+html.th-neon{--muted:#b3abd6;--neon-pink:#ff3ea5;--neon-cyan:#22e4ff;--neon-lime:#b7ff4a;--neon-gold:#ffc43d}
+html.th-neon body{color:#f5f0ff}
+html.th-neon .plate{background:rgba(11,7,22,.88);border:1.5px solid var(--neon-pink);border-radius:14px;box-shadow:0 0 18px rgba(255,62,165,.35)}
+html.th-neon .plate::before,html.th-neon .plate::after{display:none}
+html.th-neon .plate h1{font:400 1.7rem/1 var(--f-marker);letter-spacing:0;text-transform:none;color:var(--neon-pink);text-shadow:0 0 6px var(--neon-pink),0 0 18px rgba(255,62,165,.7)}
+html.th-neon .plate small{color:var(--muted)}
+html.th-neon .occ{background:transparent;color:var(--neon-cyan);border:1.5px solid var(--neon-cyan);border-radius:999px;box-shadow:0 0 10px rgba(34,228,255,.45)}
+html.th-neon .tabs button,html.th-neon.bg-photo .tabs button{background:transparent;color:#f5f0ff;border-color:rgba(245,240,255,.5)}
+html.th-neon .tabs button[aria-pressed="true"],html.th-neon.bg-photo .tabs button[aria-pressed="true"]{background:var(--neon-cyan);color:#0b0716;border-color:var(--neon-cyan);box-shadow:0 0 12px rgba(34,228,255,.5)}
+html.th-neon .tabs .hint,html.th-neon .legal a{color:var(--muted);text-shadow:none}
+html.th-neon .post,html.th-neon.bg-photo .post{background:rgba(255,255,255,.05);border:1.5px solid rgba(183,255,74,.55);border-radius:16px;box-shadow:0 0 14px rgba(0,0,0,.4);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)}
+html.th-neon .post:nth-child(3n+1){border-color:rgba(255,62,165,.6)}
+html.th-neon .post:nth-child(3n+2){border-color:rgba(34,228,255,.6)}
+html.th-neon .post::before{display:none}
+html.th-neon .c-ink{color:#f5f0ff}html.th-neon .c-red{color:var(--neon-pink)}html.th-neon .c-blue{color:var(--neon-cyan)}
+html.th-neon .c-green{color:var(--neon-lime)}html.th-neon .c-silver,html.th-neon.bg-photo .post.c-silver .txt{color:var(--neon-gold);text-shadow:none}
+html.th-neon .post .txt{text-shadow:0 0 8px rgba(255,255,255,.15)}
+html.th-neon .tally,html.th-neon .meta button.on{color:#fff}
+html.th-neon .reply{color:#e6e0ff}
+html.th-neon .rform input{color:#fff;border-bottom-color:var(--neon-cyan)}
+html.th-neon .rform button{background:var(--neon-cyan);color:#0b0716}
+html.th-neon .post .drawing{background:#f5f0ff;border-radius:10px}
+html.th-neon .champ{background:linear-gradient(135deg,rgba(34,228,255,.16),rgba(140,82,255,.16));border:1.5px solid var(--neon-cyan);border-radius:18px;box-shadow:0 0 24px rgba(34,228,255,.35)}
+html.th-neon .champ .post{background:none;border:none;box-shadow:none}
+html.th-neon .champ .post .txt{text-shadow:0 0 10px rgba(34,228,255,.8)}
+html.th-neon .champ .crown{background:transparent;color:#8ff3ff;border:1px solid var(--neon-cyan)}
+html.th-neon .chcard{background:rgba(11,7,22,.88);color:#f5f0ff;border:1.5px solid var(--neon-pink);border-radius:18px;box-shadow:inset 0 0 22px rgba(255,62,165,.25)}
+html.th-neon .chcard .k{color:#ff8ccb}
+html.th-neon .chcard button{background:var(--neon-pink);color:#0b0716;border-radius:999px;box-shadow:0 0 14px rgba(255,62,165,.6)}
+html.th-neon .chtag{background:transparent;color:var(--neon-gold);border:1px solid var(--neon-gold)}
+html.th-neon .bar{border-top:1px solid rgba(255,255,255,.12);box-shadow:0 -6px 24px rgba(255,62,165,.18)}
+html.th-neon .bar textarea{background:rgba(255,255,255,.07);color:#fff;border:1.5px solid rgba(255,255,255,.18);border-radius:12px}
+html.th-neon .modes button[aria-pressed="true"]{background:var(--neon-pink);color:#0b0716;border-color:var(--neon-pink)}
+html.th-neon .send{background:var(--neon-lime);color:#0b0716;border-radius:12px}
+html.th-neon .extras button{background:rgba(255,255,255,.06);color:#f5f0ff;border:1.5px solid rgba(34,228,255,.55);border-radius:999px}
+html.th-neon .extras button[aria-pressed="true"]{background:var(--neon-lime);color:#0b0716;border-color:var(--neon-lime)}
+html.th-neon .bar{background:#0b0716}
+html.th-neon .empty{background:rgba(11,7,22,.7);color:var(--muted)}
 </style>
 </head>
 <body>
@@ -225,20 +265,22 @@ translateStatic([
   [".send", "text", "Scribble"],
 ]);
 /* Hintergrund: eigene Wahl auf diesem Handy (Knopf „Hintergrund“), sonst der aus config.js */
-window.kloApplyBg = function (css, light) {
+window.kloApplyBg = function (css, light, theme) {
   const r = document.documentElement;
+  r.classList.toggle("th-neon", theme === "neon");
   r.classList.toggle("bg-photo", !!css); r.classList.toggle("bg-light", !!css && !!light);
   if (css) r.style.setProperty("--bg-url", css); else r.style.removeProperty("--bg-url");
 };
 (function () {
   let css = typeof HINTERGRUND !== "undefined" && HINTERGRUND ? `url("${HINTERGRUND.replace(/["\\]/g, "")}")` : "";
   let light = typeof HINTERGRUND_HELL !== "undefined" && HINTERGRUND_HELL;
+  let theme = "";
   try {
     const w = JSON.parse(localStorage.getItem("klowand-stil") || "null");
     if (w && w.own) { const f = localStorage.getItem("klowand-stil-foto"); if (f && f.startsWith("data:image/jpeg")) { css = `url("${f}")`; light = !!w.light; } }
-    else if (w && typeof w.css === "string") { css = w.css; light = !!w.light; }
+    else if (w && typeof w.css === "string") { css = w.css; light = !!w.light; theme = w.theme || ""; }
   } catch (e) {}
-  kloApplyBg(css, light);
+  kloApplyBg(css, light, theme);
 })();
 const params = new URLSearchParams(location.search);
 let lastWall = null; try { lastWall = localStorage.getItem("klowand-last"); } catch (e) {}
