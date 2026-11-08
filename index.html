@@ -436,8 +436,8 @@ if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catc
 const FIXED = !!WAENDE[WALL];
 /* Demo-Wand: Malen, Musik und zwei Spiele sind gesperrt und zeigen, was die Vollversion kann */
 const DEMO = WALL === "demo";
-/* Demo: 20 Gratis-Nachrichten pro Handy mit allem freigeschaltet, danach nur noch lesen und Striche setzen. */
-const DEMO_FREI = 20;
+/* Demo: 50 Gratis-Nachrichten pro Handy mit allem freigeschaltet, danach nur noch lesen und Striche setzen. */
+const DEMO_FREI = 50;
 window.kloDemo = {
   used() { try { return Math.max(0, parseInt(localStorage.getItem("klowand-demo-n") || "0", 10) || 0); } catch (e) { return 0; } },
   left() { return Math.max(0, DEMO_FREI - this.used()); },

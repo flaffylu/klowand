@@ -200,10 +200,10 @@
     const el = document.getElementById("demoFree"), b = document.getElementById("demoMore"); if (!el || typeof kloDemo === "undefined") return;
     const left = kloDemo.left();
     el.textContent = left > 0
-      ? "🎁 " + tr(`Noch ${left} von 20 Gratis-Nachrichten – bis dahin ist alles frei: Malen, Musik und alle Spiele.`, `${left} of 20 free messages left – until then everything is unlocked: drawing, music and all games.`, `無料メッセージ残り${left}/20 – それまで全部使えます。`)
+      ? "🎁 " + tr(`Noch ${left} von 50 Gratis-Nachrichten – bis dahin ist alles frei: Malen, Musik und alle Spiele.`, `${left} of 50 free messages left – until then everything is unlocked: drawing, music and all games.`, `無料メッセージ残り${left}/20 – それまで全部使えます。`)
       : "🔒 " + (KLO_APP
-        ? tr("Deine 20 Gratis-Nachrichten sind aufgebraucht. Lesen und Striche setzen geht weiter.", "Your 20 free messages are used up. Reading and marking still work.", "無料メッセージを使い切りました。読む・線を付けるはできます。")
-        : tr("Deine 20 Gratis-Nachrichten sind aufgebraucht. Mit eigener Wand schreibst du unbegrenzt.", "Your 20 free messages are used up. With your own wall you write without limits.", "無料メッセージを使い切りました。自分のウォールなら無制限。"));
+        ? tr("Deine 50 Gratis-Nachrichten sind aufgebraucht. Lesen und Striche setzen geht weiter.", "Your 50 free messages are used up. Reading and marking still work.", "無料メッセージを使い切りました。読む・線を付けるはできます。")
+        : tr("Deine 50 Gratis-Nachrichten sind aufgebraucht. Mit eigener Wand schreibst du unbegrenzt.", "Your 50 free messages are used up. With your own wall you write without limits.", "無料メッセージを使い切りました。自分のウォールなら無制限。"));
     b.textContent = left > 0 || KLO_APP ? tr("Was geht noch?", "What else?", "他には？") : tr("Eigene Wand holen", "Get your own wall", "自分のウォール");
     b.onclick = () => kloUpsell(left > 0 ? "all" : "limit");
   };
@@ -218,8 +218,8 @@
     game: KLO_APP ? tr("Dieses Spiel gibt's auf eigenen Wänden.", "This game is on own walls.", "このゲームは自分のウォールで。") : tr("Dieses Spiel gibt's in der Vollversion.", "This game comes with the full version.", "このゲームはフルバージョンで遊べます。"),
     notfall: tr("Die Notfall-Hilfe mit Bildern gibt's im eigenen Familien-Planner. Im echten Notfall: sofort 112 anrufen!", "The picture-based emergency help comes with your own Family Planner. In a real emergency: call 112 (911 in the US) right away!", "絵で分かる緊急ヘルプは自分のファミリープランナーで。本当の緊急時はすぐ119へ！"),
     familie: tr("Stundenplan und Familienfotos gibt's mit eurem eigenen Familien-Planner, nur für euch sichtbar.", "Timetable and family photos come with your own family wall, visible only to you.", "時間割と家族の写真は、自分たちのファミリーウォールで。家族だけが見られます。"),
-    limit: KLO_APP ? tr("Die 20 Gratis-Nachrichten auf der Demo-Wand sind aufgebraucht. Unbegrenzt schreiben, malen und spielen geht auf eigenen Wänden.", "The 20 free messages on the demo wall are used up. Unlimited writing, drawing and playing works on own walls.", "デモの無料メッセージを使い切りました。自分のウォールなら無制限。")
-      : tr("Deine 20 Gratis-Nachrichten sind aufgebraucht. Mit deiner eigenen Klo-Wand schreibst, malst und spielst du unbegrenzt:", "Your 20 free messages are used up. With your own Klo-Wand you write, draw and play without limits:", "無料メッセージを使い切りました。自分のKlo-Wandなら無制限："),
+    limit: KLO_APP ? tr("Die 50 Gratis-Nachrichten auf der Demo-Wand sind aufgebraucht. Unbegrenzt schreiben, malen und spielen geht auf eigenen Wänden.", "The 50 free messages on the demo wall are used up. Unlimited writing, drawing and playing works on own walls.", "デモの無料メッセージを使い切りました。自分のウォールなら無制限。")
+      : tr("Deine 50 Gratis-Nachrichten sind aufgebraucht. Mit deiner eigenen Klo-Wand schreibst, malst und spielst du unbegrenzt:", "Your 50 free messages are used up. With your own Klo-Wand you write, draw and play without limits:", "無料メッセージを使い切りました。自分のKlo-Wandなら無制限："),
     all: tr("Das alles bekommst du mit deiner eigenen Klo-Wand:", "All this comes with your own Klo-Wand:", "自分のKlo-Wandなら全部使えます："),
   };
   window.kloUpsell = function (reason) {

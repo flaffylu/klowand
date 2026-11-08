@@ -27,7 +27,7 @@
   let myName = ""; try { myName = localStorage.getItem("klowand-name") || ""; } catch (e) {}
   let lastId = null, stopGame = () => {};
   /* Demo-Wand: nur ein Spiel und keine Musik, der Rest zeigt auf die Vollversion */
-  // Demo: nach den 20 Gratis-Nachrichten sind Musik und 2 Spiele gesperrt
+  // Demo: nach den 50 Gratis-Nachrichten sind Musik und 2 Spiele gesperrt
   const isDemoLocked = () => typeof kloDemo !== "undefined" && kloDemo.locked();
   const locked = () => isDemoLocked() ? ["reflex", "stapel", "fliege", "memory", "ente", "simon", "zahlen"] : [];
   const upsell = r => { if (window.kloUpsell) kloUpsell(r); };
