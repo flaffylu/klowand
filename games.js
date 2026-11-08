@@ -133,7 +133,7 @@
   function menu() {
     view(Object.entries(GAMES).map(([g, x]) => LOCKED.includes(g)
       ? `<div class="card locked"><h3>🔒 ${x.title}</h3><p>${x.desc}</p>
-      <div class="lead">${tr("Nur in der Vollversion", "Full version only", "フルバージョン限定")}</div>
+      <div class="lead">${KLO_APP ? tr("Nur auf eigenen Wänden", "Own walls only", "自分のウォール限定") : tr("Nur in der Vollversion", "Full version only", "フルバージョン限定")}</div>
       <div class="row"><button type="button" class="btn go" data-go="play:${g}">${tr("Freischalten", "Unlock", "解放する")}</button></div></div>`
       : `<div class="card"><h3>${x.title}</h3><p>${x.desc}</p>
       <div class="lead" id="lead-${g}">&nbsp;</div>

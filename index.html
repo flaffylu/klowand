@@ -242,7 +242,7 @@ window.kloApplyBg = function (css, light) {
 })();
 const params = new URLSearchParams(location.search);
 let lastWall = null; try { lastWall = localStorage.getItem("klowand-last"); } catch (e) {}
-const WALL = (params.get("wand") || lastWall || Object.keys(WAENDE)[0]).toLowerCase().replace(/[^a-z0-9-]/g, "").slice(0, 60) || "wand";
+const WALL = (params.get("wand") || lastWall || (KLO_APP ? "demo" : Object.keys(WAENDE)[0])).toLowerCase().replace(/[^a-z0-9-]/g, "").slice(0, 60) || "wand";
 try { localStorage.setItem("klowand-last", WALL); } catch (e) {}
 if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});
 const FIXED = !!WAENDE[WALL];

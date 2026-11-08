@@ -155,7 +155,7 @@
   const wrap = document.querySelector(".wrap");
   if (wrap) {
     /* Hinweis „eigene Wand holen“: nur auf der Demo-Wand, nicht auf gekauften Wänden */
-    if (typeof DEMO !== "undefined" && DEMO) {
+    if (typeof DEMO !== "undefined" && DEMO && !KLO_APP) {
     const ad = document.createElement("div"); ad.className = "getown";
     ad.innerHTML = `<b>${tr("Auch so eine Klo-Wand haben?", "Want a Klo-Wand of your own?")}</b>
       <span><a href="familie.html">${tr("Für zu Hause", "For your home")}</a><a href="wirte.html">${tr("Für deine Bar", "For your bar")}</a></span>`;
@@ -190,12 +190,12 @@
   document.head.appendChild(css);
 
   const plate = document.querySelector(".plate");
-  if (plate) plate.insertAdjacentHTML("afterend", `<div class="demobar"><span>💬 <b>${tr("Hier schreibst du live mit allen zusammen, die gerade die Demo testen!", "Here you write live with everyone who's trying the demo right now!", "ここでは今デモを試しているみんなと一緒に書けます！")}</b><br>🔒 ${tr("Malen, Musik und 2 Spiele gibt's in der Vollversion.", "Drawing, music and 2 games are in the full version.", "お絵かき・音楽・2つのゲームはフルバージョンで。")}</span>
-    <button type="button" id="demoMore">${tr("Alles freischalten", "Unlock all", "すべて解放")}</button></div>`);
+  if (plate) plate.insertAdjacentHTML("afterend", `<div class="demobar"><span>💬 <b>${tr("Hier schreibst du live mit allen zusammen, die gerade die Demo testen!", "Here you write live with everyone who's trying the demo right now!", "ここでは今デモを試しているみんなと一緒に書けます！")}</b><br>🔒 ${(KLO_APP ? tr("Malen, Musik und 2 Spiele gibt's auf eigenen Wänden.", "Drawing, music and 2 games are on own walls.", "お絵かき・音楽・2つのゲームは自分のウォールで。") : tr("Malen, Musik und 2 Spiele gibt's in der Vollversion.", "Drawing, music and 2 games are in the full version.", "お絵かき・音楽・2つのゲームはフルバージョンで。"))}</span>
+    <button type="button" id="demoMore">${KLO_APP ? tr("Was geht noch?", "What else?", "他には？") : tr("Alles freischalten", "Unlock all", "すべて解放")}</button></div>`);
   const what = {
-    draw: tr("Malen ist in der Vollversion frei.", "Drawing is unlocked in the full version.", "お絵かきはフルバージョンで使えます。"),
-    music: tr("Musik gibt's in der Vollversion.", "Music comes with the full version.", "音楽はフルバージョンで使えます。"),
-    game: tr("Dieses Spiel gibt's in der Vollversion.", "This game comes with the full version.", "このゲームはフルバージョンで遊べます。"),
+    draw: KLO_APP ? tr("Malen geht auf eigenen Wänden.", "Drawing works on own walls.", "お絵かきは自分のウォールで。") : tr("Malen ist in der Vollversion frei.", "Drawing is unlocked in the full version.", "お絵かきはフルバージョンで使えます。"),
+    music: KLO_APP ? tr("Musik gibt's auf eigenen Wänden.", "Music is on own walls.", "音楽は自分のウォールで。") : tr("Musik gibt's in der Vollversion.", "Music comes with the full version.", "音楽はフルバージョンで使えます。"),
+    game: KLO_APP ? tr("Dieses Spiel gibt's auf eigenen Wänden.", "This game is on own walls.", "このゲームは自分のウォールで。") : tr("Dieses Spiel gibt's in der Vollversion.", "This game comes with the full version.", "このゲームはフルバージョンで遊べます。"),
     familie: tr("Stundenplan und Familienfotos gibt's mit eurem eigenen Familien-Planner, nur für euch sichtbar.", "Timetable and family photos come with your own family wall, visible only to you.", "時間割と家族の写真は、自分たちのファミリーウォールで。家族だけが見られます。"),
     all: tr("Das alles bekommst du mit deiner eigenen Klo-Wand:", "All this comes with your own Klo-Wand:", "自分のKlo-Wandなら全部使えます："),
   };
@@ -203,14 +203,15 @@
     if (document.querySelector(".ups")) return;
     const el = document.createElement("div");
     el.className = "ups"; el.setAttribute("role", "dialog"); el.setAttribute("aria-label", tr("Vollversion", "Full version", "フルバージョン"));
-    el.innerHTML = `<div class="box"><span class="k">${tr("Vollversion", "Full version", "フルバージョン")}</span>
-      <h2>${tr("Alles freischalten", "Unlock everything", "すべて解放")}</h2>
+    el.innerHTML = `<div class="box"><span class="k">${KLO_APP ? tr("Eigene Wand", "Own wall", "自分のウォール") : tr("Vollversion", "Full version", "フルバージョン")}</span>
+      <h2>${KLO_APP ? tr("Nur auf eigenen Wänden", "Only on own walls", "自分のウォールのみ") : tr("Alles freischalten", "Unlock everything", "すべて解放")}</h2>
       <p>${what[reason] || what.all}</p>
       <ul><li>${tr("Malen mit dem Finger", "Drawing with your finger", "指でお絵かき")}</li><li>${tr("Alle 3 Klo-Spiele mit Rangliste", "All 3 loo games with leaderboard", "トイレゲーム3種＋ランキング")}</li>
         <li>${tr("Familien-Planner: Stundenplan, Fotos & Notfall", "Family Planner: timetable, photos & emergency", "ファミリープランナー：時間割・写真・緊急")}</li><li>${tr("Gemütliche Musik", "Cozy music", "ゆったり音楽")}</li><li>${tr("Eigene Wand mit deinem Namen", "Your own wall with your name", "名前入りの自分専用ウォール")}</li>
         <li>${tr("QR-Sticker zum Ausdrucken", "Printable QR sticker", "印刷できるQRステッカー")}</li><li>${tr("Du löschst, was nicht passt", "You delete anything unwanted", "不適切な投稿は自分で削除")}</li></ul>
-      <div class="price">${tr("nur 4,99 € einmalig", "only €4.99 once", "一度だけ 約890円")}</div>
-      <div class="row"><a href="familie.html">${tr("Für zu Hause", "For your home", "おうち用")}</a><a href="wirte.html">${tr("Für deine Bar", "For your bar", "お店用")}</a></div>
+      ${KLO_APP ? `<div class="price" style="font-size:1rem">${tr("Auf dieser Wand nicht freigeschaltet.", "Not unlocked on this wall.", "このウォールでは未解放です。")}</div>`
+        : `<div class="price">${tr("nur 4,99 € einmalig", "only €4.99 once", "一度だけ 約890円")}</div>
+      <div class="row"><a href="familie.html">${tr("Für zu Hause", "For your home", "おうち用")}</a><a href="wirte.html">${tr("Für deine Bar", "For your bar", "お店用")}</a></div>`}
       <button type="button" class="later">${tr("Weiter testen", "Keep testing", "このまま試す")}</button></div>`;
     document.body.appendChild(el);
     const close = () => el.remove();

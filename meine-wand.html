@@ -232,8 +232,9 @@ function renderWalls() {
   $("redeemTitle").textContent = has ? tr("Weitere Wand einrichten", "Set up another wall") : tr("Code einlösen", "Redeem code");
   $("redeemSub").textContent = !has ? tr("Trag den Code aus deiner Kauf-E-Mail ein. Danach ist deine Wand sofort fertig. Jeder Code reicht für 2 Wände.", "Enter the code from your purchase email. Your wall is ready right away. Each code is good for 2 walls.")
     : free ? tr(`Mit deinem Code ${free} kannst du noch 1 Wand einrichten – ohne Zusatzkosten. Er ist schon eingetragen.`, `You can set up 1 more wall with your code ${free} – at no extra cost. It's already filled in.`)
+    : KLO_APP ? tr("Deine 2 Wände sind eingerichtet. Für weitere Wände trägst du hier einen neuen Code ein.", "Your 2 walls are set up. For more walls, enter a new code here.")
     : tr("Deine 2 Wände sind eingerichtet. Für 2 weitere Wände brauchst du ein Update für 4,99 €. Den neuen Code trägst du dann hier ein.", "Your 2 walls are set up. For 2 more walls you need an update for €4.99. Then enter the new code here.");
-  const ub = $("updateBox"); if (ub) ub.hidden = !has || !!free;
+  const ub = $("updateBox"); if (ub) ub.hidden = !has || !!free || KLO_APP;
   if (free && !$("code").value) $("code").value = free;
   $("walls").innerHTML = walls.map(w => {
     const url = wallUrl(w.id), ed = editing === w.id;
@@ -328,7 +329,7 @@ $("redeemForm").addEventListener("submit", async e => {
     if (!c.exists) { redeemMsg(tr("Diesen Code gibt es nicht. Prüf ihn nochmal in deiner Kauf-E-Mail.", "This code doesn't exist. Check it again in your purchase email.")); return; }
     const cd = c.data(), uses = typeof cd.n === "number" ? cd.n : (cd.used ? 1 : 0);
     if (cd.by && cd.by !== user.uid) { redeemMsg(tr("Dieser Code wurde schon von einem anderen Konto eingelöst.", "This code has already been redeemed by another account.")); return; }
-    if (uses >= WAENDE_PRO_CODE) { redeemMsg(tr("Mit diesem Code wurden schon 2 Wände eingerichtet. Für 2 weitere Wände brauchst du ein Update für 4,99 €.", "This code has already been used for 2 walls. For 2 more walls you need an update for €4.99.")); $("updateBox").hidden = false; return; }
+    if (uses >= WAENDE_PRO_CODE) { redeemMsg(KLO_APP ? tr("Mit diesem Code wurden schon 2 Wände eingerichtet. Für weitere Wände brauchst du einen neuen Code.", "This code has already been used for 2 walls. You need a new code for more walls.") : tr("Mit diesem Code wurden schon 2 Wände eingerichtet. Für 2 weitere Wände brauchst du ein Update für 4,99 €.", "This code has already been used for 2 walls. For 2 more walls you need an update for €4.99.")); $("updateBox").hidden = false; return; }
     const prevWalls = Array.isArray(cd.walls) ? cd.walls : (cd.wall ? [cd.wall] : []);
     let id = null;
     for (let i = 0; i < 6 && !id; i++) {

@@ -79,3 +79,12 @@ const HINTERGRUND_HELL = true;
 const UPDATE_LINK = "https://payhip.com/Pikumio";
 const WAENDE_PRO_CODE = 2;
 const KONTAKT = { email: "kaytrut426@gmail.com", telefon: "" };
+
+/* Android-App (Google Play): Dort darf nichts verkauft oder zum Kaufen verlinkt werden.
+   Die App startet mit ?app=android; das merkt sich die Sitzung. Im normalen Browser bleibt alles wie immer. */
+const KLO_APP = (() => {
+  try {
+    if (new URLSearchParams(location.search).get("app") === "android" || document.referrer.startsWith("android-app://")) sessionStorage.setItem("klowand-app", "android");
+    return sessionStorage.getItem("klowand-app") === "android";
+  } catch (e) { return false; }
+})();
