@@ -22,7 +22,19 @@ const WAENDE = {
   "goldener-hahn": { name: "Zum Goldenen Hahn", sub: "Herren · Kabine 2", subEn: "Men · Stall 2", subJa: "男性用・個室2" },
   "zuhause":       { name: "Zuhause",           sub: "Familien-Planner", subEn: "Family Planner", subJa: "ファミリープランナー" },
   "demo":          { name: "Demo-Bar",          sub: "Zum Ausprobieren", subEn: "Try it out", subJa: "お試し用" },
+  "familie-demo":  { name: "Familie Sonnenschein", sub: "Familien-Planner · Demo", subEn: "Family Planner · Demo", subJa: "ファミリープランナー・お試し" },
 };
+
+/* Beispiel-Sprüche, damit die Familien-Demo nicht leer aussieht (nur auf „familie-demo“, nicht in der Datenbank) */
+const FAMILIEN_BEISPIELE = [
+  { t: "Wer hat die letzte Rolle genommen?! 🧻", color: "red", font: "marker", rot: -2, n: 4 },
+  { t: "Mama, du bist die Beste! ❤️", color: "red", font: "hand", rot: 1.5, n: 6 },
+  { t: "Heute Pizza? Ja ja ja!! 🍕", color: "blue", font: "scrawl", rot: -1, n: 5 },
+  { t: "Ich hab eine 1 in Mathe!!! 🎉", color: "green", font: "marker", rot: 2, n: 7 },
+  { t: "Papa schnarcht wie ein Bär 🐻", color: "blue", font: "hand", rot: -2.5, n: 3 },
+  { t: "Am Wochenende Schlittschuh laufen? ⛸️", color: "green", font: "hand", rot: 1, n: 2 },
+  { t: "Gute Nacht ihr Lieben 🌙", color: "ink", font: "scrawl", rot: -1.5, n: 2 },
+];
 
 /* Wochen-Challenges: jede Kalenderwoche ist die nächste dran, danach geht es von vorne los.
    art: "text" = schreiben, "draw" = malen, "beides" = egal. en = englischer, ja = japanischer Text.                                  */

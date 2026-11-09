@@ -24,7 +24,7 @@ service cloud.firestore {
 
     // Deine festen Wände aus config.js. Alle anderen Wände entstehen über einen gekauften Code.
     function fixedWall(wall) {
-      return wall in [&#x27;prestigio&#x27;, &#x27;goldener-hahn&#x27;, &#x27;zuhause&#x27;, &#x27;demo&#x27;];
+      return wall in [&#x27;prestigio&#x27;, &#x27;goldener-hahn&#x27;, &#x27;zuhause&#x27;, &#x27;demo&#x27;, &#x27;familie-demo&#x27;];
     }
     function wallDoc(wall) {
       return /databases/$(database)/documents/walls/$(wall);

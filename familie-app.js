@@ -82,6 +82,52 @@
     bar(true);
     const up = () => window.kloUpsell && kloUpsell("familie");
     document.getElementById("famPlan").onclick = up; document.getElementById("famFoto").onclick = up;
+    /* Familien-Demo: Stundenplan und Fotos als Beispiel zum Anschauen, Bearbeiten erst nach dem Kauf */
+    if (typeof FAM_DEMO !== "undefined" && FAM_DEMO) {
+      const ov = (title, inner) => {
+        const el = document.createElement("div"); el.className = "fam-ov"; el.setAttribute("role", "dialog"); el.setAttribute("aria-label", title);
+        el.innerHTML = `<div class="box"><div class="head"><h2>${title}</h2><button type="button" class="x" aria-label="${tr("Schließen", "Close")}">✕</button></div>
+          <p class="note">🔒 ${tr("Beispiel zum Anschauen. Mit eurem eigenen Familien-Planner tragt ihr alles selbst ein.", "Example to look at. With your own Family Planner you fill in everything yourselves.")}</p>${inner}
+          <div class="row"><button type="button" class="btn primary" data-up>🔓 ${tr("Freischalten", "Unlock")}</button><button type="button" class="btn" data-x>${tr("Schließen", "Close")}</button></div></div>`;
+        document.body.appendChild(el);
+        const close = () => { try { speechSynthesis.cancel(); } catch (e) {} el.remove(); };
+        el.querySelector(".x").onclick = close; el.querySelector("[data-x]").onclick = close;
+        el.querySelector("[data-up]").onclick = () => { close(); up(); };
+        el.addEventListener("click", e => { if (e.target === el) close(); });
+        return el;
+      };
+      const PLAN = {
+        Mia: { tier: "🦊", f: [["➗", "Mathe"], ["📖", "Deutsch"], ["⚽", "Sport"], ["🎨", "Kunst"], ["🎵", "Musik"]] },
+        Ben: { tier: "🐻", f: [["🔬", "Sachkunde"], ["➗", "Mathe"], ["🇬🇧", "Englisch"], ["📖", "Deutsch"]] }
+      };
+      const dn = Math.min(4, Math.max(0, new Date().getDay() - 1));
+      document.getElementById("famPlan").onclick = () => {
+        let kid = "Mia", day = dn;
+        const el = ov(`📅 ${tr("Stundenplan", "Timetable")}`, `<div class="kids"></div><div class="days"></div><div class="dayh"></div><ol class="today"></ol>
+          <div class="row"><button type="button" class="btn dark" data-say>🔊 ${tr("Vorlesen", "Read aloud")}</button></div>`);
+        const draw = () => {
+          const p = PLAN[kid], list = p.f.slice(day % 2, day % 2 + 4);
+          el.querySelector(".kids").innerHTML = Object.keys(PLAN).map(k => `<button type="button" data-k="${k}" aria-pressed="${k === kid}">${PLAN[k].tier} ${k}</button>`).join("");
+          el.querySelector(".days").innerHTML = DAYS.map((d, i) => `<button type="button" data-d="${i}" class="${i === dn ? "is-today" : ""}" aria-pressed="${i === day}">${d}</button>`).join("");
+          el.querySelector(".dayh").textContent = `${p.tier} ${kid} · ${[tr("Montag", "Monday"), tr("Dienstag", "Tuesday"), tr("Mittwoch", "Wednesday"), tr("Donnerstag", "Thursday"), tr("Freitag", "Friday")][day]}`;
+          el.querySelector("ol.today").innerHTML = list.map((f, i) => `<li><b>${i + 1}</b><span class="e">${f[0]}</span>${f[1]}</li>`).join("");
+          el.querySelector("[data-say]").onclick = () => {
+            try { const u = new SpeechSynthesisUtterance(tr(`Hallo ${kid}! Heute hast du: `, `Hi ${kid}! Today you have: `) + list.map(f => f[1]).join(", ") + "."); u.lang = EN ? "en-GB" : "de-DE"; speechSynthesis.cancel(); speechSynthesis.speak(u); } catch (e) {}
+          };
+        };
+        el.addEventListener("click", e => {
+          const k = e.target.closest("[data-k]"), d = e.target.closest("[data-d]");
+          if (k) { kid = k.dataset.k; draw(); } if (d) { day = Number(d.dataset.d); draw(); }
+        });
+        draw();
+      };
+      const FOTOS = [["🎄", "Baum geschmückt!", "Mia", "#d8f0de,#a8dcb8"], ["⛄", "Unser Schneemann", "Ben", "#e3eefc,#bcd5f7"], ["🍪", "Plätzchen backen", "Mama", "#ffe8dc,#ffc9ad"],
+        ["⚽", "Fußballtraining", "Ben", "#fff4d1,#ffe08a"], ["🐶", "Bello im Schnee", "Papa", "#ece4fb,#d3c4f7"], ["🎂", "Omas Geburtstag", "Oma", "#ffe1ea,#ffbdd0"]];
+      document.getElementById("famFoto").onclick = () => {
+        ov(`📷 ${tr("Familienfotos", "Family photos")}`, `<div class="grid">${FOTOS.map(f => `<figure><div style="aspect-ratio:1;display:grid;place-items:center;font-size:3.4rem;background:linear-gradient(135deg,${f[3]})">${f[0]}</div>
+          <figcaption>${f[1]}<span>${tr("von", "by")} ${f[2]}</span></figcaption></figure>`).join("")}</div>`);
+      };
+    }
     // Notfall-Hilfe gibt's nur im eigenen Familien-Planner; der Hinweis nennt trotzdem die 112
     const sos = document.getElementById("famSos"); sos.classList.add("locked");
     sos.onclick = () => window.kloUpsell && kloUpsell("notfall");

@@ -157,7 +157,9 @@
     /* Hinweis „eigene Wand holen“: nur auf der Demo-Wand, nicht auf gekauften Wänden */
     if (typeof DEMO !== "undefined" && DEMO && !KLO_APP) {
     const ad = document.createElement("div"); ad.className = "getown";
-    ad.innerHTML = `<b>${tr("Auch so eine Klo-Wand haben?", "Want a Klo-Wand of your own?")}</b>
+    ad.innerHTML = (typeof FAM_DEMO !== "undefined" && FAM_DEMO) ? `<b>${tr("Euren eigenen Familien-Planner holen?", "Get your own Family Planner?")}</b>
+      <span><a href="familie.html#preis">${tr("Jetzt ansehen", "Have a look")}</a></span>`
+      : `<b>${tr("Auch so eine Klo-Wand haben?", "Want a Klo-Wand of your own?")}</b>
       <span><a href="familie.html">${tr("Für zu Hause", "For your home")}</a><a href="wirte.html">${tr("Für deine Bar", "For your bar")}</a></span>`;
     wrap.appendChild(ad);
     }
@@ -174,6 +176,8 @@
   css.textContent = `
   .demobar{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin:12px 0 0;padding:10px 12px;border-radius:8px;
     background:#fff6d6;border:1.5px solid #e0a92e;font:600 .95rem/1.3 var(--f-ui);color:var(--ink)}
+  .demobar.fam{background:linear-gradient(135deg,#fff,#fff4d1);border:2px solid #f6c453;border-radius:16px;box-shadow:0 8px 22px -12px rgba(217,72,59,.45)}
+  .demobar.fam button{border-radius:999px;background:#d9483b}
   .demobar button{font:700 .85rem var(--f-ui);letter-spacing:.06em;text-transform:uppercase;background:var(--red);color:#fff;border:none;border-radius:6px;padding:8px 12px;min-height:38px;cursor:pointer}
   .leoclip{display:flex;gap:12px;align-items:center;margin:10px 0 0;padding:10px;border-radius:12px;background:rgba(11,7,22,.82);border:1.5px solid rgba(34,228,255,.55);color:#f5f0ff}
   .leoclip video{flex:none;width:96px;aspect-ratio:9/16;border-radius:10px;background:#0b0716;object-fit:cover}
@@ -194,7 +198,8 @@
   document.head.appendChild(css);
 
   const plate = document.querySelector(".plate");
-  if (plate) plate.insertAdjacentHTML("afterend", `<div class="demobar"><span>💬 <b>${tr("Hier schreibst du live mit allen zusammen, die gerade die Demo testen!", "Here you write live with everyone who's trying the demo right now!", "ここでは今デモを試しているみんなと一緒に書けます！")}</b><br><span id="demoFree"></span></span>
+  const FD = (typeof FAM_DEMO !== "undefined" && FAM_DEMO);
+  if (plate) plate.insertAdjacentHTML("afterend", `<div class="demobar${FD ? " fam" : ""}"><span>${FD ? "👨‍👩‍👧 <b>" + tr("Willkommen bei Familie Sonnenschein! So sieht euer Familien-Planner aus. Schreibt, malt und spielt los!", "Welcome to the Sunshine family! This is what your Family Planner looks like. Write, draw and play!") + "</b>" : "💬 <b>" + tr("Hier schreibst du live mit allen zusammen, die gerade die Demo testen!", "Here you write live with everyone who's trying the demo right now!", "ここでは今デモを試しているみんなと一緒に書けます！") + "</b>"}<br><span id="demoFree"></span></span>
     <button type="button" id="demoMore"></button></div>`);
   const demoFree = () => {
     const el = document.getElementById("demoFree"), b = document.getElementById("demoMore"); if (!el || typeof kloDemo === "undefined") return;
@@ -209,7 +214,7 @@
   };
   window.addEventListener("klo-demo", demoFree);
   const db = document.querySelector(".demobar");
-  if (db) db.insertAdjacentHTML("afterend", `<div class="leoclip"><video src="assets/leo-clip.mp4" poster="assets/leo-poster.jpg" controls playsinline preload="none" aria-label="${tr("Video: Leo erklärt die Klo-Wand", "Video: Leo explains the Klo-Wand", "動画：レオがKlo-Wandを説明")}"></video>
+  if (db && !FD) db.insertAdjacentHTML("afterend", `<div class="leoclip"><video src="assets/leo-clip.mp4" poster="assets/leo-poster.jpg" controls playsinline preload="none" aria-label="${tr("Video: Leo erklärt die Klo-Wand", "Video: Leo explains the Klo-Wand", "動画：レオがKlo-Wandを説明")}"></video>
     <div><b>${tr("Leo erklärt die Klo-Wand", "Leo explains the Klo-Wand", "レオが説明します")}</b><span>${tr("In 48 Sekunden: live schreiben, malen, spielen und deine eigene Wand. Tippen zum Abspielen.", "In 48 seconds: write live, draw, play and get your own wall. Tap to play.", "48秒で分かる：ライブで書く・描く・遊ぶ。タップで再生。")}</span>
     <span style="font-size:.75rem;opacity:.75">${tr("KI-Stimme & KI-Figur", "AI voice & AI character", "AI音声・AIキャラクター")}</span></div></div>`);
   const what = {
@@ -220,6 +225,7 @@
     familie: tr("Stundenplan und Familienfotos gibt's mit eurem eigenen Familien-Planner, nur für euch sichtbar.", "Timetable and family photos come with your own family wall, visible only to you.", "時間割と家族の写真は、自分たちのファミリーウォールで。家族だけが見られます。"),
     limit: KLO_APP ? tr("Die 50 Gratis-Nachrichten auf der Demo-Wand sind aufgebraucht. Unbegrenzt schreiben, malen und spielen geht auf eigenen Wänden.", "The 50 free messages on the demo wall are used up. Unlimited writing, drawing and playing works on own walls.", "デモの無料メッセージを使い切りました。自分のウォールなら無制限。")
       : tr("Deine 50 Gratis-Nachrichten sind aufgebraucht. Mit deiner eigenen Klo-Wand schreibst, malst und spielst du unbegrenzt:", "Your 50 free messages are used up. With your own Klo-Wand you write, draw and play without limits:", "無料メッセージを使い切りました。自分のKlo-Wandなら無制限："),
+    fam: tr("Das alles bekommt ihr mit eurem eigenen Familien-Planner – nur für eure Familie sichtbar:", "All this comes with your own Family Planner – visible only to your family:"),
     all: tr("Das alles bekommst du mit deiner eigenen Klo-Wand:", "All this comes with your own Klo-Wand:", "自分のKlo-Wandなら全部使えます："),
   };
   window.kloUpsell = function (reason) {
@@ -227,14 +233,16 @@
     const el = document.createElement("div");
     el.className = "ups"; el.setAttribute("role", "dialog"); el.setAttribute("aria-label", tr("Vollversion", "Full version", "フルバージョン"));
     el.innerHTML = `<div class="box"><span class="k">${KLO_APP ? tr("Eigene Wand", "Own wall", "自分のウォール") : tr("Vollversion", "Full version", "フルバージョン")}</span>
-      <h2>${KLO_APP ? tr("Nur auf eigenen Wänden", "Only on own walls", "自分のウォールのみ") : tr("Alles freischalten", "Unlock everything", "すべて解放")}</h2>
-      <p>${what[reason] || what.all}</p>
-      <ul><li>${tr("Malen mit dem Finger", "Drawing with your finger", "指でお絵かき")}</li><li>${tr("Alle 8 Klo-Spiele mit Rangliste", "All 8 loo games with leaderboard", "トイレゲーム8種＋ランキング")}</li>
+      <h2>${KLO_APP ? tr("Nur auf eigenen Wänden", "Only on own walls", "自分のウォールのみ") : FD ? tr("Euer Familien-Planner", "Your Family Planner") : tr("Alles freischalten", "Unlock everything", "すべて解放")}</h2>
+      <p>${what[reason === "all" && FD ? "fam" : reason] || what.all}</p>
+      ${FD ? `<ul><li>${tr("Stundenplan für jedes Kind – mit Vorlesen", "Timetable for every child – read aloud")}</li><li>${tr("Familienfotos nur für euch", "Family photos just for you")}</li>
+        <li>${tr("Notfall-Hilfe mit großen Bildern", "Emergency help with big pictures")}</li><li>${tr("Private Familien-Wand zum Schreiben & Malen", "Private family wall to write & draw")}</li>
+        <li>${tr("8 Spiele mit Familien-Rangliste", "8 games with a family leaderboard")}</li><li>${tr("2 Wände inklusive – z. B. für Oma & Opa", "2 walls included – e.g. for grandma & grandpa")}</li></ul>` : `<ul><li>${tr("Malen mit dem Finger", "Drawing with your finger", "指でお絵かき")}</li><li>${tr("Alle 8 Klo-Spiele mit Rangliste", "All 8 loo games with leaderboard", "トイレゲーム8種＋ランキング")}</li>
         <li>${tr("Familien-Planner: Stundenplan, Fotos & Notfall", "Family Planner: timetable, photos & emergency", "ファミリープランナー：時間割・写真・緊急")}</li><li>${tr("Gemütliche Musik", "Cozy music", "ゆったり音楽")}</li><li>${tr("Eigene Wand mit deinem Namen", "Your own wall with your name", "名前入りの自分専用ウォール")}</li>
-        <li>${tr("QR-Sticker zum Ausdrucken", "Printable QR sticker", "印刷できるQRステッカー")}</li><li>${tr("Du löschst, was nicht passt", "You delete anything unwanted", "不適切な投稿は自分で削除")}</li></ul>
+        <li>${tr("QR-Sticker zum Ausdrucken", "Printable QR sticker", "印刷できるQRステッカー")}</li><li>${tr("Du löschst, was nicht passt", "You delete anything unwanted", "不適切な投稿は自分で削除")}</li></ul>`}
       ${KLO_APP ? `<div class="price" style="font-size:1rem">${tr("Auf dieser Wand nicht freigeschaltet.", "Not unlocked on this wall.", "このウォールでは未解放です。")}</div>`
         : `<div class="price">${tr("nur 4,99 € einmalig", "only €4.99 once", "一度だけ 約890円")}</div>
-      <div class="row"><a href="familie.html">${tr("Für zu Hause", "For your home", "おうち用")}</a><a href="wirte.html">${tr("Für deine Bar", "For your bar", "お店用")}</a></div>`}
+      <div class="row">${FD ? `<a href="familie.html#preis">${tr("Familien-Planner holen", "Get the Family Planner")}</a>` : `<a href="familie.html">${tr("Für zu Hause", "For your home", "おうち用")}</a><a href="wirte.html">${tr("Für deine Bar", "For your bar", "お店用")}</a>`}</div>`}
       <button type="button" class="later">${tr("Weiter testen", "Keep testing", "このまま試す")}</button></div>`;
     document.body.appendChild(el);
     const close = () => el.remove();

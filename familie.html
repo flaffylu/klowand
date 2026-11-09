@@ -203,6 +203,17 @@ footer a{color:var(--soft)}
 .reveal{opacity:0;transform:translateY(18px);transition:opacity .7s ease,transform .7s ease}
 .reveal.on{opacity:1;transform:none}
 @media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}.reveal{opacity:1;transform:none;transition:none}.btn{transition:none}}
+
+/* Mobile: Knöpfe unten immer griffbereit */
+.stick{position:fixed;left:0;right:0;bottom:0;z-index:30;display:flex;gap:10px;padding:10px max(14px,env(safe-area-inset-left,0px)) calc(10px + env(safe-area-inset-bottom,0px));
+  background:rgba(255,255,255,.92);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-top:1px solid var(--line);box-shadow:0 -10px 30px -18px rgba(31,42,46,.35);
+  transform:translateY(110%);transition:transform .3s}
+.stick.on{transform:none}
+.stick .btn{flex:1;min-height:50px;padding:10px 14px;font-size:1rem}
+@media(min-width:900px){.stick{display:none}}
+@media(max-width:899px){footer{padding-bottom:90px}}
+.hero{overflow:hidden;background:radial-gradient(70% 60% at 85% 10%,#ffe3d6 0%,transparent 70%),radial-gradient(60% 50% at 0% 90%,#ddf4e7 0%,transparent 70%),linear-gradient(180deg,#fffaf3,#fbf7f1)}
+.btn.demo{background:linear-gradient(135deg,#fff4d1,#ffe08a);border-color:#f2b632;color:#5a3b00;box-shadow:0 10px 24px -12px rgba(242,182,50,.9)}
 [hidden]{display:none!important}
 </style>
 </head>
@@ -233,7 +244,7 @@ footer a{color:var(--soft)}
       <p class="lead">Ein gemeinsamer Ort für eure Familie: Stundenplan für jedes Kind, Familienfotos nur für euch, Notfall-Hilfe mit Bildern und eine private Familien-Wand zum Schreiben, Malen und Spielen.</p>
       <div class="ctas">
         <a class="btn main" href="#preis">Für 4,99 € holen</a>
-        <a class="btn line" href="./?wand=demo" target="_blank" rel="noopener">Kostenlos ausprobieren</a>
+        <a class="btn demo" href="./?wand=familie-demo" target="_blank" rel="noopener">🎁 Familien-Demo testen</a>
       </div>
       <ul class="trust"><li>Kein Abo</li><li>Ohne App-Store</li><li>Privat – nur eure Familie</li></ul>
     </div>
@@ -271,7 +282,7 @@ footer a{color:var(--soft)}
     <article class="feat t-sky reveal"><div class="ico">📷</div><h3>Familienfotos</h3><p>Foto machen oder aus der Galerie, kurze Unterschrift, fertig.</p><ul><li>Sichtbar nur mit eurem Familien-Code</li><li>Eltern können jederzeit löschen</li></ul></article>
     <article class="feat t-rose reveal"><div class="ico">🚑</div><h3>Notfall-Hilfe für Kinder</h3><p>Große Bilder und kurze Sätze – mit Vorlese-Knopf.</p><ul><li>Nasenbluten, Wunde, Verbrennung, Stich …</li><li>„112 anrufen“ mit einem Tipp</li><li>Giftnotruf &amp; Nummer gegen Kummer</li></ul></article>
     <article class="feat t-mint reveal"><div class="ico">✏️</div><h3>Eure private Familien-Wand</h3><p>Nachrichten, Kritzeleien und Antworten – wie ein Familien-Kühlschrank, nur bunter.</p><ul><li>„Pizza am Freitag?“ – „Jaaa!“</li><li>Mit dem Finger malen</li></ul></article>
-    <article class="feat t-butter reveal"><div class="ico">🏆</div><h3>Spiele &amp; Wochen-Challenge</h3><p>Drei Mini-Spiele mit eurer eigenen Rangliste und jede Woche eine neue Familien-Aufgabe.</p><ul><li>„Mal dein Lieblingstier“</li><li>„Wofür bist du heute dankbar?“</li></ul></article>
+    <article class="feat t-butter reveal"><div class="ico">🏆</div><h3>Spiele &amp; Wochen-Challenge</h3><p>Acht Mini-Spiele mit eurer eigenen Rangliste und jede Woche eine neue Familien-Aufgabe.</p><ul><li>„Mal dein Lieblingstier“</li><li>„Wofür bist du heute dankbar?“</li></ul></article>
     <article class="feat t-lilac reveal"><div class="ico">🎨</div><h3>Euer eigener Stil</h3><p>12 Hintergründe von Regenbogen bis Weltall – oder ein eigenes Foto. Jeder auf seinem Handy.</p><ul><li>Gemütliche Musik dazu</li><li>Deutsch, English, 日本語</li></ul></article>
   </div>
   <div class="in gallery">
@@ -353,10 +364,10 @@ footer a{color:var(--soft)}
   <div class="in pricing">
     <div class="plan reveal">
       <h3>Erst ausprobieren</h3>
-      <div class="amount">0 € <small>Demo-Wand</small></div>
-      <ul><li>Die echte Wand zum Testen</li><li>Schreiben und Spiele ausprobieren</li><li>Notfall-Hilfe frei nutzbar</li><li>Ohne Anmeldung</li></ul>
+      <div class="amount">0 € <small>Familien-Demo</small></div>
+      <ul><li>Familien-Wand zum Schreiben, Malen &amp; Spielen</li><li>Stundenplan &amp; Fotos als Beispiel ansehen</li><li>🔒 Eintragen, Fotos &amp; Notfall-Hilfe nach dem Kauf</li><li>Ohne Anmeldung</li></ul>
       <div class="spacer"></div>
-      <a class="btn line" href="./?wand=demo" target="_blank" rel="noopener">Demo öffnen</a>
+      <a class="btn line" href="./?wand=familie-demo" target="_blank" rel="noopener">Demo öffnen</a>
     </div>
     <div class="plan hero-plan reveal">
       <span class="badge">Für eure Familie</span>
@@ -417,7 +428,7 @@ footer a{color:var(--soft)}
       <p class="lead" style="margin-inline:auto">Einmalig 4,99 € – in 2 Minuten eingerichtet.</p>
       <div class="ctas">
         <a class="btn main" href="https://payhip.com/Pikumio" target="_blank" rel="noopener">Jetzt holen</a>
-        <a class="btn line" href="./?wand=demo" target="_blank" rel="noopener">Erst ausprobieren</a>
+        <a class="btn line" href="./?wand=familie-demo" target="_blank" rel="noopener">Erst ausprobieren</a>
       </div>
     </div>
   </div>
@@ -427,7 +438,7 @@ footer a{color:var(--soft)}
 <footer>
   <div class="in">
     <span>© Familien-Planner · gemacht mit ❤️ in Leipzig</span>
-    <nav aria-label="Weitere Seiten"><a href="assets/familien-planner-anleitung.pdf" target="_blank" rel="noopener">Anleitung (PDF)</a><a href="meine-wand.html">Meine Wand</a><a href="./?wand=demo">Demo</a><a href="wirte.html">Für Bars</a><a href="family-en.html" hreflang="en" lang="en">English</a><a href="impressum.html">Impressum</a><a href="datenschutz.html">Datenschutz</a></nav>
+    <nav aria-label="Weitere Seiten"><a href="assets/familien-planner-anleitung.pdf" target="_blank" rel="noopener">Anleitung (PDF)</a><a href="meine-wand.html">Meine Wand</a><a href="./?wand=familie-demo">Demo</a><a href="wirte.html">Für Bars</a><a href="family-en.html" hreflang="en" lang="en">English</a><a href="impressum.html">Impressum</a><a href="datenschutz.html">Datenschutz</a></nav>
   </div>
 </footer>
 
@@ -447,5 +458,8 @@ footer a{color:var(--soft)}
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script src="config.js"></script>
 <script src="counter.js"></script>
+
+<div class="stick" id="stick"><a class="btn demo" href="./?wand=familie-demo" target="_blank" rel="noopener">🎁 Kostenlos testen</a><a class="btn main" href="#preis">Jetzt holen</a></div>
+<script>(function(){const s=document.getElementById("stick"),f=()=>s.classList.toggle("on",scrollY>520);addEventListener("scroll",f,{passive:true});f();})();</script>
 </body>
 </html>
