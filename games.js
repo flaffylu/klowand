@@ -129,6 +129,106 @@
   musicLock();
   $("kgTrack").onclick = async () => { $("kgTrackTxt").textContent = await KloMusik.next(); };
 
+  /* ---------- Eigene Lieder: MP3s vom eigenen Handy, bleiben nur auf diesem Gerät ---------- */
+  const IS_DEMO_WALL = typeof DEMO !== "undefined" && DEMO;
+  const mm = document.createElement("button"); mm.type = "button"; mm.id = "kgMine";
+  mm.className = IS_DEMO_WALL ? "locked" : "";
+  mm.innerHTML = `🎧 <span id="kgMineTxt">${tr("Eigene Lieder", "My songs")}</span>`;
+  $("kgTrack").after(mm);
+  const mcss = document.createElement("style");
+  mcss.textContent = `.mm{position:fixed;inset:0;z-index:31;background:rgba(10,14,12,.55);display:flex;align-items:flex-end;justify-content:center;padding:12px}
+  .mm .box{width:min(520px,100%);max-height:88vh;overflow:auto;background:#fff;color:#1d2321;border-radius:20px;padding:18px;box-shadow:0 20px 50px rgba(0,0,0,.4);font-family:var(--f-ui)}
+  .mm h2{margin:0;font:400 1.6rem var(--f-marker)}
+  .mm .hd{display:flex;justify-content:space-between;align-items:center;gap:8px}
+  .mm .x{min-width:44px;min-height:44px;border-radius:50%;border:1.5px solid #c3cec7;background:#fff;font-size:1.1rem;cursor:pointer;color:#1d2321}
+  .mm p.n{margin:6px 0 10px;color:#5d6a63;font:600 .95rem var(--f-ui)}
+  .mm .now{background:#1d2321;color:#fff;border-radius:14px;padding:12px 14px;margin:8px 0}
+  .mm .now b{display:block;font:700 1.1rem var(--f-ui);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .mm .ctl{display:flex;gap:8px;justify-content:center;margin-top:8px}
+  .mm .ctl button{min-width:56px;min-height:48px;border-radius:999px;border:none;background:#2f6b3a;color:#fff;font-size:1.3rem;cursor:pointer}
+  .mm .ctl button[aria-pressed=true]{background:#b3261e}
+  .mm ul{list-style:none;margin:8px 0;padding:0;display:flex;flex-direction:column;gap:6px}
+  .mm li{display:flex;align-items:center;gap:8px;background:#f4f7f5;border-radius:12px;padding:6px 6px 6px 12px}
+  .mm li.on{background:#dff0e2;outline:2px solid #2f6b3a}
+  .mm li span{flex:1;font:700 1rem var(--f-ui);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer}
+  .mm li button{min-width:40px;min-height:40px;border-radius:50%;border:1.5px solid #c3cec7;background:#fff;cursor:pointer;color:#1d2321}
+  .mm .add{display:flex;align-items:center;justify-content:center;gap:8px;min-height:50px;border-radius:14px;border:2px dashed #2f6b3a;color:#2f6b3a;font:700 1.05rem var(--f-ui);cursor:pointer;margin-top:6px}
+  .mm .add input{position:absolute;width:1px;height:1px;opacity:0}
+  .mm .empty{text-align:center;color:#5d6a63;padding:14px;font:600 1rem var(--f-ui)}`;
+  document.head.appendChild(mcss);
+  const audio = new Audio(); audio.preload = "auto";
+  let songs = [], cur = -1, shuffle = false, urls = {};
+  const DBN = "klowand-lieder";
+  const idb = () => new Promise((res, rej) => { const r = indexedDB.open(DBN, 1); r.onupgradeneeded = () => r.result.createObjectStore("songs", { keyPath: "id" }); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); });
+  const tx = async (mode, fn) => { const db = await idb(); return new Promise((res, rej) => { const t = db.transaction("songs", mode); const st = t.objectStore("songs"); const out = fn(st); t.oncomplete = () => res(out && out.result); t.onerror = () => rej(t.error); }); };
+  const loadSongs = async () => { try { const db = await idb(); songs = await new Promise((res, rej) => { const r = db.transaction("songs").objectStore("songs").getAll(); r.onsuccess = () => res(r.result.sort((a, b) => a.ts - b.ts)); r.onerror = () => rej(r.error); }); } catch (e) { songs = []; } };
+  const urlOf = s => urls[s.id] || (urls[s.id] = URL.createObjectURL(s.blob));
+  const nice = n => n.replace(/\.(mp3|m4a|aac|wav|ogg|opus|flac)$/i, "").replace(/[_]+/g, " ");
+  function playAt(i) {
+    if (!songs.length) return;
+    cur = (i + songs.length) % songs.length;
+    if (KloMusik.isOn()) { KloMusik.stop(); $("kgMusic").setAttribute("aria-pressed", false); $("kgMusicTxt").textContent = tr("Musik an", "Music on"); }
+    audio.src = urlOf(songs[cur]); audio.play().catch(() => {}); drawMine();
+  }
+  const nextSong = () => playAt(shuffle && songs.length > 1 ? (cur + 1 + Math.floor(Math.random() * (songs.length - 1))) % songs.length : cur + 1);
+  audio.addEventListener("ended", nextSong);
+  ["play", "pause"].forEach(ev => audio.addEventListener(ev, drawMine));
+  $("kgMusic").addEventListener("click", () => { if (KloMusik.isOn() || !audio.paused) audio.pause(); });
+  let mmEl = null;
+  function drawMine() {
+    const playing = !audio.paused && cur >= 0 && songs[cur];
+    $("kgMineTxt").textContent = playing ? "▶ " + nice(songs[cur].name).slice(0, 18) : tr("Eigene Lieder", "My songs");
+    mm.setAttribute("aria-pressed", !!playing);
+    if (!mmEl) return;
+    const now = mmEl.querySelector(".now"), list = mmEl.querySelector("ul");
+    now.hidden = cur < 0 || !songs[cur];
+    if (!now.hidden) now.querySelector("b").textContent = nice(songs[cur].name);
+    mmEl.querySelector("[data-pp]").textContent = playing ? "⏸" : "▶";
+    mmEl.querySelector("[data-sh]").setAttribute("aria-pressed", shuffle);
+    list.innerHTML = songs.length ? songs.map((s, i) => `<li class="${i === cur ? "on" : ""}"><span data-play="${i}">${i === cur && playing ? "🔊 " : "🎵 "}${esc(nice(s.name))}</span><button type="button" data-del="${i}" aria-label="${tr("Löschen", "Delete")}">✕</button></li>`).join("")
+      : `<li class="empty" style="display:block">${tr("Noch keine Lieder. Tipp unten auf „Lieder hinzufügen“.", "No songs yet. Tap “Add songs” below.")}</li>`;
+  }
+  async function openMine() {
+    if (IS_DEMO_WALL) { upsell("musik"); return; }
+    await loadSongs();
+    mmEl = document.createElement("div"); mmEl.className = "mm"; mmEl.setAttribute("role", "dialog"); mmEl.setAttribute("aria-label", tr("Eigene Lieder", "My songs"));
+    mmEl.innerHTML = `<div class="box"><div class="hd"><h2>🎧 ${tr("Eigene Lieder", "My songs")}</h2><button type="button" class="x" data-x aria-label="${tr("Schließen", "Close")}">✕</button></div>
+      <p class="n">${tr("Such dir Lieder von deinem Handy aus. Sie bleiben nur auf diesem Handy und laufen weiter, wenn du das Fenster schließt.", "Pick songs from your phone. They stay on this phone and keep playing when you close this window.")}</p>
+      <div class="now" hidden><small>${tr("Läuft gerade", "Now playing")}</small><b></b>
+        <div class="ctl"><button type="button" data-prev aria-label="${tr("Zurück", "Previous")}">⏮</button><button type="button" data-pp aria-label="Play/Pause">▶</button><button type="button" data-next aria-label="${tr("Weiter", "Next")}">⏭</button><button type="button" data-sh aria-pressed="false" aria-label="${tr("Zufall", "Shuffle")}">🔀</button></div></div>
+      <ul></ul>
+      <label class="add">＋ ${tr("Lieder hinzufügen", "Add songs")}<input type="file" accept="audio/*" multiple></label></div>`;
+    document.body.appendChild(mmEl);
+    const close = () => { mmEl.remove(); mmEl = null; };
+    mmEl.addEventListener("click", async e => {
+      if (e.target === mmEl || e.target.closest("[data-x]")) return close();
+      const t = e.target.closest("[data-play],[data-del],[data-prev],[data-pp],[data-next],[data-sh]"); if (!t) return;
+      if (t.dataset.play != null) playAt(+t.dataset.play);
+      else if (t.dataset.del != null) {
+        const i = +t.dataset.del, sg = songs[i];
+        if (i === cur) { audio.pause(); audio.removeAttribute("src"); cur = -1; } else if (i < cur) cur--;
+        try { await tx("readwrite", st => st.delete(sg.id)); } catch (er) {}
+        if (urls[sg.id]) { URL.revokeObjectURL(urls[sg.id]); delete urls[sg.id]; }
+        songs.splice(i, 1); drawMine();
+      }
+      else if (t.hasAttribute("data-prev")) playAt(cur - 1);
+      else if (t.hasAttribute("data-next")) nextSong();
+      else if (t.hasAttribute("data-sh")) { shuffle = !shuffle; drawMine(); }
+      else if (t.hasAttribute("data-pp")) { if (cur < 0) playAt(0); else if (audio.paused) { audio.play().catch(() => {}); } else audio.pause(); }
+    });
+    mmEl.querySelector("input[type=file]").addEventListener("change", async e => {
+      const files = [...e.target.files].filter(f => f.type.startsWith("audio/") || /\.(mp3|m4a|aac|wav|ogg|opus|flac)$/i.test(f.name));
+      for (const f of files) {
+        const s = { id: Date.now().toString(36) + Math.random().toString(36).slice(2, 7), name: f.name, blob: f, ts: Date.now() };
+        try { await tx("readwrite", st => st.put(s)); songs.push(s); } catch (er) { alert(tr("Das Lied passt nicht mehr auf dein Handy.", "This song doesn't fit on your phone anymore.")); break; }
+      }
+      e.target.value = ""; drawMine();
+      if (files.length && audio.paused && cur < 0) playAt(songs.length - files.length);
+    });
+    drawMine();
+  }
+  mm.onclick = openMine;
+
   /* ---------- Spiele-Fenster ---------- */
   const kg = document.createElement("div");
   kg.className = "kg"; kg.hidden = true; kg.setAttribute("role", "dialog"); kg.setAttribute("aria-label", tr("Klo-Spiele", "Loo Games"));
