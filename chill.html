@@ -82,7 +82,7 @@ form button:disabled{opacity:.5}
 <div class="name" id="nameBox" hidden>
   <form id="nameForm">
     <h2>Wie heißt du hier?</h2>
-    <p>Dein Spitzname im Chill-Raum (2–12 Zeichen). Alle aus eurer Gruppe sehen ihn.</p>
+    <p id="nameHint">Dein Spitzname im Chill-Raum (2–12 Zeichen). Alle aus eurer Gruppe sehen ihn.</p>
     <label for="nameIn" style="position:absolute;left:-9999px">Spitzname</label>
     <input id="nameIn" maxlength="12" placeholder="z. B. Mia">
     <button type="submit">Reinkommen</button>
@@ -105,7 +105,8 @@ form button:disabled{opacity:.5}
   const IN_APP = typeof KLO_APP !== "undefined" && KLO_APP;
   let KEY = null;
   try { const k = q.get("k"); KEY = /^[A-Za-z0-9]{24,40}$/.test(k || "") ? k : localStorage.getItem("klowand-fam-" + WALL); if (!/^[A-Za-z0-9]{24,40}$/.test(KEY || "")) KEY = null; } catch (e) {}
-  const LIVE = !!(WALL && !FIXED && KEY);
+  const DEMOW = WALL === "demo" || WALL === "familie-demo";
+  const LIVE = !!(WALL && !FIXED && KEY) || DEMOW;
   $("back").href = "./?wand=" + encodeURIComponent(WALL || "demo");
   const esc = s => String(s).replace(/[&<>"]/g, m => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[m]));
 
@@ -268,17 +269,23 @@ form button:disabled{opacity:.5}
   // ---------- Live: private Gruppe ----------
   firebase.initializeApp(firebaseConfig);
   const fsdb = firebase.firestore();
-  const grp = fsdb.collection("walls").doc(WALL).collection("familie").doc(KEY);
+  const grp = DEMOW ? fsdb.collection("walls").doc(WALL) : fsdb.collection("walls").doc(WALL).collection("familie").doc(KEY);
+  if (DEMOW) { $("sub").textContent = "Demo · alle, die gerade testen"; $("msg").maxLength = 120; }
+  /* Demo: zählt zu den Gratis-Nachrichten */
+  const FREI = WALL === "familie-demo" ? 100 : 500, DKEY = WALL === "familie-demo" ? "klowand-famdemo-n" : "klowand-demo-n";
+  const used = () => { try { return parseInt(localStorage.getItem(DKEY) || "0", 10) || 0; } catch (e) { return 0; } };
   const now = () => firebase.firestore.FieldValue.serverTimestamp();
-  try { const wd = await fsdb.collection("walls").doc(WALL).get(); if (wd.exists && wd.data().name) $("sub").textContent = wd.data().name + " · nur für eure Gruppe"; } catch (e) {}
+  if (!DEMOW) try { const wd = await fsdb.collection("walls").doc(WALL).get(); if (wd.exists && wd.data().name) $("sub").textContent = wd.data().name + " · nur für eure Gruppe"; } catch (e) {}
 
-  const okName = n => /^[A-Za-zÄÖÜäöüß0-9 ._-]{2,12}$/.test(n) && !KloFilter.reason(n, false);
+  const okName = n => /^[A-Za-zÄÖÜäöüß0-9 ._-]{2,12}$/.test(n) && !KloFilter.reason(n, DEMOW);
   const mod = (t, ok) => { $("mod").textContent = t; $("mod").className = ok ? "mod" : "mod bad"; };
   function check(t) {
     if (t.length < 3) return "Bisschen mehr als das, bitte.";
     if (/[0-9][0-9 /-]{6,}[0-9]/.test(t)) return "Keine Telefonnummern im Chill-Raum.";
     if (/(https?:\/\/|www\.|@)/i.test(t)) return "Keine Links oder @Namen hier.";
-    const why = KloFilter.reason(t, false);
+    const why = KloFilter.reason(t, DEMOW);
+    if (DEMOW && why === "kontakt") return "Hier wird nichts Privates ausgetauscht: keine Nummern, Profile, Treffen oder Fragen nach Alter und Wohnort.";
+    if (DEMOW && why === "politik") return "Keine Politik hier. Hier wird gechillt.";
     if (why === "sorge") return "Wenn es dir nicht gut geht: Sprich mit einem Erwachsenen, dem du vertraust, oder ruf kostenlos an: Nummer gegen Kummer 116 111 · Im Notfall 112.";
     if (why) return "Das geht hier so nicht. Bleib nett 🙂";
     return null;
@@ -303,14 +310,16 @@ form button:disabled{opacity:.5}
     }, () => mod("Der Chill-Raum ist gerade nicht erreichbar. Lade die Seite neu."));
     $("form").addEventListener("submit", e => {
       e.preventDefault();
-      const t = $("msg").value.trim().slice(0, 200), err = check(t);
+      if (DEMOW && used() >= FREI) { mod(IN_APP ? "Deine Gratis-Nachrichten sind aufgebraucht. Lesen geht weiter." : "Deine Gratis-Nachrichten sind aufgebraucht. Mit eurer eigenen Wand bekommt ihr euren privaten Chill-Raum."); return; }
+      const t = $("msg").value.trim().slice(0, DEMOW ? 120 : 200), err = check(t);
       if (err) { mod(err); return; }
       $("msg").value = ""; mod("");
-      grp.collection("chill").add({ n: me, t, ts: now() }).catch(er => mod(er && er.code === "permission-denied" ? "Hat nicht geklappt. Sind die neuen Firebase-Regeln schon drin?" : "Hat nicht geklappt. Versuch es gleich nochmal."));
+      grp.collection("chill").add({ n: me, t, ts: now() }).then(() => { if (DEMOW) try { localStorage.setItem(DKEY, String(used() + 1)); } catch (er) {} }).catch(er => mod(er && er.code === "permission-denied" ? "Hat nicht geklappt. Sind die neuen Firebase-Regeln schon drin?" : "Hat nicht geklappt. Versuch es gleich nochmal."));
     });
   }
   if (okName(me)) enter();
   else {
+    if (DEMOW) $("nameHint").textContent = "Dein Spitzname (2–12 Zeichen). Nimm nicht deinen echten Namen – alle, die gerade die Demo testen, sehen ihn.";
     $("nameBox").hidden = false; $("nameIn").focus();
     $("nameForm").addEventListener("submit", e => {
       e.preventDefault(); const n = $("nameIn").value.trim();

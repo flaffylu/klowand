@@ -142,7 +142,7 @@
     at.insertAdjacentHTML("afterend", `<div class="fambar"><b>${tr("Familien-Planner · nur für euch", "Family Planner · just for you", "ファミリープランナー・家族だけ")}</b>
       <button type="button" id="famPlan" class="${locked ? "locked" : ""}">📅 ${tr("Stundenplan", "Timetable", "時間割")}</button>
       <button type="button" id="famFoto" class="${locked ? "locked" : ""}">📷 ${tr("Familienfotos", "Family photos", "家族の写真")}</button>
-      <button type="button" id="famChill" class="chill${locked ? " locked" : ""}">🛋️ ${tr("Chill-Raum", "Chill room", "チルルーム")}</button>
+      <button type="button" id="famChill" class="chill">🛋️ ${tr("Chill-Raum", "Chill room", "チルルーム")}</button>
       <button type="button" id="famEk" class="ek">🛒 ${tr("Einkaufsliste", "Shopping list", "買い物リスト")}</button>
       <button type="button" id="famSos" class="sos">🚑 ${tr("Notfall – Hilfe!", "Emergency – help!", "きんきゅう – たすけて！")}</button></div>`);
     const sos = document.getElementById("famSos"); if (sos) sos.onclick = () => window.kloNotfall && kloNotfall();
