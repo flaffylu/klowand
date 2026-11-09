@@ -242,7 +242,7 @@
         <li>${tr("Familien-Planner: Stundenplan, Fotos & Notfall", "Family Planner: timetable, photos & emergency", "ファミリープランナー：時間割・写真・緊急")}</li><li>${tr("Gemütliche Musik", "Cozy music", "ゆったり音楽")}</li><li>${tr("Eigene Wand mit deinem Namen", "Your own wall with your name", "名前入りの自分専用ウォール")}</li>
         <li>${tr("QR-Sticker zum Ausdrucken", "Printable QR sticker", "印刷できるQRステッカー")}</li><li>${tr("Du löschst, was nicht passt", "You delete anything unwanted", "不適切な投稿は自分で削除")}</li></ul>`}
       ${KLO_APP ? `<div class="price" style="font-size:1rem">${tr("Auf dieser Wand nicht freigeschaltet.", "Not unlocked on this wall.", "このウォールでは未解放です。")}</div>`
-        : `<div class="price">${tr("nur 4,99 € einmalig", "only €4.99 once", "一度だけ 約890円")}</div>
+        : `<div class="price">${tr("nur 4,99 € einmalig", "only €4.99 once", "一度だけ 約890円")}</div><p style="margin:-6px 0 12px">💙 ${tr("Auch mit PayPal bezahlen", "Pay with PayPal too", "PayPalでも支払えます")}</p>
       <div class="row">${FD ? `<a href="familie.html#preis">${tr("Familien-Planner holen", "Get the Family Planner")}</a>` : `<a href="familie.html">${tr("Für zu Hause", "For your home", "おうち用")}</a><a href="wirte.html">${tr("Für deine Bar", "For your bar", "お店用")}</a>`}</div>`}
       <button type="button" class="later">${tr("Weiter testen", "Keep testing", "このまま試す")}</button></div>`;
     document.body.appendChild(el);

@@ -215,6 +215,9 @@ footer a{color:var(--soft)}
 .reveal.on{opacity:1;transform:none}
 @media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}.reveal{opacity:1;transform:none;transition:none}.btn{transition:none}}
 
+.paypal{display:inline-flex;align-items:center;gap:8px;margin:12px auto 0;padding:8px 16px;border-radius:999px;background:#eef5ff;border:1.5px solid #b9d4ff;color:#0b2a5c;font:600 1rem var(--f-body,inherit)}
+.paypal b{color:#0b3c91}
+.paywrap{text-align:center}
 /* Mobile: Knöpfe unten immer griffbereit */
 .stick{position:fixed;left:0;right:0;bottom:0;z-index:30;display:flex;gap:10px;padding:10px max(14px,env(safe-area-inset-left,0px)) calc(10px + env(safe-area-inset-bottom,0px));
   background:rgba(255,255,255,.92);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-top:1px solid var(--line);box-shadow:0 -10px 30px -18px rgba(31,42,46,.35);
@@ -257,7 +260,7 @@ footer a{color:var(--soft)}
         <a class="btn main" href="#preis">Für 4,99 € holen</a>
         <a class="btn demo" href="./?wand=familie-demo" target="_blank" rel="noopener">🎁 Familien-Demo testen</a>
       </div>
-      <ul class="trust"><li>Kein Abo</li><li>Ohne App-Store</li><li>Privat – nur eure Familie</li></ul>
+      <ul class="trust"><li>Kein Abo</li><li>Ohne App-Store</li><li>Privat – nur eure Familie</li><li>Auch mit <b>PayPal</b></li></ul>
     </div>
     <div class="stage">
       <div class="device"><img src="assets/familie-plan.jpg" alt="Stundenplan im Familien-Planner: Heute Mathe, Deutsch und Sport, jedes Fach mit Bild" width="540" height="699"></div>
@@ -395,6 +398,7 @@ footer a{color:var(--soft)}
       </ul>
       <div class="spacer"></div>
       <a class="btn main" href="https://payhip.com/Pikumio" target="_blank" rel="noopener">Jetzt für 4,99 € holen</a>
+      <div class="paywrap"><span class="paypal">💙 Bezahlen auch ganz einfach mit <b>PayPal</b></span></div>
       <p class="fine center">Sichere Zahlung über Payhip · Code kommt sofort per E-Mail</p>
     </div>
   </div>
