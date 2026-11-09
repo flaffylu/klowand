@@ -11,7 +11,7 @@
   try {
     if (document.referrer || location.hash || new URLSearchParams(location.search).has("info") || sessionStorage.getItem("klowand-faminfo")) return;
     sessionStorage.setItem("klowand-faminfo", "1");
-    location.replace("./?wand=familie-demo");
+    location.replace("./?wand=familie-demo&qr=1");
   } catch (e) {}
 })();
 </script>

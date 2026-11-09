@@ -57,8 +57,8 @@ window.KloCodes = (function () {
     const sum = (page, from) => (stats || []).filter(r => r.page === page && (!from || r.day >= from)).reduce((a, r) => a + r.n, 0);
     const visitRow = (page, label) => `<div class="rk-row"><div><span class="n">${label}</span><span class="m">heute ${sum(page, today)} · 7 Tage ${sum(page, weekAgo)}</span></div><span class="s">${sum(page)}</span><span class="m">gesamt</span></div>`;
     view.innerHTML = `
-      <h3 style="margin:18px 0 8px;font:700 1rem var(--f-ui);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)">Besucher der Infoseiten</h3>
-      ${stats ? `<div class="feed">${visitRow("familie", "Familien-Seite")}${visitRow("wirte", "Bar-Seite")}</div>
+      <h3 style="margin:18px 0 8px;font:700 1rem var(--f-ui);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)">Besucher &amp; Flyer-Scans</h3>
+      ${stats ? `<div class="feed">${visitRow("familie", "Familien-Seite")}${visitRow("wirte", "Bar-Seite")}${visitRow("scanbar", "📱 Bar-Flyer gescannt")}${visitRow("scanfam", "📱 Familien-Flyer gescannt")}</div>
         <p style="margin:6px 0 0;color:var(--muted);font-size:.85rem">Jeder Besuch zählt einmal, egal wie oft die Seite neu geladen wird.</p>`
         : `<p style="color:var(--muted)">Noch keine Zahlen. Sind die neuen Regeln in Firebase veröffentlicht?</p>`}
       <div class="stats" style="margin-top:14px">

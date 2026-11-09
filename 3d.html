@@ -647,6 +647,16 @@ const esc = s => String(s).replace(/[&<>"]/g, m => ({ "&": "&amp;", "<": "&lt;",
   // ---------- Live: echte Demo-Wand ----------
   firebase.initializeApp(firebaseConfig);
   const fsdb = firebase.firestore();
+  if (new URLSearchParams(location.search).has("qr")) {
+    try {
+      if (!sessionStorage.getItem("klowand-scan-scanbar")) {
+        sessionStorage.setItem("klowand-scan-scanbar", "1");
+        const d = new Date(), day = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+        fsdb.collection("stats").doc("scanbar_" + day).set({ n: firebase.firestore.FieldValue.increment(1) }, { merge: true }).catch(() => {});
+      }
+    } catch (e) {}
+    history.replaceState(null, "", location.pathname);
+  }
   const base = fsdb.collection("walls").doc("demo");
   window.fs = fsdb; window.kloDemo = kloDemo; window.kloUpsell = upsell;
   $("bGames").onclick = () => { if (focus) closeCard(); setTour(false); const b = document.getElementById("kgOpen"); if (b) b.click(); };
