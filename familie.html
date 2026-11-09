@@ -4,6 +4,17 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="color-scheme" content="only light">
+<script>
+/* Flyer-QR: Wer die Seite direkt öffnet (gescannt, ohne Herkunftsseite), landet sofort in der Familien-Demo.
+   Wer von einer anderen Seite kommt oder #preis o. ä. aufruft, sieht diese Infoseite. */
+(function () {
+  try {
+    if (document.referrer || location.hash || new URLSearchParams(location.search).has("info") || sessionStorage.getItem("klowand-faminfo")) return;
+    sessionStorage.setItem("klowand-faminfo", "1");
+    location.replace("./?wand=familie-demo");
+  } catch (e) {}
+})();
+</script>
 <title>Familien-Planner · Stundenplan, Fotos & Notfall-Hilfe für eure Familie</title>
 <meta name="description" content="Der Familien-Planner für euer Zuhause: Stundenplan für jedes Kind, Familienfotos nur für euch, Notfall-Hilfe für Kinder und eine private Familien-Wand. Einmalig 4,99 €, kein Abo.">
 <meta name="theme-color" content="#fbf7f1">
