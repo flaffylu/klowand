@@ -17,6 +17,7 @@
   .fambar button{flex:1 1 140px;font:700 1rem var(--f-ui);letter-spacing:.04em;background:var(--ink);color:#fff;border:none;border-radius:7px;padding:10px 12px;min-height:46px;cursor:pointer}
   .fambar button+button{background:var(--red)}
   .fambar button.ek{background:#2f6b3a}
+  .fambar button.chill{background:linear-gradient(135deg,#4b2c7f,#b0377e)}
   .fambar button{font-size:1.15rem;min-height:56px;border-radius:10px}
   .fambar button.sos{flex:1 1 100%;background:repeating-linear-gradient(-45deg,#b3261e 0 16px,#c8372e 16px 32px);font-size:1.25rem;letter-spacing:.06em;box-shadow:0 4px 0 #7d1a15}
   .fambar button.locked::before{content:"🔒 "}
@@ -141,10 +142,12 @@
     at.insertAdjacentHTML("afterend", `<div class="fambar"><b>${tr("Familien-Planner · nur für euch", "Family Planner · just for you", "ファミリープランナー・家族だけ")}</b>
       <button type="button" id="famPlan" class="${locked ? "locked" : ""}">📅 ${tr("Stundenplan", "Timetable", "時間割")}</button>
       <button type="button" id="famFoto" class="${locked ? "locked" : ""}">📷 ${tr("Familienfotos", "Family photos", "家族の写真")}</button>
+      <button type="button" id="famChill" class="chill${locked ? " locked" : ""}">🛋️ ${tr("Chill-Raum", "Chill room", "チルルーム")}</button>
       <button type="button" id="famEk" class="ek">🛒 ${tr("Einkaufsliste", "Shopping list", "買い物リスト")}</button>
       <button type="button" id="famSos" class="sos">🚑 ${tr("Notfall – Hilfe!", "Emergency – help!", "きんきゅう – たすけて！")}</button></div>`);
     const sos = document.getElementById("famSos"); if (sos) sos.onclick = () => window.kloNotfall && kloNotfall();
     const ek = document.getElementById("famEk"); if (ek) ek.onclick = openEinkauf;
+    const ch = document.getElementById("famChill"); if (ch) ch.onclick = () => { location.href = "chill.html?wand=" + encodeURIComponent(WALL); };
   }
 
   /* Demo: nur zeigen, dass es das gibt */

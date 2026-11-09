@@ -198,6 +198,23 @@ service cloud.firestore {
       allow read: if famOk(wall, key);
       allow create: if famOk(wall, key) && okMark(request.resource.data, id);
     }
+    // Chill-Raum: alle aus der privaten Gruppe schreiben zusammen, die Eltern können löschen
+    match /walls/{wall}/familie/{key}/chill/{id} {
+      allow read: if famOk(wall, key);
+      allow create: if famOk(wall, key)
+        && request.resource.data.keys().hasOnly(['n', 't', 'ts'])
+        && okName(request.resource.data.n)
+        && okText(request.resource.data.t, 200)
+        && request.resource.data.ts == request.time;
+      allow delete: if isOwner(wall) && famOk(wall, key);
+    }
+    match /walls/{wall}/familie/{key}/da/{dev} {
+      allow read: if famOk(wall, key);
+      allow create, update: if famOk(wall, key) && dev.matches('[a-zA-Z0-9]{8,40}')
+        && request.resource.data.keys().hasOnly(['n', 'ts'])
+        && okName(request.resource.data.n)
+        && request.resource.data.ts == request.time;
+    }
     match /walls/{wall}/familie/{key}/games/{game}/scores/{id} {
       allow read: if famOk(wall, key);
       allow create: if famOk(wall, key) && okScore(game, request.resource.data);
