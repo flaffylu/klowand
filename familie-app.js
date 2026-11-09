@@ -16,6 +16,7 @@
   .fambar b{flex:1 1 100%;font:700 .8rem var(--f-ui);letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
   .fambar button{flex:1 1 140px;font:700 1rem var(--f-ui);letter-spacing:.04em;background:var(--ink);color:#fff;border:none;border-radius:7px;padding:10px 12px;min-height:46px;cursor:pointer}
   .fambar button+button{background:var(--red)}
+  .fambar button.ek{background:#2f6b3a}
   .fambar button{font-size:1.15rem;min-height:56px;border-radius:10px}
   .fambar button.sos{flex:1 1 100%;background:repeating-linear-gradient(-45deg,#b3261e 0 16px,#c8372e 16px 32px);font-size:1.25rem;letter-spacing:.06em;box-shadow:0 4px 0 #7d1a15}
   .fambar button.locked::before{content:"🔒 "}
@@ -68,13 +69,82 @@
   .fam-big p{margin:0;color:#fff;font:600 1rem var(--f-ui);text-align:center}`;
   document.head.appendChild(css);
 
+  /* Einkaufsliste: Produkte antippen, Liste bleibt auf diesem Handy */
+    const box = (title, note, inner, foot) => {
+      const el = document.createElement("div"); el.className = "fam-ov"; el.setAttribute("role", "dialog"); el.setAttribute("aria-label", title);
+      el.innerHTML = `<div class="box"><div class="head"><h2>${title}</h2><button type="button" class="x" aria-label="${tr("Schließen", "Close")}">✕</button></div>
+        ${note ? `<p class="note">${note}</p>` : ""}${inner}<div class="row">${foot || ""}<button type="button" class="btn" data-x>${tr("Schließen", "Close")}</button></div></div>`;
+      document.body.appendChild(el);
+      const close = () => el.remove();
+      el.querySelector(".x").onclick = close; el.querySelector("[data-x]").onclick = close;
+      el.addEventListener("click", e => { if (e.target === el) close(); });
+      return el;
+    };
+    if (!document.getElementById("ekcss")) {
+      const c = document.createElement("style"); c.id = "ekcss";
+      c.textContent = `.fam-ov .ek-cat{margin:12px 0 6px;font:700 .8rem var(--f-ui);letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+      .fam-ov .ek-chips{display:flex;flex-wrap:wrap;gap:6px}
+      .fam-ov .ek-chips button{font:700 1rem var(--f-ui);border:1.5px solid #c3cec7;background:#fff;color:var(--ink);border-radius:999px;padding:6px 12px;min-height:42px;cursor:pointer}
+      .fam-ov .ek-chips button.on{background:#2f6b3a;border-color:#2f6b3a;color:#fff}
+      .fam-ov .ek-list{list-style:none;margin:8px 0 0;padding:0;display:flex;flex-direction:column;gap:6px}
+      .fam-ov .ek-list li{display:flex;align-items:center;gap:10px;background:#f4f7f5;border-radius:12px;padding:6px 8px 6px 12px;font:700 1.2rem var(--f-ui)}
+      .fam-ov .ek-list li.done span.t{text-decoration:line-through;opacity:.5}
+      .fam-ov .ek-list li span.t{flex:1;cursor:pointer}
+      .fam-ov .ek-list li .q{display:flex;align-items:center;gap:4px}
+      .fam-ov .ek-list li .q button{width:36px;height:36px;border-radius:50%;border:1.5px solid #c3cec7;background:#fff;font:700 1.1rem var(--f-ui);cursor:pointer;color:var(--ink)}
+      .fam-ov .ek-add{display:flex;gap:6px;margin-top:10px}
+      .fam-ov .ek-add input{flex:1;min-width:0;font:600 1.05rem var(--f-ui);padding:9px 11px;border:1.5px solid #c3cec7;border-radius:10px;min-height:44px;background:#fff;color:var(--ink)}`;
+      document.head.appendChild(c);
+    }
+    const CATS = [
+      [tr("Getränke", "Drinks"), ["🍺 Bier", "🥤 Cola", "💧 Wasser", "🧃 Saft", "🍷 Wein", "🥂 Sekt", "☕ Kaffee", "🧊 Eis­würfel"]],
+      [tr("Essen", "Food"), ["🍞 Brot", "🥛 Milch", "🧀 Käse", "🥚 Eier", "🧈 Butter", "🍝 Nudeln", "🍅 Tomaten", "🥔 Kartoffeln", "🍌 Bananen", "🍎 Äpfel", "🥩 Fleisch", "🍕 Pizza"]],
+      [tr("Snacks", "Snacks"), ["🥨 Brezeln", "🍫 Schokolade", "🍿 Popcorn", "🍪 Kekse", "🥜 Erdnüsse", "🍬 Gummibärchen"]],
+      [tr("Haushalt", "Household"), ["🧻 Klopapier", "🧼 Seife", "🧽 Schwamm", "🗑️ Müllbeutel", "🧴 Shampoo", "🦷 Zahnpasta", "🔋 Batterien", "🕯️ Kerzen"]]
+    ];
+    const EK_KEY = "klowand-einkauf";
+    const ekLoad = () => { try { const v = JSON.parse(localStorage.getItem(EK_KEY) || "[]"); return Array.isArray(v) ? v : []; } catch (e) { return []; } };
+    const ekSave = l => { try { localStorage.setItem(EK_KEY, JSON.stringify(l)); } catch (e) {} };
+    function openEinkauf() {
+      let list = ekLoad();
+      const el = box(`🛒 ${tr("Einkaufsliste", "Shopping list")}`, tr("Einfach antippen – schon steht's auf der Liste. Die Liste bleibt auf diesem Handy.", "Just tap – it's on the list. The list stays on this phone."),
+        `<ul class="ek-list" id="ekList"></ul><div id="ekCats"></div>
+         <form class="ek-add" id="ekForm"><label class="sr" for="ekIn" style="position:absolute;left:-9999px">${tr("Eigenes Produkt", "Own item")}</label><input id="ekIn" maxlength="30" placeholder="${tr("Eigenes Produkt …", "Own item …")}" autocomplete="off"><button type="submit" class="btn dark">+</button></form>`,
+        `<button type="button" class="btn primary" data-share>📤 ${tr("Teilen", "Share")}</button><button type="button" class="btn" data-clear>${tr("Erledigte weg", "Clear done")}</button>`);
+      const draw = () => {
+        ekSave(list);
+        const ul = el.querySelector("#ekList");
+        ul.innerHTML = list.length ? list.map((it, i) => `<li class="${it.d ? "done" : ""}"><span class="t" data-t="${i}">${escF(it.n)}</span><span class="q"><button type="button" data-m="${i}" aria-label="${tr("weniger", "less")}">−</button><b>${it.q}</b><button type="button" data-p="${i}" aria-label="${tr("mehr", "more")}">+</button></span></li>`).join("")
+          : `<li style="justify-content:center;color:var(--muted);font-size:1rem">${tr("Noch leer – tipp unten was an!", "Still empty – tap something below!")}</li>`;
+        el.querySelector("#ekCats").innerHTML = CATS.map(([c, items]) => `<div class="ek-cat">${c}</div><div class="ek-chips">${items.map(n => `<button type="button" data-a="${escF(n)}" class="${list.some(x => x.n === n) ? "on" : ""}">${n}</button>`).join("")}</div>`).join("");
+      };
+      const add = n => { const f = list.find(x => x.n === n); if (f) { f.q++; f.d = false; } else list.unshift({ n, q: 1, d: false }); try { KloMusik.blip("good"); } catch (e) {} draw(); };
+      el.addEventListener("click", e => {
+        const t = e.target.closest("[data-a],[data-t],[data-m],[data-p],[data-share],[data-clear]"); if (!t) return;
+        if (t.dataset.a) add(t.dataset.a);
+        else if (t.dataset.t != null) { const it = list[+t.dataset.t]; it.d = !it.d; draw(); }
+        else if (t.dataset.p != null) { list[+t.dataset.p].q++; draw(); }
+        else if (t.dataset.m != null) { const i = +t.dataset.m; if (--list[i].q <= 0) list.splice(i, 1); draw(); }
+        else if (t.hasAttribute("data-clear")) { list = list.filter(x => !x.d); draw(); }
+        else if (t.hasAttribute("data-share")) {
+          const txt = "🛒 " + tr("Einkaufsliste", "Shopping list") + ":\n" + list.filter(x => !x.d).map(x => `• ${x.q > 1 ? x.q + "× " : ""}${x.n}`).join("\n");
+          if (navigator.share) navigator.share({ text: txt }).catch(() => {});
+          else { try { navigator.clipboard.writeText(txt); t.textContent = "✓ " + tr("Kopiert", "Copied"); } catch (er) {} }
+        }
+      });
+      el.querySelector("#ekForm").addEventListener("submit", e => { e.preventDefault(); const i = el.querySelector("#ekIn"); const v = i.value.trim().slice(0, 30); if (v.length >= 2) add("📝 " + v); i.value = ""; });
+      draw();
+    }
+
   function bar(locked) {
     const at = document.querySelector(".demobar") || document.querySelector(".plate");
     at.insertAdjacentHTML("afterend", `<div class="fambar"><b>${tr("Familien-Planner · nur für euch", "Family Planner · just for you", "ファミリープランナー・家族だけ")}</b>
       <button type="button" id="famPlan" class="${locked ? "locked" : ""}">📅 ${tr("Stundenplan", "Timetable", "時間割")}</button>
       <button type="button" id="famFoto" class="${locked ? "locked" : ""}">📷 ${tr("Familienfotos", "Family photos", "家族の写真")}</button>
+      <button type="button" id="famEk" class="ek">🛒 ${tr("Einkaufsliste", "Shopping list", "買い物リスト")}</button>
       <button type="button" id="famSos" class="sos">🚑 ${tr("Notfall – Hilfe!", "Emergency – help!", "きんきゅう – たすけて！")}</button></div>`);
     const sos = document.getElementById("famSos"); if (sos) sos.onclick = () => window.kloNotfall && kloNotfall();
+    const ek = document.getElementById("famEk"); if (ek) ek.onclick = openEinkauf;
   }
 
   /* Demo: nur zeigen, dass es das gibt */
@@ -87,73 +157,8 @@
       const fb = document.querySelector(".fambar");
       fb.querySelector("b").textContent = tr("Klo-Wand Extras · für euch", "Klo-Wand extras · for you");
       const bp = document.getElementById("famPlan"), bf = document.getElementById("famFoto");
-      bp.classList.remove("locked"); bp.textContent = "🛒 " + tr("Einkaufsliste", "Shopping list");
+      bp.hidden = true;
       bf.textContent = "📸 " + tr("Freundefotos", "Friends photos");
-      const box = (title, note, inner, foot) => {
-        const el = document.createElement("div"); el.className = "fam-ov"; el.setAttribute("role", "dialog"); el.setAttribute("aria-label", title);
-        el.innerHTML = `<div class="box"><div class="head"><h2>${title}</h2><button type="button" class="x" aria-label="${tr("Schließen", "Close")}">✕</button></div>
-          ${note ? `<p class="note">${note}</p>` : ""}${inner}<div class="row">${foot || ""}<button type="button" class="btn" data-x>${tr("Schließen", "Close")}</button></div></div>`;
-        document.body.appendChild(el);
-        const close = () => el.remove();
-        el.querySelector(".x").onclick = close; el.querySelector("[data-x]").onclick = close;
-        el.addEventListener("click", e => { if (e.target === el) close(); });
-        return el;
-      };
-      if (!document.getElementById("ekcss")) {
-        const c = document.createElement("style"); c.id = "ekcss";
-        c.textContent = `.fam-ov .ek-cat{margin:12px 0 6px;font:700 .8rem var(--f-ui);letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
-        .fam-ov .ek-chips{display:flex;flex-wrap:wrap;gap:6px}
-        .fam-ov .ek-chips button{font:700 1rem var(--f-ui);border:1.5px solid #c3cec7;background:#fff;color:var(--ink);border-radius:999px;padding:6px 12px;min-height:42px;cursor:pointer}
-        .fam-ov .ek-chips button.on{background:#2f6b3a;border-color:#2f6b3a;color:#fff}
-        .fam-ov .ek-list{list-style:none;margin:8px 0 0;padding:0;display:flex;flex-direction:column;gap:6px}
-        .fam-ov .ek-list li{display:flex;align-items:center;gap:10px;background:#f4f7f5;border-radius:12px;padding:6px 8px 6px 12px;font:700 1.2rem var(--f-ui)}
-        .fam-ov .ek-list li.done span.t{text-decoration:line-through;opacity:.5}
-        .fam-ov .ek-list li span.t{flex:1;cursor:pointer}
-        .fam-ov .ek-list li .q{display:flex;align-items:center;gap:4px}
-        .fam-ov .ek-list li .q button{width:36px;height:36px;border-radius:50%;border:1.5px solid #c3cec7;background:#fff;font:700 1.1rem var(--f-ui);cursor:pointer;color:var(--ink)}
-        .fam-ov .ek-add{display:flex;gap:6px;margin-top:10px}
-        .fam-ov .ek-add input{flex:1;min-width:0;font:600 1.05rem var(--f-ui);padding:9px 11px;border:1.5px solid #c3cec7;border-radius:10px;min-height:44px;background:#fff;color:var(--ink)}`;
-        document.head.appendChild(c);
-      }
-      const CATS = [
-        [tr("Getränke", "Drinks"), ["🍺 Bier", "🥤 Cola", "💧 Wasser", "🧃 Saft", "🍷 Wein", "🥂 Sekt", "☕ Kaffee", "🧊 Eis­würfel"]],
-        [tr("Essen", "Food"), ["🍞 Brot", "🥛 Milch", "🧀 Käse", "🥚 Eier", "🧈 Butter", "🍝 Nudeln", "🍅 Tomaten", "🥔 Kartoffeln", "🍌 Bananen", "🍎 Äpfel", "🥩 Fleisch", "🍕 Pizza"]],
-        [tr("Snacks", "Snacks"), ["🥨 Brezeln", "🍫 Schokolade", "🍿 Popcorn", "🍪 Kekse", "🥜 Erdnüsse", "🍬 Gummibärchen"]],
-        [tr("Haushalt", "Household"), ["🧻 Klopapier", "🧼 Seife", "🧽 Schwamm", "🗑️ Müllbeutel", "🧴 Shampoo", "🦷 Zahnpasta", "🔋 Batterien", "🕯️ Kerzen"]]
-      ];
-      const KEY = "klowand-einkauf";
-      const load = () => { try { const v = JSON.parse(localStorage.getItem(KEY) || "[]"); return Array.isArray(v) ? v : []; } catch (e) { return []; } };
-      const save = l => { try { localStorage.setItem(KEY, JSON.stringify(l)); } catch (e) {} };
-      bp.onclick = () => {
-        let list = load();
-        const el = box(`🛒 ${tr("Einkaufsliste", "Shopping list")}`, tr("Einfach antippen – schon steht's auf der Liste. Die Liste bleibt auf diesem Handy.", "Just tap – it's on the list. The list stays on this phone."),
-          `<ul class="ek-list" id="ekList"></ul><div id="ekCats"></div>
-           <form class="ek-add" id="ekForm"><label class="sr" for="ekIn" style="position:absolute;left:-9999px">${tr("Eigenes Produkt", "Own item")}</label><input id="ekIn" maxlength="30" placeholder="${tr("Eigenes Produkt …", "Own item …")}" autocomplete="off"><button type="submit" class="btn dark">+</button></form>`,
-          `<button type="button" class="btn primary" data-share>📤 ${tr("Teilen", "Share")}</button><button type="button" class="btn" data-clear>${tr("Erledigte weg", "Clear done")}</button>`);
-        const draw = () => {
-          save(list);
-          const ul = el.querySelector("#ekList");
-          ul.innerHTML = list.length ? list.map((it, i) => `<li class="${it.d ? "done" : ""}"><span class="t" data-t="${i}">${escF(it.n)}</span><span class="q"><button type="button" data-m="${i}" aria-label="${tr("weniger", "less")}">−</button><b>${it.q}</b><button type="button" data-p="${i}" aria-label="${tr("mehr", "more")}">+</button></span></li>`).join("")
-            : `<li style="justify-content:center;color:var(--muted);font-size:1rem">${tr("Noch leer – tipp unten was an!", "Still empty – tap something below!")}</li>`;
-          el.querySelector("#ekCats").innerHTML = CATS.map(([c, items]) => `<div class="ek-cat">${c}</div><div class="ek-chips">${items.map(n => `<button type="button" data-a="${escF(n)}" class="${list.some(x => x.n === n) ? "on" : ""}">${n}</button>`).join("")}</div>`).join("");
-        };
-        const add = n => { const f = list.find(x => x.n === n); if (f) { f.q++; f.d = false; } else list.unshift({ n, q: 1, d: false }); try { KloMusik.blip("good"); } catch (e) {} draw(); };
-        el.addEventListener("click", e => {
-          const t = e.target.closest("[data-a],[data-t],[data-m],[data-p],[data-share],[data-clear]"); if (!t) return;
-          if (t.dataset.a) add(t.dataset.a);
-          else if (t.dataset.t != null) { const it = list[+t.dataset.t]; it.d = !it.d; draw(); }
-          else if (t.dataset.p != null) { list[+t.dataset.p].q++; draw(); }
-          else if (t.dataset.m != null) { const i = +t.dataset.m; if (--list[i].q <= 0) list.splice(i, 1); draw(); }
-          else if (t.hasAttribute("data-clear")) { list = list.filter(x => !x.d); draw(); }
-          else if (t.hasAttribute("data-share")) {
-            const txt = "🛒 " + tr("Einkaufsliste", "Shopping list") + ":\n" + list.filter(x => !x.d).map(x => `• ${x.q > 1 ? x.q + "× " : ""}${x.n}`).join("\n");
-            if (navigator.share) navigator.share({ text: txt }).catch(() => {});
-            else { try { navigator.clipboard.writeText(txt); t.textContent = "✓ " + tr("Kopiert", "Copied"); } catch (er) {} }
-          }
-        });
-        el.querySelector("#ekForm").addEventListener("submit", e => { e.preventDefault(); const i = el.querySelector("#ekIn"); const v = i.value.trim().slice(0, 30); if (v.length >= 2) add("📝 " + v); i.value = ""; });
-        draw();
-      };
       const FR = [["🍻", "Feierabend-Bier", "#fff4d1,#ffe08a"], ["🎳", "Bowling-Abend", "#e3eefc,#bcd5f7"], ["🎤", "Karaoke-Nacht", "#ece4fb,#d3c4f7"],
         ["⚽", "Public Viewing", "#d8f0de,#a8dcb8"], ["🎂", "Geburtstag", "#ffe1ea,#ffbdd0"], ["🎄", "Weihnachtsfeier", "#ffe8dc,#ffc9ad"]];
       bf.onclick = () => {
