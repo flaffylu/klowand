@@ -212,8 +212,8 @@ const esc = s => String(s).replace(/[&<>"]/g, m => ({ "&": "&amp;", "<": "&lt;",
   try { Object.assign(store, JSON.parse(localStorage.getItem("klowand3d-live") || "{}")); } catch (e) {}
   const save = () => { try { localStorage.setItem("klowand3d-live", JSON.stringify(store)); } catch (e) {} };
 
-  /* 50 Gratis-Nachrichten – derselbe Zähler wie auf der normalen Demo-Wand */
-  const DEMO_FREI = 50;
+  /* 500 Gratis-Nachrichten – derselbe Zähler wie auf der normalen Demo-Wand */
+  const DEMO_FREI = 500;
   const kloDemo = {
     used() { try { return Math.max(0, parseInt(localStorage.getItem("klowand-demo-n") || "0", 10) || 0); } catch (e) { return 0; } },
     left() { return Math.max(0, DEMO_FREI - this.used()); },
@@ -413,7 +413,7 @@ const esc = s => String(s).replace(/[&<>"]/g, m => ({ "&": "&amp;", "<": "&lt;",
   function stats() { $("stats").textContent = notes.length === 1 ? "1 Spruch" : `${notes.length} Sprüche`; }
   function freeLine() {
     const left = kloDemo.left();
-    $("free").textContent = left > 0 ? `🎁 Noch ${left} von 50 gratis` : "🔒 50 Gratis-Nachrichten aufgebraucht";
+    $("free").textContent = left > 0 ? `🎁 Noch ${left} von 500 gratis` : "🔒 500 Gratis-Nachrichten aufgebraucht";
     $("bOwn").hidden = IN_APP;
   }
   freeLine();
@@ -539,7 +539,7 @@ const esc = s => String(s).replace(/[&<>"]/g, m => ({ "&": "&amp;", "<": "&lt;",
   function upsell(reason) {
     $("upsHead").textContent = IN_APP ? "Nur auf eigenen Wänden" : "Alles freischalten";
     $("upsText").textContent = reason === "limit"
-      ? (IN_APP ? "Die 50 Gratis-Nachrichten auf der Demo-Wand sind aufgebraucht. Lesen und Striche setzen geht weiter." : "Deine 50 Gratis-Nachrichten sind aufgebraucht. Mit deiner eigenen Klo-Wand schreibst und malst du unbegrenzt. Lesen und Striche setzen geht hier weiter.")
+      ? (IN_APP ? "Die 500 Gratis-Nachrichten auf der Demo-Wand sind aufgebraucht. Lesen und Striche setzen geht weiter." : "Deine 500 Gratis-Nachrichten sind aufgebraucht. Mit deiner eigenen Klo-Wand schreibst und malst du unbegrenzt. Lesen und Striche setzen geht hier weiter.")
       : "Das alles bekommst du mit deiner eigenen Klo-Wand:";
     $("upsBuy").hidden = IN_APP; $("ups").hidden = false;
   }

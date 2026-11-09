@@ -453,7 +453,7 @@ const FIXED = !!WAENDE[WALL];
 const FAM_DEMO = WALL === "familie-demo";
 const DEMO = WALL === "demo" || FAM_DEMO;
 /* Demo: 50 Gratis-Nachrichten pro Handy mit allem freigeschaltet, danach nur noch lesen und Striche setzen. */
-const DEMO_FREI = FAM_DEMO ? 100 : 50;
+const DEMO_FREI = FAM_DEMO ? 100 : 500;
 const DEMO_KEY = FAM_DEMO ? "klowand-famdemo-n" : "klowand-demo-n";
 window.kloDemo = {
   used() { try { return Math.max(0, parseInt(localStorage.getItem(DEMO_KEY) || "0", 10) || 0); } catch (e) { return 0; } },
