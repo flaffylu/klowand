@@ -187,7 +187,7 @@
   .ups .box{width:min(420px,100%);background:var(--plate);border:3px solid var(--ink);border-radius:14px;padding:20px 18px 16px;text-align:center;box-shadow:0 18px 40px rgba(0,0,0,.45)}
   .ups .k{display:inline-block;background:var(--red);color:#fff;font:700 .8rem var(--f-ui);letter-spacing:.14em;text-transform:uppercase;padding:4px 10px;border-radius:3px}
   .ups h2{margin:10px 0 4px;font:400 1.7rem/1.1 var(--f-marker);color:var(--ink)}
-  .ups p{margin:0 0 8px;font:600 1rem var(--f-ui);color:var(--muted)}
+  .ups p{margin:0 0 8px;font:600 1rem var(--f-ui);color:#3b423f}
   .ups ul{list-style:none;margin:8px 0 12px;padding:0;text-align:left;font:600 1.05rem/1.7 var(--f-ui);color:var(--ink)}
   .ups li::before{content:"✓ ";color:var(--green);font-weight:700}
   .ups .price{font:400 2rem var(--f-marker);color:var(--red);margin:4px 0 12px}
@@ -196,7 +196,7 @@
   .ups a{background:var(--red);color:#fff}.ups a+a{background:var(--ink)}
   .ups a.buy{display:flex;justify-content:center;width:100%;box-sizing:border-box;min-height:52px;font-size:1.05rem;background:#1f9d55;color:#fff;margin-bottom:6px}
   .ups .buyhint{font-size:.85rem;margin:0 0 12px;opacity:.85}
-  .ups button{background:none;border:none;color:var(--muted);text-decoration:underline;width:100%;justify-content:center}`;
+  .ups button{background:none;border:none;color:#3b423f;text-decoration:underline;width:100%;justify-content:center}`;
   document.head.appendChild(css);
 
   const plate = document.querySelector(".plate");
