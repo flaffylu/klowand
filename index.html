@@ -389,6 +389,7 @@ html.famdemo .post{border-radius:10px}
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script src="lang-ja.js"></script>
 <script src="lang.js"></script>
+<script src="demo-trial.js"></script>
 <script src="scan-music.js"></script>
 <script src="config.js"></script>
 <script src="filter.js"></script>
@@ -454,15 +455,17 @@ const FIXED = !!WAENDE[WALL];
 const FAM_DEMO = WALL === "familie-demo";
 const DEMO = WALL === "demo" || FAM_DEMO;
 /* Demo: 50 Gratis-Nachrichten pro Handy mit allem freigeschaltet, danach nur noch lesen und Striche setzen. */
-const DEMO_FREI = FAM_DEMO ? 100 : 500;
-const DEMO_KEY = FAM_DEMO ? "klowand-famdemo-n" : "klowand-demo-n";
+const DEMO_FREI = KloTrial.MSG;
 window.kloDemo = {
-  used() { try { return Math.max(0, parseInt(localStorage.getItem(DEMO_KEY) || "0", 10) || 0); } catch (e) { return 0; } },
-  left() { return Math.max(0, DEMO_FREI - this.used()); },
-  locked() { return DEMO && this.left() <= 0; },
-  use() { if (!DEMO) return; try { localStorage.setItem(DEMO_KEY, String(this.used() + 1)); } catch (e) {} window.dispatchEvent(new Event("klo-demo")); }
+  used() { return KloTrial.used(); },
+  left() { return KloTrial.left(); },
+  over() { return DEMO && KloTrial.over(); },          // 4 Gratis-Tage vorbei
+  locked() { return DEMO && !KloTrial.canWrite(); },  // auch die 150 Sätze danach aufgebraucht
+  free(f) { return !DEMO || KloTrial.free(f); },
+  use() { if (DEMO) KloTrial.use(); }
 };
-function demoLocks() { document.querySelector("[data-m=draw]").classList.toggle("locked", kloDemo.locked()); }
+if (DEMO) KloTrial.start();
+function demoLocks() { /* Malen bleibt in der Demo immer frei */ }
 demoLocks(); window.addEventListener("klo-demo", demoLocks);
 const info = WAENDE[WALL] ? { ...WAENDE[WALL], sub: (JA && WAENDE[WALL].subJa) || (EN && WAENDE[WALL].subEn) || WAENDE[WALL].sub } : { name: "Klo-Wand", sub: "" };
 function showInfo() {
@@ -733,7 +736,6 @@ function exportDrawing() {
 
 /* ---------- Schreiben oder Malen ---------- */
 function setMode(m) {
-  if (m === "draw" && kloDemo.locked()) { if (window.kloUpsell) kloUpsell("limit"); return; }
   mode = m;
   document.querySelectorAll(".modes button").forEach(b => b.setAttribute("aria-pressed", b.dataset.m === m));
   const draw = m === "draw";
@@ -755,7 +757,7 @@ if (CH_NOW) { $("chJoin").hidden = false; $("chJoin").onclick = () => setChJoin(
 
 composer.addEventListener("submit", e => {
   e.preventDefault();
-  if (kloDemo.locked()) { if (window.kloUpsell) kloUpsell("limit"); return; }
+  if (mode !== "draw" && kloDemo.locked()) { if (window.kloUpsell) kloUpsell("limit"); return; }
   const target = (famOnly && famBase ? famBase : base).collection("posts");
   const okMsg = famOnly && famBase ? tr("Hängt jetzt an der Wand – nur für die Familie 🔒", "It's on the wall – family only 🔒", "家族だけに貼りました 🔒") : tr("Hängt jetzt an der Wand.", "It's on the wall now.");
   const rot = Number((Math.random() * 6 - 3).toFixed(1));
@@ -764,7 +766,7 @@ composer.addEventListener("submit", e => {
     const img = exportDrawing();
     if (!img) { say(tr("Mal erst was, dann kritzeln.", "Draw something first, then scribble.")); return; }
     if (img.length > 150000) { say(tr("Die Zeichnung ist zu groß. Mal etwas einfacher.", "The drawing is too big. Try something simpler.")); return; }
-    target.add(Object.assign({ img, rot, ts: now() }, chJoin ? { ch: THIS_WEEK } : {})).then(() => { say(okMsg, true); kloDemo.use(); }).catch(fail);
+    target.add(Object.assign({ img, rot, ts: now() }, chJoin ? { ch: THIS_WEEK } : {})).then(() => { say(okMsg, true); }).catch(fail);
     clearPad();
   } else {
     const t = msg.value.trim(), err = check(t);

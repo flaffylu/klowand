@@ -276,8 +276,11 @@
     x.innerHTML = `<button type="button" class="cal" id="xCal"><span>📅</span>${T("Kalender", "Calendar")}</button><button type="button" class="wet" id="xWet"><span>⛅</span>${T("Wetter", "Weather")}</button>
       <button type="button" class="fb" id="xFb"><span>📖</span>${T("Freundebuch", "Friends book")}</button><button type="button" class="ev" id="xEv"><span>🎉</span>${T("Tipps", "Events")}</button>`;
     const sos = fb.querySelector(".sos"); sos ? sos.before(x) : fb.appendChild(x);
-    document.getElementById("xCal").onclick = openCal; document.getElementById("xWet").onclick = openWeather;
-    document.getElementById("xFb").onclick = openFB; document.getElementById("xEv").onclick = openEvents;
+    const over = () => typeof kloDemo !== "undefined" && kloDemo.over && kloDemo.over();
+    const g = fn => () => { if (over()) { window.kloUpsell && kloUpsell("trial"); return; } fn(); };
+    document.getElementById("xCal").onclick = g(openCal); document.getElementById("xWet").onclick = g(openWeather);
+    document.getElementById("xFb").onclick = g(openFB); document.getElementById("xEv").onclick = g(openEvents);
+    if (over()) x.querySelectorAll("button").forEach(b => b.classList.add("locked"));
     badge();
   }
   // familie-app.js baut den Kasten evtl. erst nach dem Laden – kurz warten

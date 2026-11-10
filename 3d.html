@@ -97,6 +97,7 @@ button:focus-visible,input:focus-visible{outline:3px solid var(--cyan);outline-o
   --f-hand:"Gochi Hand",cursive;--f-marker:"Permanent Marker",cursive;--f-scrawl:"Caveat",cursive;color:#1d2321;touch-action:pan-y;-webkit-user-select:text;user-select:text}
 .kg .card{position:static;transform:none;left:auto;bottom:auto;width:auto;z-index:auto;box-shadow:none}
 .kg .card .row{justify-content:flex-start}
+.tools button.locked::before{content:"🔒";margin-right:2px}
 .loading{position:fixed;inset:0;display:grid;place-items:center;font:400 1.4rem var(--f-sign);color:var(--cyan);z-index:1}
 @media (prefers-reduced-motion:reduce){.sign{text-shadow:none}}
 </style>
@@ -116,7 +117,7 @@ button:focus-visible,input:focus-visible{outline:3px solid var(--cyan);outline-o
     <button type="button" id="bDoor"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 21V3h11v18M3 21h18M13 12h.01"/></svg>Tür</button>
     <button type="button" id="bGames"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="2" y="7" width="20" height="11" rx="5"/><path d="M7 11v3M5.5 12.5h3M16 12h.01M18 14h.01"/></svg>Spiele</button>
     <button type="button" id="bChill" onclick="location.href='chill.html?wand=demo'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 18v-5a3 3 0 0 1 3-3h10a3 3 0 0 1 3 3v5M2 18h20M6 10V7a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v3"/></svg>Chill</button>
-    <button type="button" id="bDisco" onclick="location.href='disco.html?from=3d'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="13" r="7"/><path d="M12 2v4M5 13h14M12 6c-2.5 2-2.5 12 0 14M12 6c2.5 2 2.5 12 0 14"/></svg>Disco</button>
+    <button type="button" id="bDisco" onclick="if(window.KloTrial&&KloTrial.over()){window.kloUpsell&&kloUpsell('trial')}else location.href='disco.html?from=3d'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="13" r="7"/><path d="M12 2v4M5 13h14M12 6c-2.5 2-2.5 12 0 14M12 6c2.5 2 2.5 12 0 14"/></svg>Disco</button>
     <button type="button" id="bOracle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="11" r="7"/><path d="M8 21h8M10 18l-1 3M14 18l1 3"/></svg>Orakel</button>
     <button type="button" id="bPhoto"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>Foto</button>
   </div>
@@ -192,6 +193,7 @@ button:focus-visible,input:focus-visible{outline:3px solid var(--cyan);outline-o
 <script src="config.js"></script>
 <script src="filter.js"></script>
 <script src="music.js"></script>
+<script src="demo-trial.js"></script>
 <script>
 /* Für games.js: dieselben Namen wie auf der normalen Wand */
 var fs = null;
@@ -214,14 +216,14 @@ const esc = s => String(s).replace(/[&<>"]/g, m => ({ "&": "&amp;", "<": "&lt;",
   try { Object.assign(store, JSON.parse(localStorage.getItem("klowand3d-live") || "{}")); } catch (e) {}
   const save = () => { try { localStorage.setItem("klowand3d-live", JSON.stringify(store)); } catch (e) {} };
 
-  /* 500 Gratis-Nachrichten – derselbe Zähler wie auf der normalen Demo-Wand */
-  const DEMO_FREI = 500;
+  /* Probezeit wie auf der normalen Demo-Wand: 4 Tage alles frei, danach Schreiben (150), Malen und Chill-Raum */
+  KloTrial.start();
   const kloDemo = {
-    used() { try { return Math.max(0, parseInt(localStorage.getItem("klowand-demo-n") || "0", 10) || 0); } catch (e) { return 0; } },
-    left() { return Math.max(0, DEMO_FREI - this.used()); },
-    locked() { return this.left() <= 0; },
-    use() { try { localStorage.setItem("klowand-demo-n", String(this.used() + 1)); } catch (e) {} freeLine(); window.dispatchEvent(new Event("klo-demo")); }
+    used: () => KloTrial.used(), left: () => KloTrial.left(),
+    over: () => KloTrial.over(), locked: () => !KloTrial.canWrite(),
+    use() { KloTrial.use(); freeLine(); }
   };
+  const trialOk = () => { if (!KloTrial.over()) return true; upsell("trial"); return false; };
   let device = null;
   try { device = localStorage.getItem("klowand-device"); if (!device) { device = crypto.randomUUID().replace(/-/g, ""); localStorage.setItem("klowand-device", device); } }
   catch (e) { device = device || ("d" + Math.random().toString(36).slice(2, 14)); }
@@ -414,8 +416,9 @@ const esc = s => String(s).replace(/[&<>"]/g, m => ({ "&": "&amp;", "<": "&lt;",
   function toast(t) { toastEl.textContent = t; toastEl.hidden = false; clearTimeout(toastT); toastT = setTimeout(() => toastEl.hidden = true, 1800); }
   function stats() { $("stats").textContent = notes.length === 1 ? "1 Spruch" : `${notes.length} Sprüche`; }
   function freeLine() {
-    const left = kloDemo.left();
-    $("free").textContent = left > 0 ? `🎁 Noch ${left} von 500 gratis` : "🔒 500 Gratis-Nachrichten aufgebraucht";
+    const d = KloTrial.daysLeft(), left = kloDemo.left();
+    $("free").textContent = !KloTrial.over() ? `🎁 Noch ${d} ${d === 1 ? "Tag" : "Tage"} alles gratis` : left > 0 ? `⏰ Noch ${left} von ${KloTrial.MSG} Sätzen` : "🔒 Sätze aufgebraucht";
+    ["bDoor", "bGames", "bDisco", "bOracle", "bPhoto", "bMusic"].forEach(id => { const b = $(id); if (b) b.classList.toggle("locked", KloTrial.over()); });
     $("bOwn").hidden = IN_APP;
   }
   freeLine();
@@ -425,7 +428,7 @@ const esc = s => String(s).replace(/[&<>"]/g, m => ({ "&": "&amp;", "<": "&lt;",
   PENS.forEach(([k, c, n], i) => { const b = document.createElement("button"); b.type = "button"; b.style.background = c; b.setAttribute("aria-label", n); b.setAttribute("aria-pressed", i === 0); b.onclick = () => { pen = c; penKey = k; pensEl.querySelectorAll("button").forEach(x => x.setAttribute("aria-pressed", x === b)); $("penLbl").textContent = n; }; pensEl.insertBefore(b, $("penLbl")); });
   $("penLbl").textContent = PENS[0][2];
   document.querySelectorAll(".modes button").forEach(b => b.onclick = () => {
-    if (b.dataset.m === "draw" && kloDemo.locked()) { upsell("limit"); return; }
+    if (b.dataset.m === "spray" && !trialOk()) return;
     mode = b.dataset.m; document.querySelectorAll(".modes button").forEach(x => x.setAttribute("aria-pressed", x === b));
     $("form").hidden = mode !== "write"; $("openPad").hidden = mode !== "draw"; $("sprayHint").hidden = mode !== "spray";
     if (mode === "draw") openPad();
@@ -452,7 +455,7 @@ const esc = s => String(s).replace(/[&<>"]/g, m => ({ "&": "&amp;", "<": "&lt;",
     const k = hit.object.userData.kind;
     if (mode === "spray" && (walls.includes(hit.object) || k === "note")) { spray(hit); return; }
     if (k === "note") openCard(hit.object);
-    else if (k === "door") openDoor();
+    else if (k === "door") { if (trialOk()) openDoor(); }
     else if (k === "flush") flush();
     else if (k === "paper") { sheetGoal = sheetGoal > .5 ? .16 : .72; toast(sheetGoal > .5 ? "Abgerollt" : "Aufgerollt"); }
     else if (focus) closeCard();
@@ -523,11 +526,11 @@ const esc = s => String(s).replace(/[&<>"]/g, m => ({ "&": "&amp;", "<": "&lt;",
     return null;
   }
   function fail(e) { say(e && e.code === "permission-denied" ? "Die Wand hat das abgelehnt. Prüf deinen Text oder versuch es gleich nochmal." : "Hat nicht geklappt. Versuch es gleich nochmal."); toast("Hat nicht geklappt"); }
-  function postIt(fields) {
-    if (kloDemo.locked()) { upsell("limit"); return; }
+  function postIt(fields, isDrawing) {
+    if (!isDrawing && kloDemo.locked()) { upsell("limit"); return; }
     const rot = Number((Math.random() * 6 - 3).toFixed(1));
     base.collection("posts").add(Object.assign(fields, { rot, ts: now() })).then(ref => {
-      kloDemo.use(); wantFocus = ref.id; say("Hängt jetzt an der Wand – live für alle.", true); blip(880); tYaw = Math.round(tYaw / (2 * Math.PI)) * 2 * Math.PI;
+      if (!isDrawing) kloDemo.use(); wantFocus = ref.id; say("Hängt jetzt an der Wand – live für alle.", true); blip(880); tYaw = Math.round(tYaw / (2 * Math.PI)) * 2 * Math.PI;
     }).catch(fail);
   }
   $("form").addEventListener("submit", e => {
@@ -540,7 +543,9 @@ const esc = s => String(s).replace(/[&<>"]/g, m => ({ "&": "&amp;", "<": "&lt;",
   // Vollversion
   function upsell(reason) {
     $("upsHead").textContent = IN_APP ? "Nur auf eigenen Wänden" : "Alles freischalten";
-    $("upsText").textContent = reason === "limit"
+    $("upsText").textContent = reason === "trial"
+      ? (IN_APP ? "Deine 4 Gratis-Tage sind vorbei. Weiter frei: Schreiben (150 Sätze), Malen und der Chill-Raum." : "Deine 4 Gratis-Tage sind vorbei. Weiter kostenlos: Schreiben (150 Sätze), Malen und der Chill-Raum. Alles andere gibt's mit deiner eigenen Klo-Wand.")
+      : reason === "limit"
       ? (IN_APP ? "Die 500 Gratis-Nachrichten auf der Demo-Wand sind aufgebraucht. Lesen und Striche setzen geht weiter." : "Deine 500 Gratis-Nachrichten sind aufgebraucht. Mit deiner eigenen Klo-Wand schreibst und malst du unbegrenzt. Lesen und Striche setzen geht hier weiter.")
       : "Das alles bekommst du mit deiner eigenen Klo-Wand:";
     $("upsBuy").hidden = IN_APP; $("ups").hidden = false;
@@ -552,7 +557,7 @@ const esc = s => String(s).replace(/[&<>"]/g, m => ({ "&": "&amp;", "<": "&lt;",
   const pc = $("padCanvas"), px = pc.getContext("2d"); let drawing = false;
   function clearPad() { px.clearRect(0, 0, 512, 420); padDirty = false; }
   let padDirty = false;
-  function openPad() { if (kloDemo.locked()) { upsell("limit"); return; } clearPad(); $("pad").hidden = false; }
+  function openPad() { clearPad(); $("pad").hidden = false; }
   $("openPad").onclick = openPad;
   const pt = e => { const r = pc.getBoundingClientRect(); return [(e.clientX - r.left) * 512 / r.width, (e.clientY - r.top) * 420 / r.height]; };
   pc.addEventListener("pointerdown", e => { drawing = true; pc.setPointerCapture(e.pointerId); const [x, y] = pt(e); px.strokeStyle = pen; px.lineWidth = 10; px.lineCap = px.lineJoin = "round"; px.shadowColor = pen; px.shadowBlur = 10; px.beginPath(); px.moveTo(x, y); px.lineTo(x + .1, y); px.stroke(); padDirty = true; });
@@ -565,7 +570,7 @@ const esc = s => String(s).replace(/[&<>"]/g, m => ({ "&": "&amp;", "<": "&lt;",
     const out = document.createElement("canvas"); out.width = 384; out.height = 315; out.getContext("2d").drawImage(pc, 0, 0, 384, 315);
     const img = out.toDataURL("image/png");
     if (img.length > 150000) { toast("Zu groß – mal etwas einfacher"); return; }
-    $("pad").hidden = true; postIt({ img });
+    $("pad").hidden = true; postIt({ img }, true);
   };
 
   // Tür & Videos
@@ -577,6 +582,7 @@ const esc = s => String(s).replace(/[&<>"]/g, m => ({ "&": "&amp;", "<": "&lt;",
   $("kinoClose").onclick = closeDoor;
   function faceDoor() { const k = Math.round((tYaw - Math.PI) / (2 * Math.PI)); return k * 2 * Math.PI + Math.PI; }
   $("bDoor").onclick = () => {
+    if (!trialOk()) return;
     if (focus) closeCard(); setTour(false);
     const ang = ((tYaw % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI); const atDoor = Math.abs(ang - Math.PI) < .6;
     if (atDoor) openDoor(); else { tYaw = faceDoor(); tPitch = -.05; toast("Tipp auf die Tür"); }
@@ -585,13 +591,13 @@ const esc = s => String(s).replace(/[&<>"]/g, m => ({ "&": "&amp;", "<": "&lt;",
   // Orakel
   let orakel = "";
   function ask() { orakel = ORAKEL[Math.floor(Math.random() * ORAKEL.length)]; $("oracleText").textContent = orakel; blip(520); }
-  $("bOracle").onclick = () => { ask(); $("oracle").hidden = false; };
+  $("bOracle").onclick = () => { if (!trialOk()) return; ask(); $("oracle").hidden = false; };
   $("oracleAgain").onclick = ask;
   $("oracleClose").onclick = () => $("oracle").hidden = true;
   $("oracleStick").onclick = () => { $("oracle").hidden = true; postIt({ t: orakel, color: "silver", font: "marker" }); };
 
   // Foto
-  $("bPhoto").onclick = () => { renderer.render(scene, camera); $("photoImg").src = canvas.toDataURL("image/jpeg", .9); $("photo").hidden = false; blip(1200); };
+  $("bPhoto").onclick = () => { if (!trialOk()) return; renderer.render(scene, camera); $("photoImg").src = canvas.toDataURL("image/jpeg", .9); $("photo").hidden = false; blip(1200); };
   $("photoClose").onclick = () => $("photo").hidden = true;
 
   // Licht
@@ -644,7 +650,7 @@ const esc = s => String(s).replace(/[&<>"]/g, m => ({ "&": "&amp;", "<": "&lt;",
     tick(); const id = setInterval(tick, 300);
     music = { stop() { clearInterval(id); out.gain.setTargetAtTime(0, a.currentTime, .1); } };
   }
-  $("bMusic").onclick = () => { if (!music && window.__kloSong) __kloSong.pause(); if (music) { music.stop(); music = null; } else startMusic(); $("bMusic").setAttribute("aria-pressed", !!music); };
+  $("bMusic").onclick = () => { if (!music && !trialOk()) return; if (!music && window.__kloSong) __kloSong.pause(); if (music) { music.stop(); music = null; } else startMusic(); $("bMusic").setAttribute("aria-pressed", !!music); };
 
   // ---------- Live: echte Demo-Wand ----------
   firebase.initializeApp(firebaseConfig);
@@ -662,7 +668,7 @@ const esc = s => String(s).replace(/[&<>"]/g, m => ({ "&": "&amp;", "<": "&lt;",
   }
   const base = fsdb.collection("walls").doc("demo");
   window.fs = fsdb; window.kloDemo = kloDemo; window.kloUpsell = upsell;
-  $("bGames").onclick = () => { if (focus) closeCard(); setTour(false); const b = document.getElementById("kgOpen"); if (b) b.click(); };
+  $("bGames").onclick = () => { if (!trialOk()) return; if (focus) closeCard(); setTour(false); const b = document.getElementById("kgOpen"); if (b) b.click(); };
   function now() { return firebase.firestore.FieldValue.serverTimestamp(); }
   const DAY = 864e5, since = firebase.firestore.Timestamp.fromMillis(Date.now() - 60 * DAY);
   const LEGACY = Date.now() < Date.parse("2027-01-10");

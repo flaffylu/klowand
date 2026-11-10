@@ -114,12 +114,27 @@ label.bpm input{flex:1;accent-color:var(--pink)}
 </div>
 
 <script src="three.min.js"></script>
+<script src="lang.js"></script>
+<script src="config.js"></script>
+<script src="demo-trial.js"></script>
 <script>
 (async function () {
   const $ = id => document.getElementById(id);
   const q = new URLSearchParams(location.search);
   const WALL = (q.get("wand") || "demo").toLowerCase().replace(/[^a-z0-9-]/g, "").slice(0, 60) || "demo";
   $("back").href = q.get("from") === "3d" ? "3d.html" : "./?wand=" + encodeURIComponent(WALL);
+  /* Demo: Disco gehört nach den 4 Gratis-Tagen zur Vollversion */
+  if ((WALL === "demo" || WALL === "familie-demo" || q.get("from") === "3d") && window.KloTrial && KloTrial.over()) {
+    const app = typeof KLO_APP !== "undefined" && KLO_APP;
+    const d = document.createElement("div");
+    d.style.cssText = "position:fixed;inset:0;z-index:20;display:grid;place-items:center;padding:16px;background:rgba(6,3,13,.82)";
+    d.innerHTML = `<div style="max-width:420px;background:#140a24;border:1.5px solid #ff3ea5;border-radius:20px;padding:20px;text-align:center;box-shadow:0 0 40px rgba(255,62,165,.35)">
+      <h2 style="margin:0 0 8px;font:400 1.7rem 'Permanent Marker',cursive;color:#ff3ea5">🪩 Disco-Raum</h2>
+      <p style="margin:0 0 14px;font:600 1.05rem/1.35 'Barlow Condensed',sans-serif">Deine 4 Gratis-Tage sind vorbei. Weiter kostenlos: Schreiben (150 Sätze), Malen und der Chill-Raum.${app ? "" : " Den Disco-Raum gibt's mit deiner eigenen Klo-Wand."}</p>
+      ${app ? "" : `<a href="wirte.html" style="display:inline-flex;min-height:46px;align-items:center;padding:0 18px;margin:4px;border-radius:999px;background:#ff3ea5;color:#140612;font:700 1rem 'Barlow Condensed';text-decoration:none;text-transform:uppercase">Eigene Wand holen</a>`}
+      <a href="${$("back").href}" style="display:inline-flex;min-height:46px;align-items:center;padding:0 18px;margin:4px;border-radius:999px;border:1.5px solid rgba(255,255,255,.3);color:#fff;font:700 1rem 'Barlow Condensed';text-decoration:none;text-transform:uppercase">Zurück</a></div>`;
+    document.body.appendChild(d);
+  }
 
   // ---------- Audio ----------
   const AC = window.AudioContext || window.webkitAudioContext;

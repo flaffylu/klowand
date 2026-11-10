@@ -310,11 +310,10 @@ form button:disabled{opacity:.5}
     }, () => mod("Der Chill-Raum ist gerade nicht erreichbar. Lade die Seite neu."));
     $("form").addEventListener("submit", e => {
       e.preventDefault();
-      if (DEMOW && used() >= FREI) { mod(IN_APP ? "Deine Gratis-Nachrichten sind aufgebraucht. Lesen geht weiter." : "Deine Gratis-Nachrichten sind aufgebraucht. Mit eurer eigenen Wand bekommt ihr euren privaten Chill-Raum."); return; }
       const t = $("msg").value.trim().slice(0, DEMOW ? 120 : 200), err = check(t);
       if (err) { mod(err); return; }
       $("msg").value = ""; mod("");
-      grp.collection("chill").add({ n: me, t, ts: now() }).then(() => { if (DEMOW) try { localStorage.setItem(DKEY, String(used() + 1)); } catch (er) {} }).catch(er => mod(er && er.code === "permission-denied" ? "Hat nicht geklappt. Sind die neuen Firebase-Regeln schon drin?" : "Hat nicht geklappt. Versuch es gleich nochmal."));
+      grp.collection("chill").add({ n: me, t, ts: now() }).catch(er => mod(er && er.code === "permission-denied" ? "Hat nicht geklappt. Sind die neuen Firebase-Regeln schon drin?" : "Hat nicht geklappt. Versuch es gleich nochmal."));
     });
   }
   if (okName(me)) enter();

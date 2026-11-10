@@ -28,8 +28,9 @@
   let lastId = null, stopGame = () => {};
   /* Demo-Wand: nur ein Spiel und keine Musik, der Rest zeigt auf die Vollversion */
   // Demo: nach den 50 Gratis-Nachrichten sind Musik und 2 Spiele gesperrt
-  const isDemoLocked = () => typeof kloDemo !== "undefined" && kloDemo.locked();
-  const locked = () => isDemoLocked() ? ["reflex", "stapel", "fliege", "memory", "ente", "simon", "zahlen"] : [];
+  // Demo: nach den 4 Gratis-Tagen sind Spiele, Musik, eigene Lieder und Disco gesperrt
+  const isDemoLocked = () => typeof kloDemo !== "undefined" && (kloDemo.over ? kloDemo.over() : kloDemo.locked());
+  const locked = () => isDemoLocked() ? ["fang", "reflex", "stapel", "fliege", "memory", "ente", "simon", "zahlen"] : [];
   const upsell = r => { if (window.kloUpsell) kloUpsell(r); };
 
   /* ---------- Styles ---------- */
@@ -119,7 +120,7 @@
   const musicLock = () => { $("kgMusic").classList.toggle("locked", isDemoLocked()); $("kgTrack").hidden = isDemoLocked() || !(KloMusik.trackCount > 1); };
   window.addEventListener("klo-demo", musicLock);
   $("kgMusic").onclick = async () => {
-    if (isDemoLocked()) { upsell("limit"); return; }
+    if (isDemoLocked()) { upsell("trial"); return; }
     if (window.__kloSong) __kloSong.pause();
     await KloMusik.toggle();
     const on = KloMusik.isOn();
@@ -132,12 +133,14 @@
 
   /* ---------- Eigene Lieder: MP3s vom eigenen Handy, bleiben nur auf diesem Gerät ---------- */
   const IS_DEMO_WALL = typeof DEMO !== "undefined" && DEMO;
+  const mineLocked = () => IS_DEMO_WALL && isDemoLocked();
   const mm = document.createElement("button"); mm.type = "button"; mm.id = "kgMine";
-  mm.className = IS_DEMO_WALL ? "locked" : "";
+  mm.className = mineLocked() ? "locked" : "";
   mm.innerHTML = `🎧 <span id="kgMineTxt">${tr("Eigene Lieder", "My songs")}</span>`;
   $("kgTrack").after(mm);
   const dsc = document.createElement("button"); dsc.type = "button"; dsc.id = "kgDisco"; dsc.innerHTML = "🪩 " + tr("Disco-Raum", "Disco room");
-  dsc.onclick = () => { location.href = "disco.html?wand=" + encodeURIComponent(typeof WALL !== "undefined" ? WALL : "demo"); };
+  if (isDemoLocked()) dsc.classList.add("locked");
+  dsc.onclick = () => { if (isDemoLocked()) { upsell("trial"); return; } location.href = "disco.html?wand=" + encodeURIComponent(typeof WALL !== "undefined" ? WALL : "demo"); };
   mm.after(dsc);
   const mcss = document.createElement("style");
   mcss.textContent = `.mm{position:fixed;inset:0;z-index:31;background:rgba(10,14,12,.55);display:flex;align-items:flex-end;justify-content:center;padding:12px}
@@ -194,7 +197,7 @@
       : `<li class="empty" style="display:block">${tr("Noch keine Lieder. Tipp unten auf „Lieder hinzufügen“.", "No songs yet. Tap “Add songs” below.")}</li>`;
   }
   async function openMine() {
-    if (IS_DEMO_WALL) { upsell("musik"); return; }
+    if (mineLocked()) { upsell("trial"); return; }
     await loadSongs();
     mmEl = document.createElement("div"); mmEl.className = "mm"; mmEl.setAttribute("role", "dialog"); mmEl.setAttribute("aria-label", tr("Eigene Lieder", "My songs"));
     mmEl.innerHTML = `<div class="box"><div class="hd"><h2>🎧 ${tr("Eigene Lieder", "My songs")}</h2><button type="button" class="x" data-x aria-label="${tr("Schließen", "Close")}">✕</button></div>
@@ -253,7 +256,7 @@
     const b = e.target.closest("[data-go]"); if (!b) return;
     const [what, g, tab] = b.dataset.go.split(":");
     if (what === "menu") menu();
-    if ((what === "play" || what === "board") && locked().includes(g)) { upsell("limit"); return; }
+    if ((what === "play" || what === "board") && locked().includes(g)) { upsell("trial"); return; }
     if (what === "play") ({ fang: playFang, reflex: playReflex, stapel: playStapel, fliege: playFliege, memory: playMemory, ente: playEnte, simon: playSimon, zahlen: playZahlen })[g]();
     if (what === "board") board(g, tab || "heute");
   });

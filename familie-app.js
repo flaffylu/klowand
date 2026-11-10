@@ -218,8 +218,12 @@
       };
     }
     // Notfall-Hilfe gibt's nur im eigenen Familien-Planner; der Hinweis nennt trotzdem die 112
-    const sos = document.getElementById("famSos"); sos.classList.add("locked");
-    sos.onclick = () => window.kloUpsell && kloUpsell("notfall");
+    /* Probezeit: 4 Tage alles frei (Notfall-Hilfe echt nutzbar), danach gesperrt – außer Schreiben, Malen, Chill-Raum */
+    const over = () => typeof kloDemo !== "undefined" && kloDemo.over && kloDemo.over();
+    const sos = document.getElementById("famSos");
+    const gate = (id, fn) => { const b = document.getElementById(id); if (!b) return; const orig = fn || b.onclick; b.classList.toggle("locked", over()); b.onclick = e => { if (over()) { window.kloUpsell && kloUpsell("trial"); return; } orig && orig.call(b, e); }; };
+    gate("famSos", () => window.kloNotfall ? kloNotfall() : (window.kloUpsell && kloUpsell("notfall")));
+    ["famPlan", "famFoto", "famEk"].forEach(id => gate(id));
     return;
   }
   if (typeof FIXED !== "undefined" && FIXED) return;

@@ -203,14 +203,14 @@
     <button type="button" id="demoMore"></button></div>`);
   const demoFree = () => {
     const el = document.getElementById("demoFree"), b = document.getElementById("demoMore"); if (!el || typeof kloDemo === "undefined") return;
-    const left = kloDemo.left();
-    el.textContent = left > 0
-      ? "🎁 " + tr(`Noch ${left} von ${DEMO_FREI} Gratis-Nachrichten – bis dahin ist alles frei: Malen, Musik und alle Spiele.`, `${left} of ${DEMO_FREI} free messages left – until then everything is unlocked: drawing, music and all games.`, `無料メッセージ残り${left}/${DEMO_FREI} – それまで全部使えます。`)
-      : "🔒 " + (KLO_APP
-        ? tr(`Deine ${DEMO_FREI} Gratis-Nachrichten sind aufgebraucht. Lesen und Striche setzen geht weiter.`, `Your ${DEMO_FREI} free messages are used up. Reading and marking still work.`, "無料メッセージを使い切りました。読む・線を付けるはできます。")
-        : tr(`Deine ${DEMO_FREI} Gratis-Nachrichten sind aufgebraucht. Mit eigener Wand schreibst du unbegrenzt.`, `Your ${DEMO_FREI} free messages are used up. With your own wall you write without limits.`, "無料メッセージを使い切りました。自分のウォールなら無制限。"));
-    b.textContent = left > 0 || KLO_APP ? tr("Was geht noch?", "What else?", "他には？") : tr("Eigene Wand holen", "Get your own wall", "自分のウォール");
-    b.onclick = () => kloUpsell(left > 0 ? "all" : "limit");
+    const over = kloDemo.over(), left = kloDemo.left(), days = KloTrial.daysLeft();
+    el.textContent = !over
+      ? "🎁 " + tr(`Noch ${days} ${days === 1 ? "Tag" : "Tage"} alles gratis: Spiele, Musik, Disco, Kalender, Freundebuch und mehr.`, `${days} more day${days === 1 ? "" : "s"} with everything free: games, music, disco, calendar, friends book and more.`)
+      : left > 0
+        ? "⏰ " + tr(`Deine 4 Gratis-Tage sind vorbei. Weiter frei: Schreiben (noch ${left} von ${DEMO_FREI}), Malen und Chill-Raum.`, `Your 4 free days are over. Still free: writing (${left} of ${DEMO_FREI} left), drawing and the chill room.`)
+        : "🔒 " + tr(`Deine ${DEMO_FREI} Sätze sind aufgebraucht. Malen und Chill-Raum gehen weiter.`, `Your ${DEMO_FREI} messages are used up. Drawing and the chill room still work.`);
+    b.textContent = !over || KLO_APP ? tr("Was geht noch?", "What else?", "他には？") : tr("Eigene Wand holen", "Get your own wall", "自分のウォール");
+    b.onclick = () => kloUpsell(!over ? "all" : left > 0 ? "trial" : "limit");
   };
   window.addEventListener("klo-demo", demoFree);
   const db = document.querySelector(".demobar");
@@ -222,6 +222,8 @@
     music: KLO_APP ? tr("Musik gibt's auf eigenen Wänden.", "Music is on own walls.", "音楽は自分のウォールで。") : tr("Musik gibt's in der Vollversion.", "Music comes with the full version.", "音楽はフルバージョンで使えます。"),
     game: KLO_APP ? tr("Dieses Spiel gibt's auf eigenen Wänden.", "This game is on own walls.", "このゲームは自分のウォールで。") : tr("Dieses Spiel gibt's in der Vollversion.", "This game comes with the full version.", "このゲームはフルバージョンで遊べます。"),
     notfall: tr("Die Notfall-Hilfe mit Bildern gibt's im eigenen Familien-Planner. Im echten Notfall: sofort 112 anrufen!", "The picture-based emergency help comes with your own Family Planner. In a real emergency: call 112 (911 in the US) right away!", "絵で分かる緊急ヘルプは自分のファミリープランナーで。本当の緊急時はすぐ119へ！"),
+    trial: KLO_APP ? tr("Die 4 Gratis-Tage der Demo sind vorbei. Weiter frei: Schreiben (150 Sätze), Malen und der Chill-Raum. Alles andere gibt's auf eigenen Wänden.", "The 4 free demo days are over. Still free: writing (150 messages), drawing and the chill room. Everything else is on own walls.")
+      : tr("Deine 4 Gratis-Tage sind vorbei. Weiter kostenlos: Schreiben (150 Sätze), Malen und der Chill-Raum. Alles andere bekommst du mit deiner eigenen Wand:", "Your 4 free days are over. Still free: writing (150 messages), drawing and the chill room. Everything else comes with your own wall:"),
     musik: tr("Eigene Lieder vom Handy abspielen geht mit deiner eigenen Wand. Dort wählst du einfach deine MP3s aus.", "Playing your own songs from your phone works with your own wall. Just pick your MP3s there."),
     fotos: tr("Fotos teilen geht mit eurer eigenen Wand: Familien- oder Freunde-Bereich einschalten, und nur wer euren QR-Code hat, sieht die Bilder.", "Sharing photos works with your own wall: switch on the private area, and only people with your QR code can see the pictures."),
     familie: tr("Stundenplan und Familienfotos gibt's mit eurem eigenen Familien-Planner, nur für euch sichtbar.", "Timetable and family photos come with your own family wall, visible only to you.", "時間割と家族の写真は、自分たちのファミリーウォールで。家族だけが見られます。"),
