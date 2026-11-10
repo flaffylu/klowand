@@ -120,6 +120,7 @@
   window.addEventListener("klo-demo", musicLock);
   $("kgMusic").onclick = async () => {
     if (isDemoLocked()) { upsell("limit"); return; }
+    if (window.__kloSong) __kloSong.pause();
     await KloMusik.toggle();
     const on = KloMusik.isOn();
     $("kgMusic").setAttribute("aria-pressed", on);
@@ -171,6 +172,7 @@
     if (!songs.length) return;
     cur = (i + songs.length) % songs.length;
     if (KloMusik.isOn()) { KloMusik.stop(); $("kgMusic").setAttribute("aria-pressed", false); $("kgMusicTxt").textContent = tr("Musik an", "Music on"); }
+    if (window.__kloSong) __kloSong.pause();
     audio.src = urlOf(songs[cur]); audio.play().catch(() => {}); drawMine();
   }
   const nextSong = () => playAt(shuffle && songs.length > 1 ? (cur + 1 + Math.floor(Math.random() * (songs.length - 1))) % songs.length : cur + 1);

@@ -644,12 +644,13 @@ const esc = s => String(s).replace(/[&<>"]/g, m => ({ "&": "&amp;", "<": "&lt;",
     tick(); const id = setInterval(tick, 300);
     music = { stop() { clearInterval(id); out.gain.setTargetAtTime(0, a.currentTime, .1); } };
   }
-  $("bMusic").onclick = () => { if (music) { music.stop(); music = null; } else startMusic(); $("bMusic").setAttribute("aria-pressed", !!music); };
+  $("bMusic").onclick = () => { if (!music && window.__kloSong) __kloSong.pause(); if (music) { music.stop(); music = null; } else startMusic(); $("bMusic").setAttribute("aria-pressed", !!music); };
 
   // ---------- Live: echte Demo-Wand ----------
   firebase.initializeApp(firebaseConfig);
   const fsdb = firebase.firestore();
   if (new URLSearchParams(location.search).has("qr")) {
+    setTimeout(() => window.kloScanSong && kloScanSong({ bottom: 300 }), 0);
     try {
       if (!sessionStorage.getItem("klowand-scan-scanbar")) {
         sessionStorage.setItem("klowand-scan-scanbar", "1");
@@ -719,6 +720,7 @@ const esc = s => String(s).replace(/[&<>"]/g, m => ({ "&": "&amp;", "<": "&lt;",
 })();
 </script>
 <script src="games.js"></script>
+<script src="scan-music.js"></script>
 <script>if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});</script>
 </body>
 </html>

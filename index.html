@@ -389,6 +389,7 @@ html.famdemo .post{border-radius:10px}
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script src="lang-ja.js"></script>
 <script src="lang.js"></script>
+<script src="scan-music.js"></script>
 <script src="config.js"></script>
 <script src="filter.js"></script>
 <script>
@@ -505,8 +506,8 @@ function kloScan(kind) {
 (function () {
   const q = new URLSearchParams(location.search), fromQr = q.has("qr") || !document.referrer;
   if (!fromQr || KLO_APP) return;
-  if (WALL === "familie-demo" && q.get("wand") === "familie-demo") kloScan("scanfam");
-  else if (WALL === "demo" && q.get("wand") === "demo") kloScan("scanbar");
+  if (WALL === "familie-demo" && q.get("wand") === "familie-demo") { kloScan("scanfam"); window.kloScanSong && kloScanSong({ bottom: 280 }); }
+  else if (WALL === "demo" && q.get("wand") === "demo") { kloScan("scanbar"); window.kloScanSong && kloScanSong({ bottom: 280 }); }
   if (q.has("qr")) { q.delete("qr"); history.replaceState(null, "", location.pathname + (q.toString() ? "?" + q : "") + location.hash); }
 })();
 const base = fs.collection("walls").doc(WALL);
