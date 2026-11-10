@@ -92,6 +92,12 @@ form button:disabled{opacity:.5}
 .slist .empty{display:block;text-align:center;color:var(--muted);padding:12px}
 .sadd{position:relative;display:flex;align-items:center;justify-content:center;min-height:50px;margin-top:10px;border-radius:14px;border:2px dashed var(--lime);color:var(--lime);font:700 1.05rem var(--f-ui);cursor:pointer}
 .sadd input{position:absolute;width:1px;height:1px;opacity:0}
+.ytf{display:flex;gap:6px}
+.ytf input{flex:1;min-width:0;min-height:46px;border-radius:12px;border:1.5px solid var(--line);background:rgba(255,255,255,.07);color:var(--ink);padding:0 12px;font:600 1rem var(--f-ui)}
+.ytf button{min-height:46px;padding:0 16px;border-radius:12px;border:none;background:#ff3d3d;color:#fff;font:800 1rem var(--f-ui);cursor:pointer}
+.ytbox{position:fixed;left:50%;top:42%;transform:translate(-50%,-50%);z-index:6;width:min(calc(100% - 24px),960px);aspect-ratio:16/9;border-radius:10px;overflow:hidden;box-shadow:0 0 0 6px #0b0712,0 0 50px rgba(255,111,181,.45);background:#000}
+.ytbox iframe{width:100%;height:100%;border:0;display:block}
+.ytbox button{position:absolute;top:6px;right:6px;width:40px;height:40px;border-radius:50%;border:none;background:rgba(0,0,0,.65);color:#fff;font:700 1rem var(--f-ui);cursor:pointer}
 .toast{position:fixed;left:50%;top:calc(110px + env(safe-area-inset-top,0px));transform:translateX(-50%);z-index:8;padding:10px 18px;border-radius:999px;background:rgba(18,10,31,.94);border:1.5px solid var(--gold);color:var(--gold);font:700 1.05rem var(--f-ui);box-shadow:0 0 24px rgba(255,200,103,.35);white-space:nowrap;max-width:calc(100% - 32px);overflow:hidden;text-overflow:ellipsis}
 </style>
 </head>
@@ -110,9 +116,11 @@ form button:disabled{opacity:.5}
   <div class="log" id="log" aria-live="polite"></div>
   <div class="mod" id="mod"></div>
   <div class="tvbar" id="tvBar" hidden><span id="tvStat">📺 Fernseher</span><button type="button" class="go" id="tvRoll" hidden>🎲 Würfeln</button><button type="button" id="tvBoard">Brett</button><button type="button" id="tvExit">✕ Zurück</button></div>
+  <div class="tvbar" id="kinoBar" hidden><span id="kTitle">🎬 Klo-TV</span><button type="button" id="kPrev" aria-label="Kanal zurück">◀</button><button type="button" id="kNext" aria-label="Nächster Kanal">▶</button><button type="button" class="go" id="kSnd" aria-pressed="false">🔈 Ton an</button><button type="button" id="kYt">▶ YouTube</button><button type="button" id="kExit">✕ Zurück</button></div>
   <div class="acts" id="acts">
     <button type="button" id="aGift">🎁 Geschenk</button>
     <button type="button" id="aGame">🎲 Spiele</button>
+    <button type="button" id="aKino" aria-pressed="false">🎬 Leinwand</button>
     <button type="button" id="aTv" aria-pressed="false">📺 TV</button>
     <button type="button" id="aSong" aria-pressed="false">🎧 <span id="aSongTxt">Eigene Musik</span></button>
   </div>
@@ -160,6 +168,13 @@ form button:disabled{opacity:.5}
   <ul class="slist" id="songList"></ul>
   <label class="sadd">＋ Lieder hinzufügen<input type="file" id="songFile" accept="audio/*" multiple></label>
 </div></div>
+<div class="sheet" id="ytSheet" hidden><div class="sheetIn">
+  <div class="shead"><h3>▶ Musikvideo von YouTube</h3><button type="button" id="ytX" aria-label="Schließen">✕</button></div>
+  <p class="lbl">In YouTube beim Video auf „Teilen“ → „Kopieren“ tippen und den Link hier einfügen. Das Video läuft nur bei dir auf der Leinwand.</p>
+  <form id="ytForm" class="ytf"><label for="ytIn" style="position:absolute;left:-9999px">YouTube-Link</label><input id="ytIn" inputmode="url" autocomplete="off" placeholder="https://youtu.be/…"><button type="submit">▶ Abspielen</button></form>
+  <p class="lbl" id="ytErr" hidden style="color:#ff8f8f">Das ist kein YouTube-Link.</p>
+</div></div>
+<div class="ytbox" id="ytBox" hidden></div>
 <div class="toast" id="toast" hidden></div>
 
 <script src="three.min.js"></script>
@@ -299,7 +314,7 @@ form button:disabled{opacity:.5}
     const keep = new Set(list.map(p => p.id));
     for (const [id, g] of people) if (!keep.has(id)) { scene.remove(g); people.delete(id); }
     list.forEach((p, i) => { let g = people.get(p.id); if (!g || g.userData.name !== p.n) { if (g) scene.remove(g); g = avatar(p.n); people.set(p.id, g); } const s = SEATS[i % SEATS.length]; g.userData.seat = s; g.lookAt(0, .8, 2); g.rotation.x = 0; g.rotation.z = 0; });
-    curList = list; for (const g of people.values()) g.visible = !tvView;
+    curList = list; for (const g of people.values()) g.visible = !(tvView || kinoView);
     $("who").innerHTML = list.map(p => `<span><i style="background:${colorOf(p.n)}"></i>${esc(p.n)}${p.id === device ? " (du)" : ""}</span>`).join("");
   }
   function say(nameOrId, text) {
@@ -323,7 +338,7 @@ form button:disabled{opacity:.5}
   function ring(name) {
     dingDong(); toast("🔔 " + name + " ist reingekommen");
     doorUntil = performance.now() + 2600;
-    if (!tvView && !dragging) { tYaw = -.72; idleT = 0; setTimeout(() => { if (!tvView) tYaw = 0; }, 2800); }
+    if (!tvView && !kinoView && !dragging) { tYaw = -.72; idleT = 0; setTimeout(() => { if (!tvView && !kinoView) tYaw = 0; }, 2800); }
   }
 
   // ---------- Geschenke ----------
@@ -792,6 +807,7 @@ form button:disabled{opacity:.5}
   // TV groß anschauen
   let tvView = false;
   function setTvView(on) {
+    if (on && kinoView) setKino(false);
     tvView = on; $("aTv").setAttribute("aria-pressed", on); $("tvBar").hidden = !on; $("acts").hidden = on;
     for (const g of people.values()) g.visible = !on;
     if (!on) { tYaw = 0; tPitch = -.12; }
@@ -813,10 +829,164 @@ form button:disabled{opacity:.5}
 
   // ---------- Kamera: wischen zum Umschauen ----------
   let yaw = 0, tYaw = 0, pitch = -.12, tPitch = -.12, dragging = false, lx = 0, ly = 0;
+  // ---------- Große Leinwand: Musikvideo-Kanäle (alles im Handy berechnet, Bild + Musik) ----------
+  const KX = -W / 2 + .03, KY = 1.55, KZ = -.3, KW = 2.6, KH = 1.46;
+  const kC = document.createElement("canvas"); kC.width = 640; kC.height = 360; const kx = kC.getContext("2d");
+  const kT = new THREE.CanvasTexture(kC);
+  box(.05, KH + .16, KW + .16, new THREE.MeshStandardMaterial({ color: "#0b0712", roughness: .5 }), KX - .01, KY, KZ);
+  const kScreen = plane(KW, KH, new THREE.MeshBasicMaterial({ map: kT })); kScreen.rotation.y = Math.PI / 2; kScreen.position.set(KX + .03, KY, KZ); scene.add(kScreen);
+  const kLight = new THREE.PointLight("#ff6fb5", .7, 3.6, 2); kLight.position.set(KX + .7, KY, KZ); scene.add(kLight);
+  // Kanäle: Takt, Muster und Bild. Namen sind Musikrichtungen, keine echten Bands.
+  const NOTE = n => 440 * Math.pow(2, (n - 69) / 12);
+  const CH = [
+    { n: "Lo-Fi Nacht", bpm: 78, k: "x...x.....x.x...", s: "....x.......x...", h: "x.x.x.x.x.x.x.x.", bass: [45, , , , , , 45, , 41, , , , , , 43, ,], pad: [[57, 60, 64], [53, 57, 60], [55, 59, 62], [52, 55, 59]], lead: null, col: "#ff9a5a" },
+    { n: "Techno", bpm: 128, k: "x...x...x...x...", s: "....x.......x...", h: "..x...x...x...x.", bass: [36, , 36, , 36, , 36, 39, 36, , 36, , 36, , 41, ,], pad: null, lead: [60, , 63, , 67, , 63, , 60, , 63, , 70, , 67, ,], col: "#5fe6ff" },
+    { n: "Disco 70er", bpm: 118, k: "x...x...x...x...", s: "....x.......x...", h: "..x...x...x...x.", bass: [41, , 53, , 41, , 53, , 43, , 55, , 43, , 55, ,], pad: [[65, 69, 72], [67, 70, 74], [65, 69, 72], [64, 67, 72]], lead: null, col: "#ffd166" },
+    { n: "Synthwave 80er", bpm: 100, k: "x.......x.......", s: "....x.......x...", h: "x.x.x.x.x.x.x.x.", bass: [45, 45, 45, 45, 45, 45, 45, 45, 41, 41, 41, 41, 43, 43, 43, 43], pad: [[57, 60, 64], [53, 57, 60], [55, 59, 62], [55, 59, 62]], lead: [69, , , 67, , , 64, , 67, , , 64, , , 62, ,], col: "#ff4fd8" },
+    { n: "Rock", bpm: 132, k: "x.....x.x.......", s: "....x.......x...", h: "x.x.x.x.x.x.x.x.", bass: [40, , 40, 40, 40, , 40, , 43, , 43, 43, 45, , 45, ,], pad: [[52, 59, 64], [52, 59, 64], [55, 62, 67], [57, 64, 69]], pw: 1, lead: null, col: "#ff5a3d" },
+    { n: "Strand-Reggae", bpm: 82, k: "........x.......", s: "........x.......", h: "x.x.x.x.x.x.x.x.", bass: [43, , , 43, , , 47, , 48, , , 48, , , 50, ,], pad: [[67, 71, 74], [72, 76, 79], [67, 71, 74], [74, 78, 81]], off: 1, lead: null, col: "#7dffa1" }
+  ];
+  let kCh = 0, kOn = false, kBeat = 0, kSince = performance.now(), kAuto = true;
+  try { kCh = Math.max(0, Math.min(CH.length - 1, parseInt(localStorage.getItem("klowand-kino") || "0", 10) || 0)); } catch (e) {}
+  // Musik zum Kanal
+  let kGain = null, kTimer = 0, kStep = 0, kNext = 0, kNoise = null;
+  function kAudio() {
+    ac(); if (!AC) return false;
+    if (!kGain) { kGain = AC.createGain(); kGain.gain.value = .5; kGain.connect(AC.destination);
+      kNoise = AC.createBuffer(1, AC.sampleRate * .5, AC.sampleRate); const d = kNoise.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1; }
+    return true;
+  }
+  const env = (g, t, a, dcy, v) => { g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(v, t + a); g.gain.exponentialRampToValueAtTime(.0008, t + a + dcy); };
+  function kHit(kind, t, c, i) {
+    const g = AC.createGain(); g.connect(kGain);
+    if (kind === "k") { const o = AC.createOscillator(); o.frequency.setValueAtTime(140, t); o.frequency.exponentialRampToValueAtTime(42, t + .18); env(g, t, .004, .32, .9); o.connect(g); o.start(t); o.stop(t + .4); return; }
+    if (kind === "s" || kind === "h") { const s = AC.createBufferSource(); s.buffer = kNoise; const f = AC.createBiquadFilter(); f.type = kind === "s" ? "bandpass" : "highpass"; f.frequency.value = kind === "s" ? 1800 : 8000;
+      env(g, t, .002, kind === "s" ? .16 : .045, kind === "s" ? .35 : .12); s.connect(f); f.connect(g); s.start(t); s.stop(t + .25); return; }
+    if (kind === "b") { const o = AC.createOscillator(), f = AC.createBiquadFilter(); o.type = "sawtooth"; o.frequency.value = NOTE(c); f.type = "lowpass"; f.frequency.value = 520; env(g, t, .006, .22, .3); o.connect(f); f.connect(g); o.start(t); o.stop(t + .3); return; }
+    if (kind === "l") { const o = AC.createOscillator(); o.type = "square"; o.frequency.value = NOTE(c); env(g, t, .005, .16, .06); o.connect(g); o.start(t); o.stop(t + .2); return; }
+    if (kind === "p") { const len = i; c.forEach((n, j) => { const o = AC.createOscillator(); o.type = CH[kCh].pw ? "sawtooth" : "triangle"; o.frequency.value = NOTE(n); o.detune.value = (j - 1) * 6;
+      const gg = AC.createGain(); gg.gain.setValueAtTime(0, t); gg.gain.linearRampToValueAtTime(CH[kCh].pw ? .05 : .07, t + .08); gg.gain.setValueAtTime(CH[kCh].pw ? .05 : .07, t + len - .1); gg.gain.linearRampToValueAtTime(0, t + len);
+      o.connect(gg); gg.connect(kGain); o.start(t); o.stop(t + len + .05); }); }
+  }
+  function kSched() {
+    const c = CH[kCh], st = 60 / c.bpm / 4;
+    while (kNext < AC.currentTime + .15) {
+      const i = kStep % 16, t = kNext;
+      if (c.k[i] === "x") { kHit("k", t); setTimeout(() => kBeat = 1, Math.max(0, (t - AC.currentTime) * 1000)); }
+      if (c.s[i] === "x") kHit("s", t); if (c.h[i] === "x") kHit("h", t);
+      if (c.bass[i] != null) kHit("b", t, c.bass[i]);
+      if (c.lead && c.lead[i] != null) kHit("l", t, c.lead[i]);
+      if (c.pad) { const bar = Math.floor(kStep / 16) % c.pad.length;
+        if (c.off) { if (i % 4 === 2) kHit("p", t, c.pad[bar], st * 1.2); } else if (i === 0) kHit("p", t, c.pad[bar], st * 16); }
+      kStep++; kNext += st;
+    }
+  }
+  function kSound(on) {
+    if (on && !kAudio()) return;
+    kOn = on; clearInterval(kTimer);
+    if (on) { if (!song.paused) song.pause(); KloSpotify.stop(); if (KloMusik.isOn()) { KloMusik.stop(); $("music").setAttribute("aria-pressed", false); }
+      kStep = 0; kNext = AC.currentTime + .05; kTimer = setInterval(kSched, 40); }
+    kBarUI();
+  }
+  function kSet(i) { kCh = (i + CH.length) % CH.length; kSince = performance.now(); try { localStorage.setItem("klowand-kino", kCh); } catch (e) {} if (kOn) { kStep = 0; kNext = AC.currentTime + .05; } kBarUI(); }
+
+  // Bilder zum Kanal (640×360)
+  function kDraw(t) {
+    const x = kx, w = 640, h = 360, c = CH[kCh];
+    if (kAuto && !kOn && performance.now() - kSince > 40000) kSet(kCh + 1);
+    if (!kOn) { const bt = 60 / c.bpm, ph = (t % bt) / bt; if (ph < .08) kBeat = 1; }
+    const b = kBeat; kBeat *= .9;
+    const n = c.n;
+    if (n === "Lo-Fi Nacht") {
+      const g = x.createLinearGradient(0, 0, 0, h); g.addColorStop(0, "#0d1033"); g.addColorStop(1, "#3a1d4f"); x.fillStyle = g; x.fillRect(0, 0, w, h);
+      x.fillStyle = "#fff4c8"; x.beginPath(); x.arc(500, 70, 34, 0, 7); x.fill();
+      for (let i = 0; i < 14; i++) { const bx = i * 48 - 10, bh = 90 + (i * 37 % 110); x.fillStyle = "#151233"; x.fillRect(bx, h - bh, 44, bh);
+        for (let r = 0; r < bh / 18 - 1; r++) for (let q = 0; q < 3; q++) if ((i * 7 + r * 3 + q) % 5 === 0) { x.fillStyle = (Math.sin(t * .5 + i + r) > -.6) ? "#ffcf7a" : "#3a2f58"; x.fillRect(bx + 6 + q * 13, h - bh + 10 + r * 18, 7, 9); } }
+      x.strokeStyle = "rgba(170,190,255,.35)"; x.lineWidth = 1;
+      for (let i = 0; i < 70; i++) { const rx = (i * 83 + t * 40) % w, ry = (i * 51 + t * 260) % h; x.beginPath(); x.moveTo(rx, ry); x.lineTo(rx - 3, ry + 12); x.stroke(); }
+      x.fillStyle = "rgba(0,0,0,.55)"; x.fillRect(0, h - 70, w, 70); x.fillStyle = "#e9c48a"; x.beginPath(); x.ellipse(120, h - 52, 46, 12, 0, 0, 7); x.fill();
+      x.fillStyle = "#ffcf7a"; x.fillRect(100, h - 92 - b * 4, 40, 34); x.fillStyle = "#fff"; x.globalAlpha = .4; x.beginPath(); x.arc(120 + Math.sin(t) * 4, h - 110 - (t * 20 % 30), 6, 0, 7); x.fill(); x.globalAlpha = 1;
+    } else if (n === "Techno") {
+      x.fillStyle = `rgb(${8 + b * 40},${6 + b * 10},${20 + b * 50})`; x.fillRect(0, 0, w, h);
+      for (let i = 12; i > 0; i--) { const z = ((i + t * 2) % 12) / 12, s = 1 - z, rw = w * s * 1.2, rh = h * s * 1.2;
+        x.strokeStyle = i % 2 ? `rgba(95,230,255,${.25 + s * .6})` : `rgba(255,79,216,${.25 + s * .6})`; x.lineWidth = 2 + s * 6; x.strokeRect(w / 2 - rw / 2, h / 2 - rh / 2, rw, rh); }
+      for (let i = 0; i < 6; i++) { x.save(); x.translate(w / 2, h / 2); x.rotate(t * .4 + i * Math.PI / 3); x.fillStyle = `rgba(255,255,255,${.04 + b * .25})`; x.beginPath(); x.moveTo(0, 0); x.lineTo(500, -30); x.lineTo(500, 30); x.fill(); x.restore(); }
+      if (b > .8) { x.fillStyle = "rgba(255,255,255,.25)"; x.fillRect(0, 0, w, h); }
+    } else if (n === "Disco 70er") {
+      x.fillStyle = "#1a0b24"; x.fillRect(0, 0, w, h);
+      for (let i = 0; i < 10; i++) { x.save(); x.translate(w / 2, 70); x.rotate(Math.sin(t * .6 + i) * .9 + i * .6); x.fillStyle = ["rgba(255,209,102,.18)", "rgba(255,79,216,.16)", "rgba(95,230,255,.16)"][i % 3]; x.beginPath(); x.moveTo(0, 0); x.lineTo(-40, 420); x.lineTo(40, 420); x.fill(); x.restore(); }
+      for (let r = 0; r < 4; r++) for (let q = 0; q < 10; q++) { const on = (q + r + Math.floor(t * c.bpm / 60)) % 3 === 0; x.fillStyle = on ? ["#ffd166", "#ff4fd8", "#5fe6ff", "#7dffa1"][(q + r) % 4] : "#2a1838";
+        const y0 = 230 + r * 33, sk = (r + 1) * 6; x.fillRect(q * 64 - sk + 4, y0, 58 + sk / 5, 30); }
+      const mg = x.createRadialGradient(w / 2 - 12, 58, 4, w / 2, 70, 46); mg.addColorStop(0, "#fff"); mg.addColorStop(1, "#8a8aa0"); x.fillStyle = mg; x.beginPath(); x.arc(w / 2, 70, 44, 0, 7); x.fill();
+      x.fillStyle = "rgba(40,40,60,.5)"; for (let a = 0; a < 8; a++) x.fillRect(w / 2 - 44, 30 + a * 11, 88, 1.5);
+      for (let i = 0; i < 18; i++) { const a = i * .35 + t; x.fillStyle = "rgba(255,255,255,.9)"; x.fillRect((w / 2 + Math.cos(a) * 230 + i * 31) % w, (90 + Math.sin(a * 1.3) * 60 + i * 13) % 220, 3, 3); }
+    } else if (n === "Synthwave 80er") {
+      const g = x.createLinearGradient(0, 0, 0, h * .55); g.addColorStop(0, "#14062e"); g.addColorStop(1, "#7a1f6e"); x.fillStyle = g; x.fillRect(0, 0, w, h * .55);
+      const su = x.createLinearGradient(0, 70, 0, 200); su.addColorStop(0, "#ffe66b"); su.addColorStop(1, "#ff2e88"); x.fillStyle = su; x.beginPath(); x.arc(w / 2, 198, 92 + b * 4, Math.PI, 0); x.fill();
+      x.fillStyle = "#7a1f6e"; for (let k = 0; k < 6; k++) x.fillRect(w / 2 - 100, 140 + k * 10, 200, 2 + k);
+      x.fillStyle = "#2a0d40"; x.beginPath(); x.moveTo(0, 198); [60, 120, 170, 240, 300, 380, 440, 520, 580, 640].forEach((mx, i) => x.lineTo(mx, 198 - (i % 2 ? 60 : 22))); x.lineTo(w, 198); x.fill();
+      x.fillStyle = "#0b0418"; x.fillRect(0, 198, w, h - 198);
+      x.strokeStyle = "#ff4fd8"; x.lineWidth = 1.5; for (let i = -10; i <= 10; i++) { x.beginPath(); x.moveTo(w / 2 + i * 12, 198); x.lineTo(w / 2 + i * 90, h); x.stroke(); }
+      for (let k = 0; k < 10; k++) { const z = ((k + t * 1.6) % 10) / 10, y = 198 + Math.pow(z, 2.2) * (h - 198); x.globalAlpha = z; x.beginPath(); x.moveTo(0, y); x.lineTo(w, y); x.stroke(); } x.globalAlpha = 1;
+    } else if (n === "Rock") {
+      x.fillStyle = "#0c0606"; x.fillRect(0, 0, w, h);
+      [[140, "#ff5a3d"], [320, "#ffd166"], [500, "#ff5a3d"]].forEach(([sx, col], i) => { x.save(); x.translate(sx, 0); x.rotate(Math.sin(t * 1.2 + i * 2) * .35); x.fillStyle = col; x.globalAlpha = .18 + b * .2; x.beginPath(); x.moveTo(-8, 0); x.lineTo(-90, h); x.lineTo(90, h); x.lineTo(8, 0); x.fill(); x.restore(); }); x.globalAlpha = 1;
+      for (let i = 0; i < 32; i++) { const v = Math.abs(Math.sin(t * 6 + i * .7) * Math.cos(t * 2.3 + i)) * (.5 + b * .5); x.fillStyle = i % 2 ? "#ff5a3d" : "#ffd166"; x.fillRect(i * 20 + 2, h - 40 - v * 150, 16, v * 150); }
+      x.fillStyle = "#1c1010"; x.fillRect(0, h - 40, w, 40);
+      x.fillStyle = "#000"; [[150, 1], [320, 0], [490, 1]].forEach(([px, gtr]) => { const by = Math.sin(t * 8 + px) * 3 * (gtr ? 1 : .5); x.beginPath(); x.arc(px, h - 150 + by, 16, 0, 7); x.fill(); x.fillRect(px - 14, h - 134 + by, 28, 60); x.fillRect(px - 12, h - 74, 9, 34); x.fillRect(px + 3, h - 74, 9, 34);
+        if (gtr) { x.save(); x.translate(px, h - 105 + by); x.rotate(-.5); x.fillRect(-30, -4, 70, 7); x.beginPath(); x.ellipse(-30, 0, 16, 11, 0, 0, 7); x.fill(); x.restore(); } });
+      if (b > .85) for (let i = 0; i < 8; i++) { x.fillStyle = `rgba(255,${120 + i * 15},40,${.6 - i * .06})`; x.beginPath(); x.arc(40 + i * 80, h - 40, 18 + b * 20, Math.PI, 0); x.fill(); }
+    } else {
+      const g = x.createLinearGradient(0, 0, 0, h * .55); g.addColorStop(0, "#4cc3ff"); g.addColorStop(1, "#ffe9a8"); x.fillStyle = g; x.fillRect(0, 0, w, h * .55);
+      x.fillStyle = "#ffd23f"; x.beginPath(); x.arc(520, 70, 36 + b * 3, 0, 7); x.fill();
+      x.fillStyle = "#1e9bd8"; x.fillRect(0, h * .55, w, 70);
+      x.strokeStyle = "rgba(255,255,255,.7)"; x.lineWidth = 2; for (let k = 0; k < 4; k++) { x.beginPath(); for (let xx = 0; xx <= w; xx += 10) x.lineTo(xx, h * .55 + 14 + k * 16 + Math.sin(xx / 30 + t * 2 + k) * 3); x.stroke(); }
+      x.fillStyle = "#f3d9a0"; x.fillRect(0, h * .55 + 70, w, h);
+      x.save(); x.translate(120, h - 20); x.rotate(Math.sin(t * c.bpm / 60 * Math.PI) * .05); x.strokeStyle = "#5a3a1a"; x.lineWidth = 12; x.beginPath(); x.moveTo(0, 0); x.quadraticCurveTo(20, -120, 50, -220); x.stroke();
+      x.translate(50, -220); x.fillStyle = "#2f8f3a"; for (let k = 0; k < 7; k++) { x.save(); x.rotate(-2.9 + k * .45 + Math.sin(t * 1.5 + k) * .08); x.beginPath(); x.moveTo(0, 0); x.quadraticCurveTo(50, -18, 100, 10); x.quadraticCurveTo(50, -2, 0, 6); x.fill(); x.restore(); } x.restore();
+      ["#ff4d6d", "#ffd23f", "#3ddc84"].forEach((col, i) => { const bx = 330 + i * 80, by = h - 40 - Math.abs(Math.sin(t * c.bpm / 60 * Math.PI + i)) * 18; x.fillStyle = col; x.beginPath(); x.arc(bx, by, 14, 0, 7); x.fill(); });
+    }
+    // Senderlogo
+    x.fillStyle = "rgba(0,0,0,.45)"; x.beginPath(); x.roundRect(14, 14, 228, 34, 10); x.fill();
+    x.fillStyle = c.col; x.font = '400 19px "Permanent Marker"'; x.textAlign = "left"; x.fillText(`Klo-TV ${kCh + 1} · ${n}`, 24, 38);
+    if (!kOn) { x.fillStyle = "rgba(0,0,0,.45)"; x.beginPath(); x.roundRect(w - 130, 14, 116, 34, 10); x.fill(); x.fillStyle = "#fff"; x.font = '700 18px "Barlow Condensed"'; x.textAlign = "right"; x.fillText("🔇 Ton aus", w - 24, 37); }
+    kT.needsUpdate = true; kLight.color.set(c.col); kLight.intensity = .5 + b * .6;
+  }
+
+  // Leinwand groß anschauen
+  let kinoView = false;
+  function kBarUI() {
+    $("kTitle").textContent = `🎬 Klo-TV ${kCh + 1}: ${CH[kCh].n}`;
+    $("kSnd").textContent = kOn ? "🔊 Ton aus" : "🔈 Ton an"; $("kSnd").setAttribute("aria-pressed", kOn);
+  }
+  function setKino(on) {
+    if (on && tvView) setTvView(false);
+    kinoView = on; $("aKino").setAttribute("aria-pressed", on); $("kinoBar").hidden = !on; $("acts").hidden = on || tvView;
+    for (const g of people.values()) g.visible = !(on || tvView);
+    if (!on) { tYaw = 0; tPitch = -.12; ytStop(); }
+    kBarUI();
+  }
+  $("aKino").onclick = () => setKino(!kinoView);
+  $("kExit").onclick = () => setKino(false);
+  $("kPrev").onclick = () => { ytStop(); kSet(kCh - 1); }; $("kNext").onclick = () => { ytStop(); kSet(kCh + 1); };
+  $("kSnd").onclick = () => { ytStop(); kSound(!kOn); };
+  // Eigenes Musikvideo von YouTube (offizieller Player, erst nach Antippen geladen)
+  function ytId(u) { const m = /(?:youtube\.com\/(?:watch\?(?:.*&)?v=|shorts\/|embed\/|live\/)|youtu\.be\/)([A-Za-z0-9_-]{11})/.exec(String(u || "").trim()); return m ? m[1] : null; }
+  function ytStop() { const f = $("ytBox"); if (!f.hidden) { f.hidden = true; f.innerHTML = ""; } }
+  $("kYt").onclick = () => { $("ytSheet").hidden = false; setTimeout(() => $("ytIn").focus(), 50); };
+  $("ytX").onclick = () => $("ytSheet").hidden = true;
+  $("ytForm").addEventListener("submit", e => { e.preventDefault(); const id = ytId($("ytIn").value);
+    if (!id) { $("ytErr").hidden = false; return; } $("ytErr").hidden = true; $("ytSheet").hidden = true; $("ytIn").value = "";
+    if (kOn) kSound(false); if (!song.paused) song.pause(); KloSpotify.stop(); if (KloMusik.isOn()) { KloMusik.stop(); $("music").setAttribute("aria-pressed", false); }
+    if (!kinoView) setKino(true);
+    $("ytBox").innerHTML = `<iframe title="YouTube-Video" src="https://www.youtube-nocookie.com/embed/${id}?autoplay=1&rel=0&playsinline=1" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe><button type="button" aria-label="Video schließen">✕</button>`;
+    $("ytBox").querySelector("button").onclick = ytStop; $("ytBox").hidden = false; });
+  kBarUI();
+
   let downX = 0, downY = 0;
   canvas.addEventListener("pointerdown", e => { dragging = true; lx = downX = e.clientX; ly = downY = e.clientY; });
   canvas.addEventListener("pointerup", e => { if (tvView && Math.hypot(e.clientX - downX, e.clientY - downY) < 12) tvTap(e); });
-  addEventListener("pointermove", e => { if (!dragging || tvView) return; tYaw = Math.max(-.9, Math.min(.9, tYaw - (e.clientX - lx) * .005)); tPitch = Math.max(-.5, Math.min(.2, tPitch - (e.clientY - ly) * .004)); lx = e.clientX; ly = e.clientY; });
+  addEventListener("pointermove", e => { if (!dragging || tvView || kinoView) return; tYaw = Math.max(-.9, Math.min(.9, tYaw - (e.clientX - lx) * .005)); tPitch = Math.max(-.5, Math.min(.2, tPitch - (e.clientY - ly) * .004)); lx = e.clientX; ly = e.clientY; });
   addEventListener("pointerup", () => dragging = false);
   function resize() { const w = innerWidth, h = innerHeight; renderer.setSize(w, h, false); camera.aspect = w / h; camera.fov = w < h ? 72 : 58; camera.updateProjectionMatrix(); }
   addEventListener("resize", resize); resize();
@@ -826,12 +996,14 @@ form button:disabled{opacity:.5}
   function loop(now) {
     if (tvView) { tYaw = 0; tPitch = 0; const fit = Math.max(1.05, .74 / (Math.tan(camera.fov * Math.PI / 360) * Math.min(camera.aspect, 1.78)), .44 / Math.tan(camera.fov * Math.PI / 360));
       camPos.set(TVX, TVY - (innerWidth < innerHeight ? .12 : 0), TVZ + fit); }
+    else if (kinoView) { tYaw = Math.PI / 2; tPitch = 0; const tn = Math.tan(camera.fov * Math.PI / 360), fit = Math.max(1.6, 1.42 / (tn * Math.min(camera.aspect, 1.78)), .82 / tn);
+      camPos.set(Math.min(KX + fit, W / 2 - .3), KY - (innerWidth < innerHeight ? .1 : 0), KZ); }
     else camPos.set(0, 1.45, 2.1);
     camera.position.lerp(camPos, .08);
     yaw += (tYaw - yaw) * .08; pitch += (tPitch - pitch) * .08;
-    if (!dragging && !tvView) { idleT += 1; if (idleT > 400) tYaw = Math.sin(now / 9000) * .35; } else idleT = 0;
+    if (!dragging && !tvView && !kinoView) { idleT += 1; if (idleT > 400) tYaw = Math.sin(now / 9000) * .35; } else idleT = 0;
     camera.rotation.set(pitch, yaw, 0, "YXZ");
-    if (++tvFrame % 2 === 0) drawTV(now / 1000);
+    if (++tvFrame % 2 === 0) drawTV(now / 1000); else kDraw(now / 1000);
     if (!$("gameBox").hidden) { bx.clearRect(0, 0, 880, 880); if (sel === "madn") drawBoard(bx, 0, 0, 880, hlNow()); else MG[sel].def.draw(bx, 880, MG[sel].G, sel === "macke" ? mSel : new Set()); }
     doorOpen += ((now < doorUntil ? 1 : 0) - doorOpen) * .07; doorPivot.rotation.y = doorOpen * 1.25; doorLight.intensity = doorOpen * 1.4;
     for (let i = flights.length - 1; i >= 0; i--) { const f = flights[i], k = (now - f.t0) / f.dur;
