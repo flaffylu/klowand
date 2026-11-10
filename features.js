@@ -178,6 +178,8 @@
     background:#fff6d6;border:1.5px solid #e0a92e;font:600 .95rem/1.3 var(--f-ui);color:var(--ink)}
   .demobar.fam{background:linear-gradient(135deg,#fff,#fff4d1);border:2px solid #f6c453;border-radius:16px;box-shadow:0 8px 22px -12px rgba(217,72,59,.45)}
   .demobar.fam button{border-radius:999px;background:#d9483b}
+  .demobar .dbtns{display:flex;gap:8px;flex-wrap:wrap}
+  .demobar .d3d{font:700 .85rem var(--f-ui);letter-spacing:.06em;text-transform:uppercase;background:#2a1f4a;color:#fff;border-radius:6px;padding:8px 12px;min-height:38px;display:inline-flex;align-items:center;text-decoration:none}
   .demobar button{font:700 .85rem var(--f-ui);letter-spacing:.06em;text-transform:uppercase;background:var(--red);color:#fff;border:none;border-radius:6px;padding:8px 12px;min-height:38px;cursor:pointer}
   .leoclip{display:flex;gap:12px;align-items:center;margin:10px 0 0;padding:10px;border-radius:12px;background:rgba(11,7,22,.82);border:1.5px solid rgba(34,228,255,.55);color:#f5f0ff}
   .leoclip video{flex:none;width:96px;aspect-ratio:9/16;border-radius:10px;background:#0b0716;object-fit:cover}
@@ -202,7 +204,7 @@
   const plate = document.querySelector(".plate");
   const FD = (typeof FAM_DEMO !== "undefined" && FAM_DEMO);
   if (plate) plate.insertAdjacentHTML("afterend", `<div class="demobar${FD ? " fam" : ""}"><span>${FD ? "👨‍👩‍👧 <b>" + tr("Willkommen bei Familie Sonnenschein! So sieht euer Familien-Planner aus. Schreibt, malt und spielt los!", "Welcome to the Sunshine family! This is what your Family Planner looks like. Write, draw and play!") + "</b>" : "💬 <b>" + tr("Hier schreibst du live mit allen zusammen, die gerade die Demo testen!", "Here you write live with everyone who's trying the demo right now!", "ここでは今デモを試しているみんなと一緒に書けます！") + "</b>"}<br><span id="demoFree"></span></span>
-    <button type="button" id="demoMore"></button></div>`);
+    <span class="dbtns"><button type="button" id="demoMore"></button>${!FD && !EN && !KLO_APP ? `<a class="d3d" href="3d.html">🚽 ${tr("3D-Kabine", "3D cabin")}</a>` : ""}</span></div>`);
   const demoFree = () => {
     const el = document.getElementById("demoFree"), b = document.getElementById("demoMore"); if (!el || typeof kloDemo === "undefined") return;
     const over = kloDemo.over(), left = kloDemo.left(), days = KloTrial.daysLeft();

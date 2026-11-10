@@ -394,12 +394,12 @@ html.famdemo .post{border-radius:10px}
 <script src="config.js"></script>
 <script src="filter.js"></script>
 <script>
-/* Flyer-QR (?wand=demo) im Browser: direkt in die 3D-Kabine. Die App und englische/japanische Handys bleiben in 2D.
-   Mit ?2d=1 kommt man zurück zur normalen Ansicht. */
+/* Flyer-QR (?wand=demo) landet auf der normalen Wand. Nur mit ?wand=demo&3d=1 geht es direkt in die 3D-Kabine.
+   Auf der Wand führt der Knopf "3D-Kabine" in 3D. */
 (function () {
   try {
     const q = new URLSearchParams(location.search);
-    if (q.get("wand") !== "demo" || q.has("2d") || KLO_APP || EN) return;
+    if (q.get("wand") !== "demo" || !q.has("3d") || KLO_APP || EN) return; // nur mit ?3d=1 direkt in die 3D-Kabine
     const c = document.createElement("canvas");
     if (!(c.getContext("webgl") || c.getContext("experimental-webgl"))) return;
     document.documentElement.style.visibility = "hidden";
