@@ -135,6 +135,9 @@
   mm.className = IS_DEMO_WALL ? "locked" : "";
   mm.innerHTML = `🎧 <span id="kgMineTxt">${tr("Eigene Lieder", "My songs")}</span>`;
   $("kgTrack").after(mm);
+  const dsc = document.createElement("button"); dsc.type = "button"; dsc.id = "kgDisco"; dsc.innerHTML = "🪩 " + tr("Disco-Raum", "Disco room");
+  dsc.onclick = () => { location.href = "disco.html?wand=" + encodeURIComponent(typeof WALL !== "undefined" ? WALL : "demo"); };
+  mm.after(dsc);
   const mcss = document.createElement("style");
   mcss.textContent = `.mm{position:fixed;inset:0;z-index:31;background:rgba(10,14,12,.55);display:flex;align-items:flex-end;justify-content:center;padding:12px}
   .mm .box{width:min(520px,100%);max-height:88vh;overflow:auto;background:#fff;color:#1d2321;border-radius:20px;padding:18px;box-shadow:0 20px 50px rgba(0,0,0,.4);font-family:var(--f-ui)}
