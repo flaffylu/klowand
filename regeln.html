@@ -310,7 +310,7 @@ service cloud.firestore {
         &amp;&amp; !unsafe(request.resource.data.s);
     }
     function okSpiel(id, d) {
-      return id == &#x27;madn&#x27;
+      return id in [&#x27;madn&#x27;, &#x27;macke&#x27;, &#x27;vier&#x27;]
         &amp;&amp; d.keys().hasOnly([&#x27;s&#x27;, &#x27;ts&#x27;])
         &amp;&amp; d.s is string &amp;&amp; d.s.size() &lt;= 4000
         &amp;&amp; !dirty(d.s)

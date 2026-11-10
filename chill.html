@@ -112,7 +112,7 @@ form button:disabled{opacity:.5}
   <div class="tvbar" id="tvBar" hidden><span id="tvStat">📺 Fernseher</span><button type="button" class="go" id="tvRoll" hidden>🎲 Würfeln</button><button type="button" id="tvBoard">Brett</button><button type="button" id="tvExit">✕ Zurück</button></div>
   <div class="acts" id="acts">
     <button type="button" id="aGift">🎁 Geschenk</button>
-    <button type="button" id="aGame">🎲 Mensch ärgere dich nicht</button>
+    <button type="button" id="aGame">🎲 Spiele</button>
     <button type="button" id="aTv" aria-pressed="false">📺 TV</button>
     <button type="button" id="aSong" aria-pressed="false">🎧 <span id="aSongTxt">Eigene Musik</span></button>
   </div>
@@ -146,7 +146,8 @@ form button:disabled{opacity:.5}
 </div></div>
 
 <div class="sheet" id="gameBox" hidden><div class="sheetIn">
-  <div class="shead"><h3>🎲 Mensch ärgere dich nicht</h3><button type="button" id="gameX" aria-label="Schließen">✕</button></div>
+  <div class="shead"><h3 id="gTitle">🎲 Mensch ärgere dich nicht</h3><button type="button" id="gameX" aria-label="Schließen">✕</button></div>
+  <div class="chips gtabs" id="gTabs"><button type="button" data-g="madn" aria-pressed="true">Mensch ärgere dich nicht</button><button type="button" data-g="macke" aria-pressed="false">🎲 Macke</button><button type="button" data-g="vier" aria-pressed="false">🔴 4 in einer Reihe</button></div>
   <canvas id="board" width="880" height="880" aria-label="Spielbrett"></canvas>
   <div class="gstat" id="gStat" aria-live="polite"></div>
   <div class="gbtns" id="gBtns"></div>
@@ -509,7 +510,7 @@ form button:disabled{opacity:.5}
   // Nur ein Zug möglich: geht von selbst
   let autoKey = "";
   function autoMove() { const h = hlNow(); if (!h || new Set(h.ks.map(k => G.pc[h.c][k])).size !== 1) return; const key = G.turn + ":" + G.at; if (autoKey === key) return; autoKey = key; setTimeout(() => { const h2 = hlNow(); if (h2 && G.turn + ":" + G.at === key) A.move(h2.ks[0]); }, 700); }
-  if (location.hash === "#test") window.__madn = { G: () => G, hl: hlNow, move: k => A.move(k) };
+  
 
   function drawDie(x, cx, cy, s, d, col) {
     x.save(); x.translate(cx, cy); x.fillStyle = "#fff"; x.strokeStyle = col; x.lineWidth = s * .09; x.beginPath(); x.roundRect(-s / 2, -s / 2, s, s, s * .2); x.fill(); x.stroke();
@@ -546,11 +547,167 @@ form button:disabled{opacity:.5}
     const words = msg.split(" "); let line = "", yy = 238; words.forEach(wd => { if (x.measureText(line + wd).width > 200) { x.fillText(line, 296, yy); line = ""; yy += 22; } line += wd + " "; }); x.fillText(line, 296, yy);
   }
   let tvFrame = 0;
-  function drawTV(t) { if (G.tv) { tvGame(tvX, 512, 288); tvLight.color.set("#9fd8ff"); } else { tvChill(tvX, 512, 288, t); tvLight.color.set("#ff9a5a"); } tvT.needsUpdate = true; }
+  function tvMini(id) { const x = tvX, S = MG[id].G, d = MG[id].def;
+    x.fillStyle = "#1a0f2e"; x.fillRect(0, 0, 512, 288); x.save(); x.translate(8, 8); d.draw(x, 272, S, id === "macke" ? mSel : new Set()); x.restore();
+    x.textAlign = "left"; x.fillStyle = "#ff6fb5"; x.font = '400 24px "Permanent Marker"'; x.fillText(d.name.slice(d.name.indexOf(" ") + 1), 296, 40);
+    x.font = '700 22px "Barlow Condensed"';
+    if (!S.p.length) { x.fillStyle = "#b9addb"; x.fillText("Wer spielt mit?", 296, 84); }
+    S.p.forEach((p, i) => { const y = 80 + i * 32, on = S.st === "play" && i === S.turn; x.fillStyle = PC[p.c]; x.beginPath(); x.arc(306, y - 7, 8, 0, 7); x.fill(); x.fillStyle = on ? "#fff" : "#b9addb"; x.fillText((on ? "▶ " : "") + nm(p) + (id === "macke" && S.st !== "wait" ? "  " + (S.sc[i] || 0) : ""), 322, y); });
+    x.fillStyle = "#ffc867"; x.font = '700 19px "Barlow Condensed"';
+    const msg = S.st === "wait" ? "Warten auf Mitspieler …" : d.ev(S); let line = "", yy = 226; msg.split(" ").forEach(wd => { if (x.measureText(line + wd).width > 200) { x.fillText(line, 296, yy); line = ""; yy += 22; } line += wd + " "; }); x.fillText(line, 296, yy); }
+  function drawTV(t) { const tv = tvSel(); if (tv && tv !== "madn") { tvMini(tv); tvLight.color.set("#9fd8ff"); } else if (tv === "madn") { tvGame(tvX, 512, 288); tvLight.color.set("#9fd8ff"); } else { tvChill(tvX, 512, 288, t); tvLight.color.set("#ff9a5a"); } tvT.needsUpdate = true; }
+
+  // ---------- Weitere Spiele: Macke (Würfeln) und 4 in einer Reihe ----------
+  const MG = {};
+  const plOf = S => S.p[S.turn];
+  const meInG = S => S.p.find(p => p.id === device && !p.bot);
+  const myT = S => S.st === "play" && plOf(S) && plOf(S).id === device;
+  const intArr = (a, n, lo, hi) => Array.isArray(a) && (n < 0 || a.length === n) && a.every(v => Number.isInteger(v) && v >= lo && v <= hi);
+  const baseValid = (S, maxP) => !!S && S.v === 1 && Array.isArray(S.p) && S.p.length <= maxP
+    && S.p.every(p => p && typeof p.id === "string" && p.id.length <= 40 && Number.isInteger(p.c) && p.c >= 0 && p.c < 4)
+    && new Set(S.p.map(p => p.id)).size === S.p.length && new Set(S.p.map(p => p.c)).size === S.p.length
+    && ["wait", "play", "end"].includes(S.st) && Number.isInteger(S.turn) && S.turn >= 0 && S.turn < Math.max(1, S.p.length)
+    && intArr(S.ev, -1, -1, 99999) && S.ev.length <= 5;
+  async function actM(id, fn) {
+    const g = MG[id]; if (g.busy) return; g.busy = true;
+    try {
+      if (!g.ref) { const n = fn(JSON.parse(JSON.stringify(g.G))); if (n) { g.G = n; gameUI(); } return; }
+      await fsdb.runTransaction(async tx => {
+        const sn = await tx.get(g.ref); let cur = null;
+        if (sn.exists) try { cur = JSON.parse(sn.data().s); } catch (e) {}
+        if (!g.def.valid(cur)) cur = g.def.fresh();
+        const n = fn(cur); if (!n) return;
+        tx.set(g.ref, { s: JSON.stringify(n), ts: firebase.firestore.FieldValue.serverTimestamp() });
+      });
+    } catch (e) { toast(e && e.code === "permission-denied" ? "Spiel klappt nicht – sind die neuen Firebase-Regeln drin?" : "Hat nicht geklappt. Nochmal?"); }
+    finally { g.busy = false; }
+  }
+  const CA = {
+    join: id => actM(id, S => { const d = MG[id].def; if (S.st !== "wait" || S.p.length >= d.maxP || S.p.some(p => p.id === device)) return null; S.p.push({ id: device, n: pname(), c: freeColor(S) }); S.at = Date.now(); return S; }),
+    bot: id => actM(id, S => { const d = MG[id].def; if (S.st !== "wait" || S.p.length >= d.maxP || !meInG(S)) return null; const c = freeColor(S); S.p.push({ id: "bot" + c, n: "Bot", c, bot: 1 }); S.at = Date.now(); return S; }),
+    start: id => actM(id, S => { const d = MG[id].def; if (S.st !== "wait" || S.p.length < 2 || !meInG(S)) return null; d.start(S); S.st = "play"; S.turn = 0; S.ev = []; S.at = Date.now(); return S; }),
+    leave: id => actM(id, S => { const i = S.p.findIndex(p => p.id === device); if (i < 0) return null;
+      if (S.st === "wait") { S.p.splice(i, 1); S.at = Date.now(); return S; }
+      S.p[i] = { id: "bot" + S.p[i].c, n: "Bot", c: S.p[i].c, bot: 1 }; if (!S.p.some(p => !p.bot)) return MG[id].def.fresh(S.tv); return S; }),
+    skip: id => actM(id, S => { if (S.st !== "play" || Date.now() - S.at < 60e3 || !meInG(S)) return null; S.ev = [9, S.turn]; S.at = Date.now(); MG[id].def.next(S); return S; }),
+    reset: id => actM(id, S => { if (S.st === "play" && !meInG(S) && Date.now() - S.at < 180e3) return null; return MG[id].def.fresh(S.tv); }),
+    tv: (id, on) => actM(id, S => { S.tv = on; S.at = Date.now(); return S; })
+  };
+  const baseFresh = tv => ({ v: 1, st: "wait", p: [], turn: 0, tv: !!tv, at: Date.now(), ev: [] });
+
+  // Macke: 5 Würfel, 1er, 5er, Pasch und Straßen zählen. Würfelt man nichts Wertbares: Macke, die Runde ist weg.
+  const MZ = 5000;
+  function mScore(vals) {
+    const c = [0, 0, 0, 0, 0, 0, 0]; vals.forEach(v => c[v]++);
+    const best = () => { if (!c.some(Boolean)) return 0; let b = -1;
+      const use = (seq, pts) => { if (seq.every(v => c[v] > 0)) { seq.forEach(v => c[v]--); const r = best(); if (r >= 0) b = Math.max(b, pts + r); seq.forEach(v => c[v]++); } };
+      use([1, 2, 3, 4, 5], 1000); use([2, 3, 4, 5, 6], 1000); use([1, 2, 3, 4], 500); use([2, 3, 4, 5], 500);
+      for (let v = 1; v <= 6; v++) use([v, v, v], v === 1 ? 1000 : v * 100);
+      use([1], 100); use([5], 50); return b; };
+    return vals.length ? best() : -1;
+  }
+  function mBest(dice) { let bm = 0, bs = 0; for (let m = 1; m < 1 << dice.length; m++) { const s = mScore(dice.filter((_, i) => m >> i & 1)); if (s > bs || (s === bs && s > 0 && popc(m) < popc(bm))) { bs = s; bm = m; } } return [bm, bs]; }
+  const popc = m => { let n = 0; while (m) { n += m & 1; m >>= 1; } return n; };
+  const mNext = S => { S.ph = "roll"; S.dice = []; S.kept = []; S.rd = 0; S.turn = (S.turn + 1) % S.p.length;
+    if (S.fin >= 0 && S.turn === S.fin) { S.st = "end"; let w = 0; S.sc.forEach((v, i) => { if (v > S.sc[w]) w = i; }); S.ev = [6, w, S.sc[w]]; } };
+  MG.macke = { G: null, ref: null, busy: false, def: {
+    name: "🎲 Macke", maxP: 4,
+    fresh: tv => Object.assign(baseFresh(tv), { sc: [], rd: 0, dice: [], kept: [], ph: "roll", fin: -1 }),
+    valid: S => { try { return baseValid(S, 4) && intArr(S.sc, S.p.length, 0, 99999) && Number.isInteger(S.rd) && S.rd >= 0 && intArr(S.dice, -1, 1, 6) && intArr(S.kept, -1, 1, 6) && S.dice.length + S.kept.length <= 5 && ["roll", "pick"].includes(S.ph) && Number.isInteger(S.fin); } catch (e) { return false; } },
+    start: S => { S.sc = S.p.map(() => 0); S.rd = 0; S.dice = []; S.kept = []; S.ph = "roll"; S.fin = -1; },
+    next: S => mNext(S),
+    roll: (S, pid) => { if (S.st !== "play" || S.ph !== "roll" || plOf(S).id !== pid) return null;
+      const n = 5 - S.kept.length; S.dice = Array.from({ length: n }, () => 1 + Math.floor(Math.random() * 6)); S.at = Date.now();
+      if (mBest(S.dice)[1] <= 0) { S.ev = [1, S.turn, S.rd]; const keep = S.dice.slice(); mNext(S); S.dice = keep; S.ph = "roll"; S.mk = 1; return S; }
+      S.mk = 0; S.ph = "pick"; S.ev = [2, S.turn]; return S; },
+    take: (S, pid, mask, stop) => { if (S.st !== "play" || S.ph !== "pick" || plOf(S).id !== pid) return null;
+      const sel = S.dice.filter((_, i) => mask >> i & 1), s = mScore(sel); if (s <= 0) return null;
+      S.rd += s; S.kept = S.kept.concat(sel); S.at = Date.now();
+      let hot = false; if (S.kept.length >= 5) { S.kept = []; hot = true; }
+      if (stop) { S.sc[S.turn] += S.rd; S.ev = [3, S.turn, S.rd]; if (S.fin < 0 && S.sc[S.turn] >= MZ) { S.fin = S.turn; S.ev = [4, S.turn, S.sc[S.turn]]; } mNext(S); }
+      else { S.ph = "roll"; S.dice = []; S.ev = hot ? [7, S.turn, S.rd] : [5, S.turn, s]; }
+      return S; },
+    botStep: S => { const b = plOf(S); if (S.ph === "roll") return MG.macke.def.roll(S, b.id);
+      const [m, s] = mBest(S.dice), nr = S.rd + s, rem = 5 - S.kept.length - popc(m), left = rem === 0 ? 5 : rem;
+      const stop = S.sc[S.turn] + nr >= MZ || nr >= 650 || (nr >= 300 && left <= 2 && left > 0);
+      return MG.macke.def.take(S, b.id, m, stop); },
+    ev: S => { const e = S.ev || [], a = nm(S.p[e[1]]);
+      switch (e[0]) { case 1: return `😵 Macke! ${a} verliert ${e[2]} Punkte dieser Runde.`; case 2: return `${a} hat gewürfelt – Würfel auswählen.`;
+        case 3: return `${a} nimmt ${e[2]} Punkte.`; case 4: return `🔔 ${a} hat ${e[2]} – letzte Runde für alle!`; case 5: return `${a} legt ${e[2]} Punkte beiseite und würfelt weiter.`;
+        case 6: return `🏆 ${a} gewinnt mit ${e[2]} Punkten!`; case 7: return `🔥 Alle 5 Würfel zählen! ${a} darf mit allen neu würfeln (${e[2]} in der Runde).`; case 9: return `⏭ ${a} wurde übersprungen.`; default: return ""; } },
+    layout: (S, n) => { const s = S * .155, g = S * .03, w = n * s + (n - 1) * g; return Array.from({ length: n }, (_, i) => [S / 2 - w / 2 + s / 2 + i * (s + g), S * .5, s]); },
+    draw: (x, S, G, sel) => {
+      x.fillStyle = "#1f6b45"; x.beginPath(); x.roundRect(0, 0, S, S, S * .05); x.fill();
+      x.strokeStyle = "rgba(255,255,255,.18)"; x.lineWidth = S * .008; x.beginPath(); x.roundRect(S * .04, S * .04, S * .92, S * .92, S * .04); x.stroke();
+      const col = plOf(G) ? PC[plOf(G).c] : "#fff"; x.textAlign = "center"; x.fillStyle = "#fff";
+      x.font = `700 ${S * .045}px "Barlow Condensed"`; x.fillText(G.kept.length ? "Beiseite gelegt" : G.st === "play" ? "Sammle Punkte – bei Macke ist alles weg!" : `Wer zuerst ${MZ} Punkte hat`, S / 2, S * .12);
+      G.kept.forEach((v, i) => drawDie(x, S / 2 - (G.kept.length - 1) * S * .06 + i * S * .12, S * .21, S * .1, v, "#c6ff6a"));
+      const L = MG.macke.def.layout(S, G.dice.length), up = performance.now();
+      G.dice.forEach((v, i) => { const [cx, cy, s] = L[i], on = sel.has(i); drawDie(x, cx, cy - (on ? s * .25 : 0) + (G.mk ? Math.sin(up / 90 + i) * 2 : 0), s, v, on ? "#c6ff6a" : G.mk ? "#ff4d6d" : col); });
+      if (G.mk && G.dice.length) { x.fillStyle = "#ff4d6d"; x.font = `400 ${S * .09}px "Permanent Marker"`; x.fillText("MACKE!", S / 2, S * .73); }
+      x.fillStyle = "#ffc867"; x.font = `700 ${S * .07}px "Barlow Condensed"`; x.fillText(G.st === "play" ? `Runde: ${G.rd}` : "", S / 2, S * .86);
+      if (sel.size && G.ph === "pick") { const s = mScore(G.dice.filter((_, i) => sel.has(i))); x.fillStyle = s > 0 ? "#c6ff6a" : "#ffb3b3"; x.font = `700 ${S * .045}px "Barlow Condensed"`; x.fillText(s > 0 ? `Auswahl: +${s}` : "Diese Auswahl zählt nicht", S / 2, S * .67); }
+    },
+    tap: (nx, ny, S) => { const G = MG.macke.G; if (!myT(G) || G.ph !== "pick") return; const L = MG.macke.def.layout(1, G.dice.length);
+      L.forEach(([cx, cy, s], i) => { if (Math.abs(nx - cx) < s * .6 && Math.abs(ny - cy) < s * .8) { mSel.has(i) ? mSel.delete(i) : mSel.add(i); gameUI(); } }); },
+    status: G => G.st === "play" ? (myT(G) ? (G.ph === "roll" ? (G.kept.length || G.rd ? `Du hast ${G.rd} in der Runde – würfel weiter!` : "Du bist dran: würfeln!") : "Tipp die Würfel an, die zählen (1er, 5er, Pasch, Straße).") : `${esc(nm(plOf(G)))} ist dran …`) : null,
+    chip: (G, i) => G.st !== "wait" ? ` · ${G.sc[i] || 0}` : "",
+    buttons: (G, b) => { if (!myT(G)) return;
+      if (G.ph === "roll") b.push(["m_roll", G.kept.length || G.rd ? `🎲 Weiter würfeln (${5 - G.kept.length})` : "🎲 Würfeln", "go"]);
+      else { const m = [...mSel].reduce((a, i) => a | 1 << i, 0), s = m ? mScore(G.dice.filter((_, i) => m >> i & 1)) : -1;
+        if (s > 0) { b.push(["m_go", `↻ Beiseite & weiter (+${s})`, "go"]); b.push(["m_stop", `💰 ${G.rd + s} Punkte nehmen`]); } } },
+    act: (k) => { const G = MG.macke.G, m = [...mSel].reduce((a, i) => a | 1 << i, 0);
+      if (k === "m_roll") actM("macke", S => MG.macke.def.roll(S, device));
+      if (k === "m_go" || k === "m_stop") { mSel.clear(); actM("macke", S => MG.macke.def.take(S, device, m, k === "m_stop")); } },
+    primary: G => !myT(G) ? null : G.ph === "roll" ? ["🎲 Würfeln", "m_roll"] : null
+  } };
+  const mSel = new Set(); let mSelKey = "";
+
+  // 4 in einer Reihe: 7 Spalten, 6 Reihen, zu zweit oder gegen den Bot
+  const V4 = (b, r, c) => r >= 0 && r < 6 && c >= 0 && c < 7 ? b[r * 7 + c] : -1;
+  function v4Win(b, who) { for (let r = 0; r < 6; r++) for (let c = 0; c < 7; c++) for (const [dr, dc] of [[0, 1], [1, 0], [1, 1], [1, -1]]) { const cells = [0, 1, 2, 3].map(k => [r + dr * k, c + dc * k]); if (cells.every(([a, d]) => V4(b, a, d) === who)) return cells.map(([a, d]) => a * 7 + d); } return null; }
+  const v4Drop = (b, c) => { for (let r = 5; r >= 0; r--) if (b[r * 7 + c] === 0) return r * 7 + c; return -1; };
+  MG.vier = { G: null, ref: null, busy: false, def: {
+    name: "🔴 4 in einer Reihe", maxP: 2,
+    fresh: tv => Object.assign(baseFresh(tv), { b: Array(42).fill(0), last: -1, win: [] }),
+    valid: S => { try { return baseValid(S, 2) && intArr(S.b, 42, 0, 2) && Number.isInteger(S.last) && intArr(S.win, -1, 0, 41) && S.win.length <= 4; } catch (e) { return false; } },
+    start: S => { S.b = Array(42).fill(0); S.last = -1; S.win = []; },
+    next: S => { S.turn = (S.turn + 1) % S.p.length; },
+    move: (S, pid, c) => { if (S.st !== "play" || plOf(S).id !== pid || !(c >= 0 && c < 7)) return null; const i = v4Drop(S.b, c); if (i < 0) return null;
+      const who = S.turn + 1; S.b[i] = who; S.last = i; S.at = Date.now(); S.ev = [1, S.turn, c + 1];
+      const w = v4Win(S.b, who); if (w) { S.win = w; S.st = "end"; S.ev = [2, S.turn]; return S; }
+      if (S.b.every(Boolean)) { S.st = "end"; S.ev = [3, S.turn]; return S; }
+      S.turn = (S.turn + 1) % 2; return S; },
+    botStep: S => { const me = S.turn + 1, op = 3 - me, ok = [3, 2, 4, 1, 5, 0, 6].filter(c => v4Drop(S.b, c) >= 0);
+      const wins = who => ok.find(c => { const b = S.b.slice(); b[v4Drop(b, c)] = who; return v4Win(b, who); });
+      let c = wins(me); if (c === undefined) c = wins(op);
+      if (c === undefined) { const safe = ok.filter(cc => { const b = S.b.slice(); b[v4Drop(b, cc)] = me; return !ok.some(o => { const i = v4Drop(b, o); if (i < 0) return false; const b2 = b.slice(); b2[i] = op; return v4Win(b2, op); }); });
+        const pool = safe.length ? safe : ok; c = Math.random() < .7 ? pool[0] : pool[Math.floor(Math.random() * pool.length)]; }
+      return MG.vier.def.move(S, plOf(S).id, c); },
+    ev: S => { const e = S.ev || [], a = nm(S.p[e[1]]); switch (e[0]) { case 1: return `${a} wirft in Spalte ${e[2]}.`; case 2: return `🏆 ${a} hat 4 in einer Reihe!`; case 3: return "Unentschieden – das Brett ist voll."; case 9: return `⏭ ${a} wurde übersprungen.`; default: return ""; } },
+    draw: (x, S, G) => { const u = S / 7.4, ox = (S - u * 7) / 2, oy = (S - u * 6) / 2 + u * .2;
+      x.fillStyle = "#1a0f2e"; x.fillRect(0, 0, S, S);
+      x.fillStyle = "#2453c7"; x.beginPath(); x.roundRect(ox - u * .15, oy - u * .15, u * 7.3, u * 6.3, u * .3); x.fill();
+      for (let r = 0; r < 6; r++) for (let c = 0; c < 7; c++) { const v = G.b[r * 7 + c], cx = ox + (c + .5) * u, cy = oy + (r + .5) * u;
+        x.beginPath(); x.arc(cx, cy, u * .4, 0, 7); x.fillStyle = v ? PC[(G.p[v - 1] || { c: v === 1 ? 0 : 2 }).c] : "#120a1f"; x.fill();
+        if (v) { x.beginPath(); x.arc(cx - u * .12, cy - u * .12, u * .1, 0, 7); x.fillStyle = "rgba(255,255,255,.45)"; x.fill(); }
+        if (G.win.includes(r * 7 + c) || G.last === r * 7 + c) { x.beginPath(); x.arc(cx, cy, u * .44, 0, 7); x.lineWidth = u * .07; x.strokeStyle = G.win.includes(r * 7 + c) ? "#fff" : "rgba(255,255,255,.5)"; x.stroke(); } }
+      if (myT(G)) { x.fillStyle = "#c6ff6a"; x.font = `700 ${u * .4}px "Barlow Condensed"`; x.textAlign = "center"; for (let c = 0; c < 7; c++) if (v4Drop(G.b, c) >= 0) x.fillText("▼", ox + (c + .5) * u, oy - u * .32 + Math.sin(performance.now() / 200) * 3); } },
+    tap: (nx) => { const G = MG.vier.G; if (!myT(G)) return; const u = 1 / 7.4, ox = (1 - u * 7) / 2, c = Math.floor((nx - ox) / u); if (c >= 0 && c < 7) actM("vier", S => MG.vier.def.move(S, device, c)); },
+    status: G => G.st === "play" ? (myT(G) ? "Du bist dran: tipp eine Spalte an." : `${esc(nm(plOf(G)))} ist dran …`) : null,
+    chip: () => "", buttons: () => {}, act: () => {}, primary: () => null
+  } };
+  Object.values(MG).forEach(g => g.G = g.def.fresh());
+  if (location.hash === "#test") window.__madn = { G: () => G, hl: hlNow, move: k => A.move(k), MG: () => MG, mSel, gameUI };
+  // Bots der neuen Spiele
+  setInterval(() => { for (const [id, g] of Object.entries(MG)) { const S = g.G; if (S.st !== "play" || g.busy) continue; const cur = plOf(S); if (!cur || !cur.bot) continue;
+    const humans = S.p.filter(p => !p.bot); if (!(humans[0] && humans[0].id === device) && !(meInG(S) && Date.now() - S.at > 8000)) continue;
+    if (Date.now() - (S.at || 0) < 900) continue;
+    actM(id, T => { const c2 = plOf(T); return c2 && c2.bot && T.st === "play" ? g.def.botStep(T) : null; }); } }, 700);
 
   // Spiel-Fenster
   const bc = $("board"), bx = bc.getContext("2d");
-  function gameUI() {
+  function madnUI() {
     autoMove();
     const mi = meIn(), cur = G.p[G.turn], idle = Date.now() - (G.at || 0) > 60e3;
     const chips = G.p.map((p, i) => `<span class="pl${G.st === "play" && i === G.turn ? " on" : ""}"><i style="background:${PC[p.c]}"></i>${esc(nm(p))}${p.id === device && !p.bot ? " (du)" : ""}</span>`).join("");
@@ -579,10 +736,52 @@ form button:disabled{opacity:.5}
       if (k === "tvon") { const on = !G.tv; A.tv(on); if (on) { $("gameBox").hidden = true; setTvView(true); } return; }
       A[k](); });
     // TV-Leiste
-    $("tvRoll").hidden = !(myTurn() && G.ph === "roll");
-    $("tvStat").textContent = G.tv ? (G.st === "play" ? (myTurn() ? (G.ph === "roll" ? "Du bist dran!" : "Tipp deine Figur auf dem TV an") : nm(cur) + " ist dran") : G.st === "end" ? evText(G) : "Mensch ärgere dich nicht") : "📺 Lo-Fi-Abend";
+    if (false) $("tvStat").textContent = G.tv ? (G.st === "play" ? (myTurn() ? (G.ph === "roll" ? "Du bist dran!" : "Tipp deine Figur auf dem TV an") : nm(cur) + " ist dran") : G.st === "end" ? evText(G) : "Mensch ärgere dich nicht") : "📺 Lo-Fi-Abend";
   }
-  bc.addEventListener("click", e => { const r = bc.getBoundingClientRect(); pickCell(Math.floor((e.clientX - r.left) / r.width * 11), Math.floor((e.clientY - r.top) / r.height * 11)); });
+  let sel = "madn";
+  const gameName = id => id === "madn" ? "🎲 Mensch ärgere dich nicht" : MG[id].def.name;
+  function tvSel() { let best = null, at = -1; [["madn", G], ...Object.entries(MG).map(([k, g]) => [k, g.G])].forEach(([k, S]) => { if (S.tv && (S.at || 0) > at) { at = S.at || 0; best = k; } }); return best; }
+  function gameUI() {
+    $("gTabs").querySelectorAll("button").forEach(b => b.setAttribute("aria-pressed", b.dataset.g === sel));
+    $("gTitle").textContent = gameName(sel);
+    if (sel === "madn") madnUI(); else miniUI(sel);
+    const tv = tvSel();
+    if (tv && tv !== "madn") { const S = MG[tv].G, pr = MG[tv].def.primary(S);
+      $("tvRoll").hidden = !pr; if (pr) { $("tvRoll").textContent = pr[0]; $("tvRoll").dataset.k = pr[1]; $("tvRoll").dataset.g = tv; }
+      $("tvStat").textContent = S.st === "play" ? (myT(S) ? "Du bist dran!" : nm(plOf(S)) + " ist dran") : S.st === "end" ? MG[tv].def.ev(S) : MG[tv].def.name.slice(3); }
+    else if (tv === "madn") { $("tvRoll").hidden = !(myTurn() && G.ph === "roll"); $("tvRoll").textContent = "🎲 Würfeln"; $("tvRoll").dataset.g = "madn"; $("tvStat").textContent = G.st === "play" ? (myTurn() ? (G.ph === "roll" ? "Du bist dran!" : "Tipp deine Figur auf dem TV an") : nm(G.p[G.turn]) + " ist dran") : G.st === "end" ? evText(G) : "Mensch ärgere dich nicht"; }
+    else { $("tvRoll").hidden = true; $("tvStat").textContent = "📺 Lo-Fi-Abend"; }
+  }
+  function miniUI(id) {
+    const g = MG[id], S = g.G, d = g.def, mi = meInG(S), cur = plOf(S), idle = Date.now() - (S.at || 0) > 60e3;
+    if (id === "macke") { const k = S.turn + ":" + S.at; if (k !== mSelKey) { mSelKey = k; mSel.clear(); } }
+    const chips = S.p.map((p, i) => `<span class="pl${S.st === "play" && i === S.turn ? " on" : ""}"><i style="background:${PC[p.c]}"></i>${esc(nm(p))}${p.id === device && !p.bot ? " (du)" : ""}${d.chip(S, i)}</span>`).join("");
+    let st = S.st === "wait" ? (S.p.length ? `Warten auf Mitspieler (${S.p.length}/${d.maxP}). Ab 2 geht's los.` : `Noch keiner dabei. Spiel mit – ${d.maxP === 2 ? "zu zweit" : "zu zweit bis zu viert"} oder gegen einen Bot.`) : S.st === "end" ? "Spiel vorbei." : d.status(S);
+    const sh = `${chips ? chips + "<br>" : ""}${st}<span class="ev">${esc(d.ev(S))}</span>`;
+    if ($("gStat").dataset.h !== sh) { $("gStat").dataset.h = sh; $("gStat").innerHTML = sh; }
+    const b = [];
+    if (S.st === "wait") {
+      if (!mi && S.p.length < d.maxP) b.push(["join", "✋ Mitspielen", "go"]);
+      if (mi && S.p.length < d.maxP) b.push(["bot", "🤖 Bot dazu"]);
+      if (mi && S.p.length >= 2) b.push(["start", "▶ Los geht's", "go"]);
+      if (mi) b.push(["leave", "Aussteigen"]);
+    } else if (S.st === "play") {
+      d.buttons(S, b);
+      if (mi && !myT(S) && idle && cur && !cur.bot) b.push(["skip", "⏭ Überspringen"]);
+      if (mi) b.push(["leave", "Aussteigen"]);
+      if (!mi && idle) b.push(["reset", "🔄 Neues Spiel"]);
+    } else b.push(["reset", "🔄 Neues Spiel", "go"]);
+    b.push(["tvon", S.tv ? "📺 TV: Spiel aus" : "📺 Auf dem TV zeigen"]);
+    const bh = b.map(([k, l, c]) => `<button type="button" data-k="${k}"${c ? ` class="${c}"` : ""}>${l}</button>`).join("");
+    if ($("gBtns").dataset.h !== bh) { $("gBtns").dataset.h = bh; $("gBtns").innerHTML = bh; }
+    $("gBtns").querySelectorAll("button").forEach(el => el.onclick = () => { const k = el.dataset.k;
+      if (k === "tvon") { const on = !S.tv; CA.tv(id, on); if (on) { $("gameBox").hidden = true; setTvView(true); } return; }
+      if (CA[k]) CA[k](id); else d.act(k); });
+  }
+  $("gTabs").querySelectorAll("button").forEach(b => b.onclick = () => { sel = b.dataset.g; $("gStat").dataset.h = ""; $("gBtns").dataset.h = ""; gameUI(); });
+  bc.addEventListener("click", e => { const r = bc.getBoundingClientRect(), nx = (e.clientX - r.left) / r.width, ny = (e.clientY - r.top) / r.height;
+    if (sel !== "madn") { MG[sel].def.tap(nx, ny); return; }
+    pickCell(Math.floor(nx * 11), Math.floor(ny * 11)); });
   function pickCell(cx, cy) { const h = hlNow(); if (!h) return; const k = h.ks.find(k => { const [a, b] = cellOf(h.c, k, G.pc[h.c][k]); return a === cx && b === cy; }); if (k !== undefined) A.move(k); }
   $("aGame").onclick = () => { $("gameBox").hidden = false; gameUI(); };
   $("gameX").onclick = () => $("gameBox").hidden = true;
@@ -600,13 +799,15 @@ form button:disabled{opacity:.5}
   $("aTv").onclick = () => setTvView(!tvView);
   $("tvExit").onclick = () => setTvView(false);
   $("tvBoard").onclick = () => { $("gameBox").hidden = false; gameUI(); };
-  $("tvRoll").onclick = () => A.roll();
+  $("tvRoll").onclick = () => { const g = $("tvRoll").dataset.g || "madn"; if (g === "madn") A.roll(); else MG[g].def.act($("tvRoll").dataset.k); };
   const ray = new THREE.Raycaster(), ndc = new THREE.Vector2();
   function tvTap(e) {
     ndc.set(e.clientX / innerWidth * 2 - 1, -(e.clientY / innerHeight) * 2 + 1); ray.setFromCamera(ndc, camera);
     const hit = ray.intersectObject(screen)[0]; if (!hit || !hit.uv) return;
     const px = hit.uv.x * 512, py = (1 - hit.uv.y) * 288;
-    if (G.tv && px >= 8 && px <= 280 && py >= 8 && py <= 280) pickCell(Math.floor((px - 8) / 272 * 11), Math.floor((py - 8) / 272 * 11));
+    const tv = tvSel(); if (!tv || px < 8 || px > 280 || py < 8 || py > 280) return;
+    if (tv === "madn") pickCell(Math.floor((px - 8) / 272 * 11), Math.floor((py - 8) / 272 * 11));
+    else { MG[tv].def.tap((px - 8) / 272, (py - 8) / 272); if (tv === "macke") { sel = "macke"; gameUI(); } }
   }
 
   // ---------- Kamera: wischen zum Umschauen ----------
@@ -630,7 +831,7 @@ form button:disabled{opacity:.5}
     if (!dragging && !tvView) { idleT += 1; if (idleT > 400) tYaw = Math.sin(now / 9000) * .35; } else idleT = 0;
     camera.rotation.set(pitch, yaw, 0, "YXZ");
     if (++tvFrame % 2 === 0) drawTV(now / 1000);
-    if (!$("gameBox").hidden) { bx.clearRect(0, 0, 880, 880); drawBoard(bx, 0, 0, 880, hlNow()); }
+    if (!$("gameBox").hidden) { bx.clearRect(0, 0, 880, 880); if (sel === "madn") drawBoard(bx, 0, 0, 880, hlNow()); else MG[sel].def.draw(bx, 880, MG[sel].G, sel === "macke" ? mSel : new Set()); }
     doorOpen += ((now < doorUntil ? 1 : 0) - doorOpen) * .07; doorPivot.rotation.y = doorOpen * 1.25; doorLight.intensity = doorOpen * 1.4;
     for (let i = flights.length - 1; i >= 0; i--) { const f = flights[i], k = (now - f.t0) / f.dur;
       if (k < 1) { f.s.position.lerpVectors(f.pa, f.pb, k); f.s.position.y += Math.sin(k * Math.PI) * .55; f.s.scale.setScalar(.2 + .16 * Math.sin(k * Math.PI)); }
@@ -763,6 +964,8 @@ form button:disabled{opacity:.5}
       first = false;
     }, () => mod("Der Chill-Raum ist gerade nicht erreichbar. Lade die Seite neu."));
     sendGift = (e, l, to) => grp.collection("chill").add({ n: me, t: `🎁 ${e} ${l} für ${to}`, ts: now() }).catch(er => toast(er && er.code === "permission-denied" ? "Hat nicht geklappt. Sind die neuen Firebase-Regeln schon drin?" : "Hat nicht geklappt."));
+    for (const [id, g] of Object.entries(MG)) { g.ref = grp.collection("chillspiel").doc(id);
+      g.ref.onSnapshot(sn => { let n = null; if (sn.exists) try { n = JSON.parse(sn.data().s); } catch (e) {} g.G = g.def.valid(n) ? n : g.def.fresh(); gameUI(); }, () => {}); }
     gref = grp.collection("chillspiel").doc("madn");
     gref.onSnapshot(sn => { let n = null; if (sn.exists) try { n = JSON.parse(sn.data().s); } catch (e) {} G = valid(n) ? n : fresh(); gameUI(); }, () => {});
     $("form").addEventListener("submit", e => {
