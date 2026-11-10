@@ -23,7 +23,7 @@ html,body{height:100%;margin:0;background:var(--night);color:var(--ink);font-fam
 .panel{position:fixed;left:0;right:0;bottom:0;z-index:4;padding:8px 12px calc(12px + env(safe-area-inset-bottom,0px));
   background:linear-gradient(0deg,rgba(6,3,13,.97) 78%,rgba(6,3,13,0));display:flex;flex-direction:column;gap:8px}
 .tabs{display:flex;gap:6px}
-.tabs button{flex:1;min-height:44px;border-radius:12px;border:1.5px solid var(--line);background:rgba(255,255,255,.05);color:var(--ink);font:700 1rem var(--f-ui);cursor:pointer}
+.tabs button{flex:1;min-height:44px;padding:0 4px;border-radius:12px;border:1.5px solid var(--line);background:rgba(255,255,255,.05);color:var(--ink);font:700 .9rem var(--f-ui);cursor:pointer;white-space:nowrap}
 .tabs button[aria-selected=true]{background:var(--pink);border-color:var(--pink);color:#140612}
 .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 .btn{min-height:44px;padding:0 16px;border-radius:12px;border:1.5px solid var(--line);background:rgba(255,255,255,.07);color:var(--ink);font:700 1rem var(--f-ui);cursor:pointer}
@@ -40,6 +40,19 @@ label.bpm input{flex:1;accent-color:var(--pink)}
 .pads{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
 .pads button{min-height:62px;border-radius:14px;border:2px solid var(--c);background:color-mix(in srgb,var(--c) 22%,transparent);color:#fff;font:700 1rem/1.1 var(--f-ui);cursor:pointer;touch-action:manipulation}
 .pads button.hit{background:var(--c);color:#0b0716;box-shadow:0 0 22px var(--c)}
+.slots{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.slot{position:relative;min-height:70px;border-radius:14px;border:2px solid var(--c);background:color-mix(in srgb,var(--c) 18%,transparent);color:#fff;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:6px 4px;cursor:pointer;touch-action:manipulation;overflow:hidden}
+.slot.empty{border-style:dashed;background:transparent;color:var(--c)}
+.slot b{font:700 .9rem/1.1 var(--f-ui);text-align:center;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.slot small{font:600 .75rem var(--f-ui);color:var(--muted)}
+.slot.hit{background:var(--c);color:#0b0716}
+.slot.loop{box-shadow:0 0 18px var(--c);animation:pulse .5s ease-in-out infinite alternate}
+@keyframes pulse{to{background:color-mix(in srgb,var(--c) 45%,transparent)}}
+.slot input{position:absolute;inset:0;opacity:0;cursor:pointer}
+.slot .mini{position:absolute;top:3px;min-width:26px;height:26px;border-radius:50%;border:none;background:rgba(0,0,0,.55);color:#fff;font-size:.8rem;cursor:pointer;padding:0}
+.slot .lp{left:3px}.slot .rm{right:3px}
+.slot .lp[aria-pressed=true]{background:var(--c);color:#0b0716}
+@media (prefers-reduced-motion:reduce){.slot.loop{animation:none}}
 .own p{margin:0;font:600 1rem/1.35 var(--f-ui);color:var(--muted)}
 .own .now{font:700 1.15rem var(--f-ui);color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .add{display:flex;align-items:center;justify-content:center;min-height:52px;border-radius:14px;border:2px dashed var(--cyan);color:var(--cyan);font:700 1.05rem var(--f-ui);cursor:pointer;position:relative}
@@ -63,7 +76,8 @@ label.bpm input{flex:1;accent-color:var(--pink)}
   <div class="tabs" role="tablist">
     <button type="button" role="tab" aria-selected="true" data-t="beat">🥁 Beat bauen</button>
     <button type="button" role="tab" aria-selected="false" data-t="pads">🎹 Live spielen</button>
-    <button type="button" role="tab" aria-selected="false" data-t="own">🎧 Eigene Musik</button>
+    <button type="button" role="tab" aria-selected="false" data-t="smp">🎛️ Samples</button>
+    <button type="button" role="tab" aria-selected="false" data-t="own">🎧 Lied</button>
   </div>
 
   <section id="t-beat">
@@ -83,6 +97,11 @@ label.bpm input{flex:1;accent-color:var(--pink)}
   <section id="t-pads" hidden>
     <div class="pads" id="pads"></div>
     <p class="hint">Tippe die Felder – auch zusammen mit deinem Beat.</p>
+  </section>
+
+  <section id="t-smp" hidden>
+    <div class="slots" id="slots"></div>
+    <p class="hint">Lade eigene Loops oder Sounds vom Handy. Tippen = abspielen, 🔁 = als Loop im Takt. Sample 1 und 2 kannst du auch im Beat-Raster setzen. Bleibt nur auf diesem Handy.</p>
   </section>
 
   <section id="t-own" class="own" hidden>
@@ -130,7 +149,7 @@ label.bpm input{flex:1;accent-color:var(--pink)}
   };
 
   // ---------- Beat-Raster ----------
-  const ROWS = [["kick", "Kick", "#ff3ea5"], ["snare", "Snare", "#22e4ff"], ["hat", "Hi-Hat", "#ffc43d"], ["clap", "Clap", "#b7ff4a"], ["bass", "Bass", "#b48cff"]];
+  const ROWS = [["kick", "Kick", "#ff3ea5"], ["snare", "Snare", "#22e4ff"], ["hat", "Hi-Hat", "#ffc43d"], ["clap", "Clap", "#b7ff4a"], ["bass", "Bass", "#b48cff"], ["s1", "Sample 1", "#ff8f3d"], ["s2", "Sample 2", "#6bffc8"]];
   const PRE = {
     disco: { kick: [0, 4, 8, 12], snare: [4, 12], hat: [2, 6, 10, 14], clap: [], bass: [0, 3, 6, 8, 11, 14] },
     house: { kick: [0, 4, 8, 12], snare: [], hat: [2, 6, 10, 14], clap: [4, 12], bass: [2, 6, 10, 14] },
@@ -139,7 +158,8 @@ label.bpm input{flex:1;accent-color:var(--pink)}
   let pat = {};
   try { pat = JSON.parse(localStorage.getItem("klowand-disco-beat") || "null") || {}; } catch (e) {}
   const setPre = name => { pat = {}; ROWS.forEach(([k]) => pat[k] = Array(16).fill(false)); if (PRE[name]) for (const k in PRE[name]) PRE[name][k].forEach(i => pat[k][i] = true); };
-  if (!ROWS.every(([k]) => Array.isArray(pat[k]) && pat[k].length === 16)) setPre("disco");
+  if (!["kick", "snare", "hat", "clap", "bass"].every(k => Array.isArray(pat[k]) && pat[k].length === 16)) setPre("disco");
+  ROWS.forEach(([k]) => { if (!Array.isArray(pat[k]) || pat[k].length !== 16) pat[k] = Array(16).fill(false); });
   const saveBeat = () => { try { localStorage.setItem("klowand-disco-beat", JSON.stringify(pat)); } catch (e) {} };
   const grid = $("grid");
   function drawGrid() {
@@ -150,6 +170,7 @@ label.bpm input{flex:1;accent-color:var(--pink)}
     const b = e.target.closest("button[data-k]"); if (!b) return;
     const k = b.dataset.k, i = +b.dataset.i; pat[k][i] = !pat[k][i]; b.classList.toggle("on", pat[k][i]); b.setAttribute("aria-pressed", pat[k][i]); saveBeat();
     if (pat[k][i]) { audio(); SND[k](ctx.currentTime); }
+    if (pat[k][i] && (k === "s1" || k === "s2") && !smp[k === "s1" ? 0 : 1]) { document.querySelector('[data-t="smp"]').click(); }
   });
   document.querySelectorAll("[data-pre]").forEach(b => b.onclick = () => { setPre(b.dataset.pre); drawGrid(); saveBeat(); });
   let bpm = 120; $("bpm").oninput = e => { bpm = +e.target.value; $("bpmV").textContent = bpm; };
@@ -165,9 +186,49 @@ label.bpm input{flex:1;accent-color:var(--pink)}
   $("play").onclick = () => {
     audio(); playing = !playing;
     $("play").setAttribute("aria-pressed", playing); $("play").textContent = playing ? "■ Stopp" : "▶ Start";
-    if (playing) { if (ownAudio && !ownAudio.paused) ownAudio.pause(); step = 0; nextT = ctx.currentTime + .05; sched(); timer = setInterval(sched, 25); }
+    if (playing) { if (ownAudio && !ownAudio.paused) ownAudio.pause(); smp.forEach((s, i) => s && decode(i)); step = 0; nextT = ctx.currentTime + .05; sched(); timer = setInterval(sched, 25); }
     else { clearInterval(timer); grid.querySelectorAll(".now").forEach(x => x.classList.remove("now")); }
   };
+
+  // ---------- Eigene Samples & Loops (IndexedDB, nur auf diesem Handy) ----------
+  const SCOL = ["#ff8f3d", "#6bffc8", "#ff3ea5", "#22e4ff", "#ffc43d", "#b7ff4a", "#b48cff", "#ff6f6f"];
+  const smp = Array(8).fill(null);      // {name, blob, buf}
+  const loops = Array(8).fill(null);    // laufende Loop-Quelle
+  const idb = () => new Promise((res, rej) => { const rq = indexedDB.open("klowand-disco", 1); rq.onupgradeneeded = () => rq.result.createObjectStore("smp"); rq.onsuccess = () => res(rq.result); rq.onerror = () => rej(rq.error); });
+  const dbPut = async (i, v) => { try { const db = await idb(); await new Promise((res, rej) => { const t = db.transaction("smp", "readwrite"); v ? t.objectStore("smp").put(v, i) : t.objectStore("smp").delete(i); t.oncomplete = res; t.onerror = () => rej(t.error); }); } catch (e) {} };
+  const dbAll = async () => { try { const db = await idb(); return await new Promise(res => { const out = []; const c = db.transaction("smp").objectStore("smp").openCursor(); c.onsuccess = () => { const cur = c.result; if (cur) { out.push([cur.key, cur.value]); cur.continue(); } else res(out); }; c.onerror = () => res(out); }); } catch (e) { return []; } };
+  async function decode(i) { const s = smp[i]; if (!s || s.buf) return s && s.buf; audio(); try { s.buf = await ctx.decodeAudioData(await s.blob.arrayBuffer()); } catch (e) { s.bad = true; } return s.buf; }
+  const shortName = n => n.replace(/\.[a-z0-9]+$/i, "").replace(/[_-]+/g, " ").slice(0, 18);
+  function playSample(i, t) { const s = smp[i]; if (!s || !s.buf) return; const src = ctx.createBufferSource(); src.buffer = s.buf; const g = ctx.createGain(); g.gain.value = .9; src.connect(g).connect(master); src.start(t || ctx.currentTime); flash = Math.max(flash, .7); padHit = SCOL[i]; }
+  SND.s1 = t => playSample(0, t); SND.s2 = t => playSample(1, t);
+  function startLoop(i) {
+    const s = smp[i]; if (!s || !s.buf) return;
+    let t = ctx.currentTime + .02;
+    if (playing) { const stepDur = 60 / bpm / 4; const ahead = ((16 - step) % 4) * stepDur; t = nextT + ahead; }   // auf den nächsten Schlag
+    const src = ctx.createBufferSource(); src.buffer = s.buf; src.loop = true; const g = ctx.createGain(); g.gain.value = .85; src.connect(g).connect(master); src.start(t);
+    loops[i] = { src, g };
+  }
+  function stopLoop(i) { const l = loops[i]; if (!l) return; try { l.g.gain.setTargetAtTime(0, ctx.currentTime, .05); l.src.stop(ctx.currentTime + .3); } catch (e) {} loops[i] = null; }
+  function drawSlots() {
+    $("slots").innerHTML = smp.map((s, i) => s
+      ? `<div class="slot${loops[i] ? " loop" : ""}" style="--c:${SCOL[i]}" data-s="${i}" role="button" tabindex="0" aria-label="Sample ${i + 1}: ${s.name}"><button type="button" class="mini lp" data-loop="${i}" aria-pressed="${!!loops[i]}" aria-label="Loop">🔁</button><button type="button" class="mini rm" data-rm="${i}" aria-label="Entfernen">✕</button><b>${s.name.replace(/[<>&"]/g, "")}</b><small>${s.bad ? "geht nicht" : "Sample " + (i + 1)}</small></div>`
+      : `<label class="slot empty" style="--c:${SCOL[i]}"><b>＋</b><small>Sample ${i + 1}</small><input type="file" accept="audio/*" data-load="${i}"></label>`).join("");
+  }
+  $("slots").addEventListener("change", async e => {
+    const inp = e.target.closest("input[data-load]"); if (!inp || !inp.files[0]) return;
+    const i = +inp.dataset.load, f = inp.files[0];
+    if (f.size > 15 * 1024 * 1024) { alert("Das Sample ist zu groß (max. 15 MB). Nimm einen kürzeren Loop."); return; }
+    smp[i] = { name: shortName(f.name), blob: f }; await decode(i); dbPut(i, { name: smp[i].name, blob: f }); drawSlots();
+  });
+  $("slots").addEventListener("pointerdown", async e => {
+    if (e.target.closest("input")) return;
+    const lp = e.target.closest("[data-loop]"), rm = e.target.closest("[data-rm]"), sl = e.target.closest("[data-s]");
+    if (lp) { e.preventDefault(); const i = +lp.dataset.loop; audio(); await decode(i); loops[i] ? stopLoop(i) : startLoop(i); drawSlots(); return; }
+    if (rm) { e.preventDefault(); const i = +rm.dataset.rm; stopLoop(i); smp[i] = null; dbPut(i, null); drawSlots(); return; }
+    if (sl) { e.preventDefault(); const i = +sl.dataset.s; audio(); await decode(i); playSample(i); sl.classList.add("hit"); setTimeout(() => sl.classList.remove("hit"), 140); }
+  });
+  (await dbAll()).forEach(([k, v]) => { if (k >= 0 && k < 8 && v && v.blob) smp[k] = { name: v.name || "Sample", blob: v.blob }; });
+  drawSlots();
 
   // ---------- Live-Pads ----------
   const NOTES = [261.6, 311.1, 349.2, 392, 466.2, 523.3];
@@ -197,7 +258,8 @@ label.bpm input{flex:1;accent-color:var(--pink)}
   // ---------- Tabs ----------
   document.querySelectorAll(".tabs button").forEach(b => b.onclick = () => {
     document.querySelectorAll(".tabs button").forEach(x => x.setAttribute("aria-selected", x === b));
-    ["beat", "pads", "own"].forEach(t => $("t-" + t).hidden = t !== b.dataset.t);
+    ["beat", "pads", "smp", "own"].forEach(t => $("t-" + t).hidden = t !== b.dataset.t);
+    if (b.dataset.t === "smp" || b.dataset.t === "beat") { audio(); smp.forEach((s, i) => s && decode(i)); }
   });
 
   // ---------- Aufnehmen: Beat oder Live-Spiel als Datei zum Teilen ----------
