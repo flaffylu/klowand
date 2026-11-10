@@ -50,6 +50,36 @@ form button:disabled{opacity:.5}
 .name h2{margin:0;font:400 1.5rem var(--f-sign);color:var(--cyan)}
 .name p{margin:0;font:600 1rem var(--f-ui);color:var(--muted)}
 .load{position:fixed;inset:0;display:grid;place-items:center;font:400 1.6rem var(--f-sign);color:var(--pink);z-index:9;background:var(--night)}
+.acts{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none}
+.acts button,.tvbar button{flex:0 0 auto;min-height:40px;padding:0 13px;border-radius:999px;border:1.5px solid var(--line);background:rgba(255,255,255,.08);color:var(--ink);font:700 .95rem var(--f-ui);cursor:pointer}
+.acts button[aria-pressed=true]{border-color:var(--cyan);color:var(--cyan)}
+.log .gift{color:var(--gold)}
+.tvbar{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.tvbar span{flex:1;min-width:140px;font:700 1rem/1.2 var(--f-ui);color:var(--cyan)}
+.tvbar .go{background:var(--lime);color:var(--night);border:none}
+.sheet{position:fixed;inset:0;z-index:7;background:rgba(10,6,18,.6);display:flex;align-items:flex-end;justify-content:center}
+.sheetIn{width:min(480px,100%);max-height:92vh;overflow-y:auto;background:#1d1230;border:1.5px solid var(--line);border-bottom:none;border-radius:20px 20px 0 0;padding:14px 14px calc(16px + env(safe-area-inset-bottom,0px))}
+.sheetIn h3{margin:0;flex:1;font:400 1.35rem var(--f-sign);color:var(--cyan)}
+.shead{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.shead button{min-width:44px;min-height:44px;border-radius:50%;border:1.5px solid var(--line);background:transparent;color:var(--ink);font:700 1.1rem var(--f-ui);cursor:pointer}
+.lbl{margin:4px 0 6px;font:700 .95rem var(--f-ui);color:var(--muted)}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.chips button{min-height:38px;padding:0 12px;border-radius:999px;border:1.5px solid var(--line);background:rgba(255,255,255,.06);color:var(--ink);font:700 .95rem var(--f-ui);cursor:pointer}
+.chips button[aria-pressed=true]{background:var(--cyan);color:var(--night);border-color:var(--cyan)}
+.gifts{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.gifts button{aspect-ratio:1;border-radius:16px;border:1.5px solid var(--line);background:rgba(255,255,255,.06);color:var(--ink);cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font:700 .85rem var(--f-ui)}
+.gifts button b{font-size:2rem;line-height:1}
+.gifts button:active{transform:scale(.94)}
+#board{display:block;width:min(100%,440px);aspect-ratio:1;margin:0 auto;border-radius:14px;touch-action:manipulation}
+.gstat{margin:10px 0 6px;font:700 1.05rem/1.3 var(--f-ui)}
+.gstat .pl{display:inline-flex;align-items:center;gap:5px;margin:0 8px 4px 0;padding:3px 9px;border-radius:999px;background:rgba(255,255,255,.07);font-size:.9rem}
+.gstat .pl.on{outline:2px solid #fff}
+.gstat .pl i{width:10px;height:10px;border-radius:50%}
+.gstat .ev{display:block;color:var(--gold);margin-top:4px}
+.gbtns{display:flex;gap:8px;flex-wrap:wrap}
+.gbtns button{min-height:46px;padding:0 16px;border-radius:14px;border:1.5px solid var(--line);background:rgba(255,255,255,.07);color:var(--ink);font:700 1rem var(--f-ui);cursor:pointer}
+.gbtns button.go{background:var(--lime);color:var(--night);border:none;font-size:1.15rem}
+.toast{position:fixed;left:50%;top:calc(110px + env(safe-area-inset-top,0px));transform:translateX(-50%);z-index:8;padding:10px 18px;border-radius:999px;background:rgba(18,10,31,.94);border:1.5px solid var(--gold);color:var(--gold);font:700 1.05rem var(--f-ui);box-shadow:0 0 24px rgba(255,200,103,.35);white-space:nowrap;max-width:calc(100% - 32px);overflow:hidden;text-overflow:ellipsis}
 </style>
 </head>
 <body>
@@ -66,6 +96,12 @@ form button:disabled{opacity:.5}
 <div class="chat">
   <div class="log" id="log" aria-live="polite"></div>
   <div class="mod" id="mod"></div>
+  <div class="tvbar" id="tvBar" hidden><span id="tvStat">📺 Fernseher</span><button type="button" class="go" id="tvRoll" hidden>🎲 Würfeln</button><button type="button" id="tvBoard">Brett</button><button type="button" id="tvExit">✕ Zurück</button></div>
+  <div class="acts" id="acts">
+    <button type="button" id="aGift">🎁 Geschenk</button>
+    <button type="button" id="aGame">🎲 Mensch ärgere dich nicht</button>
+    <button type="button" id="aTv" aria-pressed="false">📺 TV</button>
+  </div>
   <form id="form" autocomplete="off">
     <label for="msg" style="position:absolute;left:-9999px">Nachricht</label>
     <input id="msg" maxlength="200" placeholder="Schreib was in die Runde …">
@@ -88,6 +124,20 @@ form button:disabled{opacity:.5}
     <button type="submit">Reinkommen</button>
   </form>
 </div>
+
+<div class="sheet" id="giftBox" hidden><div class="sheetIn">
+  <div class="shead"><h3>🎁 Geschenk senden</h3><button type="button" id="giftX" aria-label="Schließen">✕</button></div>
+  <p class="lbl">An wen?</p><div class="chips" id="giftTo"></div>
+  <p class="lbl">Was?</p><div class="gifts" id="giftList"></div>
+</div></div>
+
+<div class="sheet" id="gameBox" hidden><div class="sheetIn">
+  <div class="shead"><h3>🎲 Mensch ärgere dich nicht</h3><button type="button" id="gameX" aria-label="Schließen">✕</button></div>
+  <canvas id="board" width="880" height="880" aria-label="Spielbrett"></canvas>
+  <div class="gstat" id="gStat" aria-live="polite"></div>
+  <div class="gbtns" id="gBtns"></div>
+</div></div>
+<div class="toast" id="toast" hidden></div>
 
 <script src="three.min.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
@@ -181,6 +231,22 @@ form button:disabled{opacity:.5}
   disc.position.set(2.4, .51, -2.0); scene.add(disc);
   const plant = (x, z) => { box(.26, .3, .26, new THREE.MeshStandardMaterial({ color: "#c46b3a" }), x, .15, z); for (let i = 0; i < 5; i++) { const l = new THREE.Mesh(new THREE.ConeGeometry(.08, .55, 8), new THREE.MeshStandardMaterial({ color: "#3f8f4f" })); l.position.set(x + Math.sin(i * 1.3) * .07, .55, z + Math.cos(i * 1.3) * .07); l.rotation.z = Math.sin(i * 1.3) * .35; l.rotation.x = Math.cos(i * 1.3) * .35; scene.add(l); } };
   plant(-2.6, 1.6); plant(2.6, 1.6);
+  // Fernseher an der Wand: chilliges Bild in Schleife oder das Spielbrett
+  sign.position.y = 2.24;
+  const TVX = -1.2, TVY = 1.42, TVZ = -D / 2 + .05;
+  const tvC = document.createElement("canvas"); tvC.width = 512; tvC.height = 288; const tvX = tvC.getContext("2d");
+  const tvT = new THREE.CanvasTexture(tvC);
+  box(1.38, .82, .06, new THREE.MeshStandardMaterial({ color: "#0b0712", roughness: .35, metalness: .3 }), TVX, TVY, TVZ - .02);
+  const screen = plane(1.28, .72, new THREE.MeshBasicMaterial({ map: tvT })); screen.position.set(TVX, TVY, TVZ + .012); scene.add(screen);
+  const tvLight = new THREE.PointLight("#ff9a5a", .6, 3.2, 2); tvLight.position.set(TVX, TVY, TVZ + .6); scene.add(tvLight);
+  // Tür rechts: geht auf, wenn jemand reinkommt
+  const outside = plane(.9, 2, new THREE.MeshBasicMaterial({ color: "#ffe2a6" })); outside.rotation.y = -Math.PI / 2; outside.position.set(W / 2 - .006, 1, -.9); scene.add(outside);
+  const doorPivot = new THREE.Group(); doorPivot.position.set(W / 2 - .04, 1, -.45); scene.add(doorPivot);
+  const leaf = new THREE.Mesh(new THREE.BoxGeometry(.04, 2, .9), new THREE.MeshStandardMaterial({ color: "#6b3f8f", roughness: .7 })); leaf.position.set(0, 0, -.45); doorPivot.add(leaf);
+  const knob = new THREE.Mesh(new THREE.SphereGeometry(.035, 12, 10), new THREE.MeshStandardMaterial({ color: "#ffc867", metalness: .6, roughness: .3 })); knob.position.set(-.04, -.05, -.8); doorPivot.add(knob);
+  box(.06, 2.08, .06, frameM, W / 2 - .03, 1.04, -.42); box(.06, 2.08, .06, frameM, W / 2 - .03, 1.04, -1.38); box(.06, .07, 1.02, frameM, W / 2 - .03, 2.04, -.9);
+  const doorLight = new THREE.PointLight("#ffd28a", 0, 3, 2); doorLight.position.set(W / 2 - .5, 1.4, -.9); scene.add(doorLight);
+  let doorOpen = 0, doorUntil = 0;
   // Lichterkette
   const bulbs = [];
   for (let i = 0; i < 22; i++) { const x = -W / 2 + .2 + i * ((W - .4) / 21); const b = new THREE.Mesh(new THREE.SphereGeometry(.03, 8, 6), new THREE.MeshBasicMaterial({ color: COLORS[i % 5] })); b.position.set(x, H - .25 - Math.sin(i / 21 * Math.PI * 3) * .06 - .05, -D / 2 + .08); scene.add(b); bulbs.push(b); }
@@ -209,6 +275,7 @@ form button:disabled{opacity:.5}
     const keep = new Set(list.map(p => p.id));
     for (const [id, g] of people) if (!keep.has(id)) { scene.remove(g); people.delete(id); }
     list.forEach((p, i) => { let g = people.get(p.id); if (!g || g.userData.name !== p.n) { if (g) scene.remove(g); g = avatar(p.n); people.set(p.id, g); } const s = SEATS[i % SEATS.length]; g.userData.seat = s; g.lookAt(0, .8, 2); g.rotation.x = 0; g.rotation.z = 0; });
+    curList = list; for (const g of people.values()) g.visible = !tvView;
     $("who").innerHTML = list.map(p => `<span><i style="background:${colorOf(p.n)}"></i>${esc(p.n)}${p.id === device ? " (du)" : ""}</span>`).join("");
   }
   function say(nameOrId, text) {
@@ -217,20 +284,336 @@ form button:disabled{opacity:.5}
     if (g.userData.bubble) g.remove(g.userData.bubble);
     const b = bubble(text); b.position.set(0, .82, 0); g.add(b); g.userData.bubble = b; g.userData.bubbleUntil = performance.now() + 7000;
   }
+  const findG = n => { if (!n) return null; for (const v of people.values()) if (v.userData.name === n) return v; return null; };
+  const okN = n => typeof n === "string" && /^[A-Za-zÄÖÜäöüß0-9 ._-]{2,12}$/.test(n) && !KloFilter.reason(n, DEMOW);
+
+  // ---------- Klang: Türklingel und Geschenk-Pling ----------
+  let AC = null;
+  const ac = () => { try { AC = AC || new (window.AudioContext || window.webkitAudioContext)(); if (AC.state === "suspended") AC.resume(); } catch (e) {} return AC; };
+  addEventListener("pointerdown", ac);
+  function tone(f, t0, dur, vol) { const o = AC.createOscillator(), g = AC.createGain(); o.type = "sine"; o.frequency.value = f; g.gain.setValueAtTime(0, t0); g.gain.linearRampToValueAtTime(vol, t0 + .012); g.gain.exponentialRampToValueAtTime(.001, t0 + dur); o.connect(g); g.connect(AC.destination); o.start(t0); o.stop(t0 + dur + .05); }
+  function dingDong() { if (!AC || AC.state !== "running") return; const t = AC.currentTime + .02; tone(784, t, 1.3, .22); tone(1568, t, .35, .05); tone(622, t + .6, 1.7, .22); tone(1244, t + .6, .45, .05); }
+  function pling() { if (!AC || AC.state !== "running") return; const t = AC.currentTime + .01; tone(1046, t, .3, .1); tone(1318, t + .09, .4, .1); tone(1568, t + .18, .5, .08); }
+  let toastT = 0;
+  function toast(t) { const el = $("toast"); el.textContent = t; el.hidden = false; clearTimeout(toastT); toastT = setTimeout(() => el.hidden = true, 3800); }
+  function ring(name) {
+    dingDong(); toast("🔔 " + name + " ist reingekommen");
+    doorUntil = performance.now() + 2600;
+    if (!tvView && !dragging) { tYaw = -.72; idleT = 0; setTimeout(() => { if (!tvView) tYaw = 0; }, 2800); }
+  }
+
+  // ---------- Geschenke ----------
+  const GIFTS = [["🍺", "Bier"], ["🥤", "Cola"], ["🧃", "Saft"], ["☕", "Kaffee"], ["🍕", "Pizza"], ["🥨", "Brezel"], ["🍿", "Popcorn"], ["🍫", "Schoki"], ["🍩", "Donut"], ["🍦", "Eis"], ["🌹", "Rose"], ["🧸", "Teddy"]]
+    .filter(([e]) => !(e === "🍺" && WALL === "familie-demo"));
+  const GIFT_RE = /^🎁 (\S+) ([A-Za-zÄÖ]+) für (.{2,12})$/;
+  const parseGift = t => { const m = GIFT_RE.exec(t || ""); if (!m) return null; const g = GIFTS.find(([e, l]) => e === m[1] && l === m[2]) || (m[1] === "🍺" && m[2] === "Bier" ? ["🍺", "Bier"] : null); return g ? { e: g[0], l: g[1], to: m[3] } : null; };
+  const giftLine = (n, g) => `<b style="color:${colorOf(n)}">${esc(n)}</b>🎁 schenkt ${g.to === "alle" ? "allen" : esc(g.to)} ${g.e} ${esc(g.l)}`;
+  const emoTex = new Map();
+  const emoSprite = e => { let t = emoTex.get(e); if (!t) { t = tex(128, 128, x => { x.font = '96px "Noto Color Emoji","Apple Color Emoji","Segoe UI Emoji",sans-serif'; x.textAlign = "center"; x.textBaseline = "middle"; x.fillText(e, 64, 72); }); emoTex.set(e, t); }
+    const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: t, transparent: true, depthTest: false })); s.scale.set(.3, .3, 1); scene.add(s); return s; };
+  const flights = [];
+  function giftFly(from, to, emo) {
+    const a = findG(from), b = to && to !== "alle" ? findG(to) : null;
+    const pa = a ? a.position.clone().add(new THREE.Vector3(0, .25, 0)) : new THREE.Vector3(0, 1.1, 1.2);
+    const pb = b ? b.position.clone().add(new THREE.Vector3(.2, .08, .15)) : new THREE.Vector3((Math.random() - .5) * .7, .56, -.55);
+    flights.push({ s: emoSprite(emo), pa, pb, to: b, t0: performance.now(), dur: 1300, stay: b ? 9000 : 20000 });
+    pling();
+  }
+  let curList = [], giftTo = "alle", lastGift = 0;
+  function giftChips() {
+    const names = curList.filter(p => p.id !== device).map(p => p.n);
+    if (giftTo !== "alle" && !names.includes(giftTo)) giftTo = "alle";
+    $("giftTo").innerHTML = ["alle", ...names].map(n => `<button type="button" data-n="${esc(n)}" aria-pressed="${n === giftTo}">${n === "alle" ? "Alle" : esc(n)}</button>`).join("");
+    $("giftTo").querySelectorAll("button").forEach(b => b.onclick = () => { giftTo = b.dataset.n; giftChips(); });
+  }
+  $("giftList").innerHTML = GIFTS.map(([e, l]) => `<button type="button" data-e="${e}" data-l="${l}"><b>${e}</b>${l}</button>`).join("");
+  let sendGift = (e, l, to) => { giftFly(null, to, e); $("log").insertAdjacentHTML("beforeend", `<p class="gift">${giftLine("Du", { e, l, to })}</p>`); $("log").scrollTop = $("log").scrollHeight; };
+  $("giftList").querySelectorAll("button").forEach(b => b.onclick = () => {
+    if (Date.now() - lastGift < 4000) { toast("Kurz warten – gleich kannst du wieder was schenken"); return; }
+    lastGift = Date.now(); $("giftBox").hidden = true; sendGift(b.dataset.e, b.dataset.l, giftTo);
+  });
+  $("aGift").onclick = () => { giftChips(); $("giftBox").hidden = false; };
+  $("giftX").onclick = () => $("giftBox").hidden = true;
+  $("giftBox").onclick = e => { if (e.target.id === "giftBox") $("giftBox").hidden = true; };
+
+  // ---------- Fernseher: Lo-Fi-Abend in Schleife ----------
+  const STARS = Array.from({ length: 46 }, (_, i) => [(i * 97 + 13) % 512, (i * 53 + 7) % 110, i]);
+  function tvChill(x, w, h, t) {
+    const hz = h * .6;
+    const g = x.createLinearGradient(0, 0, 0, hz); g.addColorStop(0, "#160a33"); g.addColorStop(.55, "#7c2f74"); g.addColorStop(1, "#ff9259"); x.fillStyle = g; x.fillRect(0, 0, w, hz);
+    STARS.forEach(([sx, sy, i]) => { x.fillStyle = `rgba(255,255,255,${.2 + .7 * Math.abs(Math.sin(t * .9 + i))})`; x.fillRect(sx, sy, 2, 2); });
+    const sx = w * .58, sy = hz - 18 + Math.sin(t * .25) * 6;
+    const sg = x.createRadialGradient(sx, sy, 10, sx, sy, 120); sg.addColorStop(0, "rgba(255,214,140,.55)"); sg.addColorStop(1, "rgba(255,214,140,0)"); x.fillStyle = sg; x.fillRect(sx - 120, sy - 120, 240, 240);
+    x.save(); x.beginPath(); x.rect(0, 0, w, hz); x.clip();
+    const su = x.createLinearGradient(0, sy - 56, 0, sy + 56); su.addColorStop(0, "#ffe9a0"); su.addColorStop(1, "#ff5f8a"); x.fillStyle = su; x.beginPath(); x.arc(sx, sy, 56, 0, 7); x.fill();
+    x.fillStyle = "#b8467a"; for (let k = 0; k < 5; k++) x.fillRect(sx - 60, sy + 4 + k * 10, 120, 2 + k * .9);
+    x.restore();
+    // Wolken ziehen vorbei
+    x.fillStyle = "rgba(255,180,200,.25)";
+    [[.02, 40, 60], [.015, 85, 90], [.025, 25, 45]].forEach(([sp, y, r], i) => { const cx = ((t * sp * 512 + i * 190) % (w + 260)) - 130; x.beginPath(); x.ellipse(cx, y, r, r * .22, 0, 0, 7); x.ellipse(cx + r * .5, y - 6, r * .6, r * .2, 0, 0, 7); x.fill(); });
+    // Meer mit Glitzer
+    const sea = x.createLinearGradient(0, hz, 0, h); sea.addColorStop(0, "#3b1a5e"); sea.addColorStop(1, "#0c0720"); x.fillStyle = sea; x.fillRect(0, hz, w, h - hz);
+    for (let k = 0; k < 14; k++) { const yy = hz + 4 + k * 8, ww = (70 - k * 3.6) * (1 + .35 * Math.sin(t * 2.2 + k * 1.7)); x.fillStyle = `rgba(255,170,120,${.55 - k * .035})`; x.fillRect(sx - ww / 2 + Math.sin(t * 1.3 + k) * 6, yy, ww, 2); }
+    x.strokeStyle = "rgba(150,120,255,.25)"; x.lineWidth = 1.5;
+    for (let k = 0; k < 5; k++) { const yy = hz + 20 + k * 22; x.beginPath(); for (let xx = 0; xx <= w; xx += 16) x.lineTo(xx, yy + Math.sin(xx / 40 + t * 1.4 + k) * 2.5); x.stroke(); }
+    // Palme wiegt sich
+    x.save(); x.translate(70, h); x.fillStyle = "#12081f"; x.strokeStyle = "#12081f";
+    const sway = Math.sin(t * .8) * .06; x.rotate(sway);
+    x.lineWidth = 9; x.beginPath(); x.moveTo(0, 0); x.quadraticCurveTo(18, -110, 40, -190); x.stroke();
+    x.translate(40, -190);
+    for (let k = 0; k < 7; k++) { const a = -Math.PI * .95 + k * (Math.PI * .95 / 6) + Math.sin(t * 1.1 + k) * .06; x.save(); x.rotate(a); x.beginPath(); x.moveTo(0, 0); x.quadraticCurveTo(45, -18, 92, 8); x.quadraticCurveTo(45, -4, 0, 4); x.fill(); x.restore(); }
+    x.restore();
+    // Beschriftung wie ein Lo-Fi-Sender
+    x.fillStyle = "rgba(255,255,255,.85)"; x.font = '400 22px "Permanent Marker"'; x.textAlign = "right"; x.fillText("chill mal ♪", w - 16, h - 16);
+    x.fillStyle = "rgba(0,0,0,.08)"; for (let yy = (t * 30) % 4; yy < h; yy += 4) x.fillRect(0, yy, w, 1);
+  }
+
+  // ---------- Mensch ärgere dich nicht ----------
+  const PATH = [[0,4],[1,4],[2,4],[3,4],[4,4],[4,3],[4,2],[4,1],[4,0],[5,0],[6,0],[6,1],[6,2],[6,3],[6,4],[7,4],[8,4],[9,4],[10,4],[10,5],[10,6],[9,6],[8,6],[7,6],[6,6],[6,7],[6,8],[6,9],[6,10],[5,10],[4,10],[4,9],[4,8],[4,7],[4,6],[3,6],[2,6],[1,6],[0,6],[0,5]];
+  const GOAL = [[[1,5],[2,5],[3,5],[4,5]], [[5,1],[5,2],[5,3],[5,4]], [[9,5],[8,5],[7,5],[6,5]], [[5,9],[5,8],[5,7],[5,6]]];
+  const YARD = [[[0,0],[1,0],[0,1],[1,1]], [[9,0],[10,0],[9,1],[10,1]], [[9,9],[10,9],[9,10],[10,10]], [[0,9],[1,9],[0,10],[1,10]]];
+  const PC = ["#ff4d6d", "#ffd23f", "#3ddc84", "#4cc9ff"], PT = ["#ffc9d3", "#fff1b8", "#c7f5da", "#c8efff"], PN = ["Rot", "Gelb", "Grün", "Blau"];
+  const cellOf = (c, k, r) => r < 0 ? YARD[c][k] : r < 40 ? PATH[(c * 10 + r) % 40] : GOAL[c][r - 40];
+  const fresh = tv => ({ v: 1, st: "wait", p: [], turn: 0, d: 0, ph: "roll", tries: 0, pc: [[-1, -1, -1, -1], [-1, -1, -1, -1], [-1, -1, -1, -1], [-1, -1, -1, -1]], tv: !!tv, at: Date.now(), ev: [] });
+  const nm = p => !p ? "?" : p.bot ? "Bot " + PN[p.c] : okN(p.n) ? p.n : "Spieler " + PN[p.c];
+  function valid(S) {
+    try {
+      if (!S || S.v !== 1 || !Array.isArray(S.p) || S.p.length > 4 || !Array.isArray(S.pc) || S.pc.length !== 4) return false;
+      if (!S.pc.every(a => Array.isArray(a) && a.length === 4 && a.every(r => Number.isInteger(r) && r >= -1 && r <= 43))) return false;
+      if (!S.p.every(p => p && typeof p.id === "string" && p.id.length <= 40 && Number.isInteger(p.c) && p.c >= 0 && p.c < 4)) return false;
+      if (new Set(S.p.map(p => p.c)).size !== S.p.length || new Set(S.p.map(p => p.id)).size !== S.p.length) return false;
+      if (!["wait", "play", "end"].includes(S.st) || !["roll", "move"].includes(S.ph)) return false;
+      if (!Number.isInteger(S.turn) || S.turn < 0 || S.turn >= Math.max(1, S.p.length)) return false;
+      if (!Number.isInteger(S.d) || S.d < 0 || S.d > 6 || !Number.isInteger(S.tries)) return false;
+      if (!Array.isArray(S.ev) || S.ev.length > 4 || !S.ev.every(Number.isInteger)) return false;
+      return true;
+    } catch (e) { return false; }
+  }
+  function moves(S, c, d) {
+    const mine = S.pc[c], out = [];
+    mine.forEach((r, k) => {
+      if (r >= 40 && r + d > 43) return;
+      const nr = r < 0 ? (d === 6 ? 0 : null) : r + d;
+      if (nr === null || nr > 43) return;
+      if (mine.some((o, j) => j !== k && o === nr)) return;
+      if (nr >= 40) for (let x = Math.max(40, r + 1); x < nr; x++) if (mine.includes(x)) return;
+      out.push(k);
+    });
+    // Wer eine 6 hat und noch Figuren im Haus, muss raus (wenn das Startfeld frei ist)
+    if (d === 6) { const outK = out.filter(k => mine[k] < 0); if (outK.length) return outK; }
+    return out;
+  }
+  const nextTurn = S => { S.tries = 0; S.ph = "roll"; S.turn = (S.turn + 1) % S.p.length; };
+  function doRoll(S, pid) {
+    const pl = S.p[S.turn]; if (S.st !== "play" || S.ph !== "roll" || !pl || pl.id !== pid) return null;
+    const d = 1 + Math.floor(Math.random() * 6); S.d = d; S.at = Date.now();
+    if (moves(S, pl.c, d).length) { S.ph = "move"; S.ev = [1, S.turn, d]; return S; }
+    const stuck = ![1, 2, 3, 4, 5].some(x => moves(S, pl.c, x).length);
+    if (d === 6) { S.ev = [3, S.turn, d]; return S; }
+    if (stuck && S.tries < 2) { S.tries++; S.ev = [4, S.turn, d, 3 - S.tries]; return S; }
+    S.ev = [2, S.turn, d]; nextTurn(S); return S;
+  }
+  function doMove(S, pid, k) {
+    const pl = S.p[S.turn]; if (S.st !== "play" || S.ph !== "move" || !pl || pl.id !== pid || !moves(S, pl.c, S.d).includes(k)) return null;
+    const r = S.pc[pl.c][k], nr = r < 0 ? 0 : r + S.d; S.pc[pl.c][k] = nr; S.at = Date.now(); S.ev = [5, S.turn, S.d];
+    if (nr < 40) { const abs = (pl.c * 10 + nr) % 40; S.p.forEach((o, oi) => { if (o.c === pl.c) return; S.pc[o.c].forEach((q, j) => { if (q >= 0 && q < 40 && (o.c * 10 + q) % 40 === abs) { S.pc[o.c][j] = -1; S.ev = [6, S.turn, oi]; } }); }); }
+    if (S.pc[pl.c].every(x => x >= 40)) { S.st = "end"; S.ev = [7, S.turn]; return S; }
+    if (S.d === 6) { S.ph = "roll"; S.tries = 0; if (S.ev[0] !== 6) S.ev = [8, S.turn]; } else nextTurn(S);
+    return S;
+  }
+  function botPick(S) {
+    const pl = S.p[S.turn], c = pl.c, mv = moves(S, c, S.d); let best = mv[0], bs = -1e9;
+    mv.forEach(k => { const r = S.pc[c][k], nr = r < 0 ? 0 : r + S.d; let sc = nr;
+      if (r < 0) sc += 30; if (nr >= 40) sc += 25;
+      if (nr < 40) { const abs = (c * 10 + nr) % 40; S.p.forEach(o => { if (o.c !== c && S.pc[o.c].some(q => q >= 0 && q < 40 && (o.c * 10 + q) % 40 === abs)) sc += 50; }); }
+      if (sc > bs) { bs = sc; best = k; } });
+    return best;
+  }
+  function evText(S) {
+    const e = S.ev || [], a = nm(S.p[e[1]]);
+    switch (e[0]) {
+      case 1: return `${a} würfelt eine ${e[2]}.`;
+      case 2: return `${a} würfelt eine ${e[2]} – kein Zug möglich.`;
+      case 3: return `${a} hat eine 6 – nochmal würfeln!`;
+      case 4: return `${a} würfelt eine ${e[2]} – noch ${e[3]}× versuchen.`;
+      case 5: return `${a} ist mit der ${e[2]} gezogen.`;
+      case 6: return `💥 ${a} schmeißt ${nm(S.p[e[2]])} raus!`;
+      case 7: return `🏆 ${a} gewinnt!`;
+      case 8: return `${a} darf nochmal würfeln.`;
+      case 9: return `⏭ ${a} wurde übersprungen.`;
+      default: return "";
+    }
+  }
+  let G = fresh(), gref = null, gBusy = false;
+  const pname = () => LIVE ? me : "Du";
+  const meIn = () => G.p.find(p => p.id === device && !p.bot);
+  const myTurn = () => G.st === "play" && G.p[G.turn] && G.p[G.turn].id === device;
+  const hlNow = () => myTurn() && G.ph === "move" ? { c: G.p[G.turn].c, ks: moves(G, G.p[G.turn].c, G.d) } : null;
+  async function act(fn) {
+    if (gBusy) return; gBusy = true;
+    try {
+      if (!gref) { const n = fn(JSON.parse(JSON.stringify(G))); if (n) { G = n; gameUI(); } return; }
+      await fsdb.runTransaction(async tx => {
+        const sn = await tx.get(gref); let cur = null;
+        if (sn.exists) try { cur = JSON.parse(sn.data().s); } catch (e) {}
+        if (!valid(cur)) cur = fresh();
+        const n = fn(cur); if (!n) return;
+        tx.set(gref, { s: JSON.stringify(n), ts: firebase.firestore.FieldValue.serverTimestamp() });
+      });
+    } catch (e) { toast(e && e.code === "permission-denied" ? "Spiel klappt nicht – sind die neuen Firebase-Regeln drin?" : "Hat nicht geklappt. Nochmal?"); }
+    finally { gBusy = false; }
+  }
+  const freeColor = S => [0, 2, 1, 3].find(c => !S.p.some(p => p.c === c));
+  const A = {
+    join: () => act(S => { if (S.st !== "wait" || S.p.length >= 4 || S.p.some(p => p.id === device)) return null; S.p.push({ id: device, n: pname(), c: freeColor(S) }); S.at = Date.now(); return S; }),
+    bot: () => act(S => { if (S.st !== "wait" || S.p.length >= 4 || !S.p.some(p => p.id === device)) return null; const c = freeColor(S); S.p.push({ id: "bot" + c, n: "Bot", c, bot: 1 }); S.at = Date.now(); return S; }),
+    start: () => act(S => { if (S.st !== "wait" || S.p.length < 2 || !S.p.some(p => p.id === device)) return null; S.st = "play"; S.turn = 0; S.ph = "roll"; S.d = 0; S.tries = 0; S.ev = []; S.at = Date.now(); return S; }),
+    roll: () => act(S => doRoll(S, device)),
+    move: k => act(S => doMove(S, device, k)),
+    leave: () => act(S => { const i = S.p.findIndex(p => p.id === device); if (i < 0) return null;
+      if (S.st === "wait") { S.p.splice(i, 1); S.at = Date.now(); return S; }
+      S.p[i] = { id: "bot" + S.p[i].c, n: "Bot", c: S.p[i].c, bot: 1 }; if (!S.p.some(p => !p.bot)) return fresh(S.tv); return S; }),
+    skip: () => act(S => { if (S.st !== "play" || Date.now() - S.at < 60e3 || !S.p.some(p => p.id === device)) return null; S.ev = [9, S.turn]; S.at = Date.now(); nextTurn(S); return S; }),
+    reset: () => act(S => { if (S.st === "play" && !S.p.some(p => p.id === device) && Date.now() - S.at < 180e3) return null; return fresh(S.tv); }),
+    tv: on => act(S => { S.tv = on; return S; })
+  };
+  // Bots ziehen von selbst: das erste Gerät in der Runde steuert sie
+  setInterval(() => {
+    if (G.st !== "play" || gBusy) return; const cur = G.p[G.turn]; if (!cur || !cur.bot) return;
+    const humans = G.p.filter(p => !p.bot); if (!(humans[0] && humans[0].id === device) && !(meIn() && Date.now() - G.at > 8000)) return;
+    if (Date.now() - (G.at || 0) < 650 && gref) return;
+    act(S => { const c2 = S.p[S.turn]; if (!c2 || !c2.bot) return null; return S.ph === "roll" ? doRoll(S, c2.id) : doMove(S, c2.id, botPick(S)); });
+  }, 900);
+  // Nur ein Zug möglich: geht von selbst
+  let autoKey = "";
+  function autoMove() { const h = hlNow(); if (!h || new Set(h.ks.map(k => G.pc[h.c][k])).size !== 1) return; const key = G.turn + ":" + G.at; if (autoKey === key) return; autoKey = key; setTimeout(() => { const h2 = hlNow(); if (h2 && G.turn + ":" + G.at === key) A.move(h2.ks[0]); }, 700); }
+  if (location.hash === "#test") window.__madn = { G: () => G, hl: hlNow, move: k => A.move(k) };
+
+  function drawDie(x, cx, cy, s, d, col) {
+    x.save(); x.translate(cx, cy); x.fillStyle = "#fff"; x.strokeStyle = col; x.lineWidth = s * .09; x.beginPath(); x.roundRect(-s / 2, -s / 2, s, s, s * .2); x.fill(); x.stroke();
+    const P = { 1: [[0, 0]], 2: [[-1, -1], [1, 1]], 3: [[-1, -1], [0, 0], [1, 1]], 4: [[-1, -1], [1, -1], [-1, 1], [1, 1]], 5: [[-1, -1], [1, -1], [0, 0], [-1, 1], [1, 1]], 6: [[-1, -1], [1, -1], [-1, 0], [1, 0], [-1, 1], [1, 1]] }[d] || [];
+    x.fillStyle = "#1a1030"; P.forEach(([a, b]) => { x.beginPath(); x.arc(a * s * .27, b * s * .27, s * .09, 0, 7); x.fill(); }); x.restore();
+  }
+  function drawBoard(x, ox, oy, S, hl) {
+    const u = S / 11, R = u * .4;
+    x.save(); x.translate(ox, oy);
+    x.fillStyle = "#f4e3c1"; x.beginPath(); x.roundRect(0, 0, S, S, u * .5); x.fill();
+    const dot = (cx, cy, fill) => { x.beginPath(); x.arc((cx + .5) * u, (cy + .5) * u, R, 0, 7); x.fillStyle = fill; x.fill(); x.lineWidth = Math.max(1, u * .06); x.strokeStyle = "#6b5338"; x.stroke(); };
+    PATH.forEach(([cx, cy], i) => { dot(cx, cy, i % 10 === 0 ? PT[i / 10] : "#fffaf0"); if (i % 10 === 0) { x.beginPath(); x.arc((cx + .5) * u, (cy + .5) * u, R * .88, 0, 7); x.lineWidth = u * .1; x.strokeStyle = PC[i / 10]; x.stroke(); } });
+    GOAL.forEach((g, c) => g.forEach(([cx, cy]) => dot(cx, cy, PT[c])));
+    YARD.forEach((g, c) => g.forEach(([cx, cy]) => dot(cx, cy, PT[c])));
+    const used = new Set(G.p.map(p => p.c)), pulse = .45 + .4 * Math.sin(performance.now() / 170);
+    for (let c = 0; c < 4; c++) { if (!used.has(c)) continue;
+      G.pc[c].forEach((r, k) => { const [cx, cy] = cellOf(c, k, r), px = (cx + .5) * u, py = (cy + .5) * u;
+        if (hl && hl.c === c && hl.ks.includes(k)) { x.beginPath(); x.arc(px, py, R * 1.3, 0, 7); x.fillStyle = `rgba(255,255,255,${pulse})`; x.fill(); x.lineWidth = u * .08; x.strokeStyle = "#1a1030"; x.stroke(); }
+        x.beginPath(); x.arc(px, py + R * .14, R * .8, 0, 7); x.fillStyle = "rgba(0,0,0,.28)"; x.fill();
+        x.beginPath(); x.arc(px, py, R * .78, 0, 7); x.fillStyle = PC[c]; x.fill(); x.lineWidth = u * .07; x.strokeStyle = "#1a1030"; x.stroke();
+        x.beginPath(); x.arc(px - R * .26, py - R * .26, R * .2, 0, 7); x.fillStyle = "rgba(255,255,255,.65)"; x.fill(); }); }
+    if (G.d && G.st !== "wait") drawDie(x, 5.5 * u, 5.5 * u, u * .95, G.d, G.p[G.turn] ? PC[G.p[G.turn].c] : "#888");
+    x.restore();
+  }
+  function tvGame(x, w, h) {
+    x.fillStyle = "#1a0f2e"; x.fillRect(0, 0, w, h);
+    drawBoard(x, 8, 8, 272, hlNow());
+    x.textAlign = "left"; x.fillStyle = "#ff6fb5"; x.font = '400 24px "Permanent Marker"'; x.fillText("Mensch ärgere", 296, 36); x.fillText("dich nicht", 296, 62);
+    x.font = '700 22px "Barlow Condensed"';
+    if (!G.p.length) { x.fillStyle = "#b9addb"; x.fillText("Wer spielt mit?", 296, 104); }
+    G.p.forEach((p, i) => { const y = 100 + i * 32, on = G.st === "play" && i === G.turn; x.fillStyle = PC[p.c]; x.beginPath(); x.arc(306, y - 7, 8, 0, 7); x.fill(); x.fillStyle = on ? "#fff" : "#b9addb"; x.fillText((on ? "▶ " : "") + nm(p), 322, y); });
+    x.fillStyle = "#ffc867"; x.font = '700 19px "Barlow Condensed"';
+    const msg = G.st === "wait" ? "Warten auf Mitspieler …" : evText(G);
+    const words = msg.split(" "); let line = "", yy = 238; words.forEach(wd => { if (x.measureText(line + wd).width > 200) { x.fillText(line, 296, yy); line = ""; yy += 22; } line += wd + " "; }); x.fillText(line, 296, yy);
+  }
+  let tvFrame = 0;
+  function drawTV(t) { if (G.tv) { tvGame(tvX, 512, 288); tvLight.color.set("#9fd8ff"); } else { tvChill(tvX, 512, 288, t); tvLight.color.set("#ff9a5a"); } tvT.needsUpdate = true; }
+
+  // Spiel-Fenster
+  const bc = $("board"), bx = bc.getContext("2d");
+  function gameUI() {
+    autoMove();
+    const mi = meIn(), cur = G.p[G.turn], idle = Date.now() - (G.at || 0) > 60e3;
+    const chips = G.p.map((p, i) => `<span class="pl${G.st === "play" && i === G.turn ? " on" : ""}"><i style="background:${PC[p.c]}"></i>${esc(nm(p))}${p.id === device && !p.bot ? " (du)" : ""}</span>`).join("");
+    let st = "";
+    if (G.st === "wait") st = G.p.length ? `Warten auf Mitspieler (${G.p.length}/4). Ab 2 geht's los.` : "Noch keiner dabei. Spiel mit – zu zweit, zu viert oder gegen Bots.";
+    else if (G.st === "play") st = myTurn() ? (G.ph === "roll" ? "Du bist dran: würfeln!" : "Tipp eine leuchtende Figur an.") : `${esc(nm(cur))} ist dran …`;
+    else st = "Spiel vorbei.";
+    const sh = `${chips ? chips + "<br>" : ""}${st}<span class="ev">${esc(evText(G))}</span>`;
+    if ($("gStat").dataset.h !== sh) { $("gStat").dataset.h = sh; $("gStat").innerHTML = sh; }
+    const b = [];
+    if (G.st === "wait") {
+      if (!mi && G.p.length < 4) b.push(["join", "✋ Mitspielen", "go"]);
+      if (mi && G.p.length < 4) b.push(["bot", "🤖 Bot dazu"]);
+      if (mi && G.p.length >= 2) b.push(["start", "▶ Los geht's", "go"]);
+      if (mi) b.push(["leave", "Aussteigen"]);
+    } else if (G.st === "play") {
+      if (myTurn() && G.ph === "roll") b.push(["roll", "🎲 Würfeln", "go"]);
+      if (mi && !myTurn() && idle && cur && !cur.bot) b.push(["skip", "⏭ Überspringen"]);
+      if (mi) b.push(["leave", "Aussteigen"]);
+      if (!mi && idle) b.push(["reset", "🔄 Neues Spiel"]);
+    } else b.push(["reset", "🔄 Neues Spiel", "go"]);
+    b.push(["tvon", G.tv ? "📺 TV: Spiel aus" : "📺 Auf dem TV zeigen"]);
+    const bh = b.map(([k, l, c]) => `<button type="button" data-k="${k}"${c ? ` class="${c}"` : ""}>${l}</button>`).join("");
+    if ($("gBtns").dataset.h !== bh) { $("gBtns").dataset.h = bh; $("gBtns").innerHTML = bh; }
+    $("gBtns").querySelectorAll("button").forEach(el => el.onclick = () => { const k = el.dataset.k;
+      if (k === "tvon") { const on = !G.tv; A.tv(on); if (on) { $("gameBox").hidden = true; setTvView(true); } return; }
+      A[k](); });
+    // TV-Leiste
+    $("tvRoll").hidden = !(myTurn() && G.ph === "roll");
+    $("tvStat").textContent = G.tv ? (G.st === "play" ? (myTurn() ? (G.ph === "roll" ? "Du bist dran!" : "Tipp deine Figur auf dem TV an") : nm(cur) + " ist dran") : G.st === "end" ? evText(G) : "Mensch ärgere dich nicht") : "📺 Lo-Fi-Abend";
+  }
+  bc.addEventListener("click", e => { const r = bc.getBoundingClientRect(); pickCell(Math.floor((e.clientX - r.left) / r.width * 11), Math.floor((e.clientY - r.top) / r.height * 11)); });
+  function pickCell(cx, cy) { const h = hlNow(); if (!h) return; const k = h.ks.find(k => { const [a, b] = cellOf(h.c, k, G.pc[h.c][k]); return a === cx && b === cy; }); if (k !== undefined) A.move(k); }
+  $("aGame").onclick = () => { $("gameBox").hidden = false; gameUI(); };
+  $("gameX").onclick = () => $("gameBox").hidden = true;
+  $("gameBox").onclick = e => { if (e.target.id === "gameBox") $("gameBox").hidden = true; };
+  setInterval(gameUI, 5000);
+
+  // TV groß anschauen
+  let tvView = false;
+  function setTvView(on) {
+    tvView = on; $("aTv").setAttribute("aria-pressed", on); $("tvBar").hidden = !on; $("acts").hidden = on;
+    for (const g of people.values()) g.visible = !on;
+    if (!on) { tYaw = 0; tPitch = -.12; }
+    gameUI();
+  }
+  $("aTv").onclick = () => setTvView(!tvView);
+  $("tvExit").onclick = () => setTvView(false);
+  $("tvBoard").onclick = () => { $("gameBox").hidden = false; gameUI(); };
+  $("tvRoll").onclick = () => A.roll();
+  const ray = new THREE.Raycaster(), ndc = new THREE.Vector2();
+  function tvTap(e) {
+    ndc.set(e.clientX / innerWidth * 2 - 1, -(e.clientY / innerHeight) * 2 + 1); ray.setFromCamera(ndc, camera);
+    const hit = ray.intersectObject(screen)[0]; if (!hit || !hit.uv) return;
+    const px = hit.uv.x * 512, py = (1 - hit.uv.y) * 288;
+    if (G.tv && px >= 8 && px <= 280 && py >= 8 && py <= 280) pickCell(Math.floor((px - 8) / 272 * 11), Math.floor((py - 8) / 272 * 11));
+  }
 
   // ---------- Kamera: wischen zum Umschauen ----------
   let yaw = 0, tYaw = 0, pitch = -.12, tPitch = -.12, dragging = false, lx = 0, ly = 0;
-  canvas.addEventListener("pointerdown", e => { dragging = true; lx = e.clientX; ly = e.clientY; });
-  addEventListener("pointermove", e => { if (!dragging) return; tYaw = Math.max(-.9, Math.min(.9, tYaw - (e.clientX - lx) * .005)); tPitch = Math.max(-.5, Math.min(.2, tPitch - (e.clientY - ly) * .004)); lx = e.clientX; ly = e.clientY; });
+  let downX = 0, downY = 0;
+  canvas.addEventListener("pointerdown", e => { dragging = true; lx = downX = e.clientX; ly = downY = e.clientY; });
+  canvas.addEventListener("pointerup", e => { if (tvView && Math.hypot(e.clientX - downX, e.clientY - downY) < 12) tvTap(e); });
+  addEventListener("pointermove", e => { if (!dragging || tvView) return; tYaw = Math.max(-.9, Math.min(.9, tYaw - (e.clientX - lx) * .005)); tPitch = Math.max(-.5, Math.min(.2, tPitch - (e.clientY - ly) * .004)); lx = e.clientX; ly = e.clientY; });
   addEventListener("pointerup", () => dragging = false);
   function resize() { const w = innerWidth, h = innerHeight; renderer.setSize(w, h, false); camera.aspect = w / h; camera.fov = w < h ? 72 : 58; camera.updateProjectionMatrix(); }
   addEventListener("resize", resize); resize();
   camera.position.set(0, 1.45, 2.1);
+  const camPos = new THREE.Vector3(0, 1.45, 2.1);
   let idleT = 0;
   function loop(now) {
+    if (tvView) { tYaw = 0; tPitch = 0; const fit = Math.max(1.05, .74 / (Math.tan(camera.fov * Math.PI / 360) * Math.min(camera.aspect, 1.78)), .44 / Math.tan(camera.fov * Math.PI / 360));
+      camPos.set(TVX, TVY - (innerWidth < innerHeight ? .12 : 0), TVZ + fit); }
+    else camPos.set(0, 1.45, 2.1);
+    camera.position.lerp(camPos, .08);
     yaw += (tYaw - yaw) * .08; pitch += (tPitch - pitch) * .08;
-    if (!dragging) { idleT += 1; if (idleT > 400) tYaw = Math.sin(now / 9000) * .35; } else idleT = 0;
+    if (!dragging && !tvView) { idleT += 1; if (idleT > 400) tYaw = Math.sin(now / 9000) * .35; } else idleT = 0;
     camera.rotation.set(pitch, yaw, 0, "YXZ");
+    if (++tvFrame % 2 === 0) drawTV(now / 1000);
+    if (!$("gameBox").hidden) { bx.clearRect(0, 0, 880, 880); drawBoard(bx, 0, 0, 880, hlNow()); }
+    doorOpen += ((now < doorUntil ? 1 : 0) - doorOpen) * .07; doorPivot.rotation.y = doorOpen * 1.25; doorLight.intensity = doorOpen * 1.4;
+    for (let i = flights.length - 1; i >= 0; i--) { const f = flights[i], k = (now - f.t0) / f.dur;
+      if (k < 1) { f.s.position.lerpVectors(f.pa, f.pb, k); f.s.position.y += Math.sin(k * Math.PI) * .55; f.s.scale.setScalar(.2 + .16 * Math.sin(k * Math.PI)); }
+      else if (now - f.t0 < f.dur + f.stay) { if (f.to) f.s.position.copy(f.to.position).add(new THREE.Vector3(.2, .08, .15)); f.s.position.y += Math.sin(now / 300) * .003; f.s.scale.setScalar(.26); f.s.visible = !tvView; }
+      else { scene.remove(f.s); f.s.material.dispose(); flights.splice(i, 1); } }
     blobs.forEach((b, i) => b.position.set(Math.sin(now / 1700 + i) * .03, .7 + (Math.sin(now / (1400 + i * 300) + i * 2) * .5 + .5) * .24, Math.cos(now / 1900 + i) * .03));
     lavaLight.intensity = 1 + Math.sin(now / 900) * .25;
     disc.rotation.y = KloMusik.isOn() ? now / 600 : disc.rotation.y;
@@ -256,6 +639,8 @@ form button:disabled{opacity:.5}
     const lines = [["Mia", "Wer guckt heute Abend mit Film? 🍿"], ["Papa", "Ich mach Popcorn!"], ["Oma Gerda", "Ich bring Kuchen mit 🎂"], ["Ben", "Chillig hier 😎"]];
     $("log").innerHTML = lines.map(([n, t]) => `<p class="ex"><b style="color:${colorOf(n)}">${esc(n)}</b>${esc(t)}<time>Beispiel</time></p>`).join("");
     let k = 0; setInterval(() => { const [n, t] = lines[k++ % lines.length]; say(n, t); }, 3200); say(lines[0][0], lines[0][1]);
+    setTimeout(() => { placePeople([...ex.map(([id, n]) => ({ id, n })), { id: "d5", n: "Pia" }]); ring("Pia"); }, 7000);
+    setTimeout(() => giftFly("Ben", "Mia", "🥤"), 4200);
     $("msg").disabled = true; $("send").disabled = true; $("msg").placeholder = "Nur in eurer privaten Gruppe";
     $("lockText").textContent = IN_APP
       ? "Den Chill-Raum gibt es auf privaten Familien- und Freunde-Wänden. Alle aus eurer Gruppe treffen sich hier und schreiben zusammen – Fremde kommen nicht rein."
@@ -271,9 +656,6 @@ form button:disabled{opacity:.5}
   const fsdb = firebase.firestore();
   const grp = DEMOW ? fsdb.collection("walls").doc(WALL) : fsdb.collection("walls").doc(WALL).collection("familie").doc(KEY);
   if (DEMOW) { $("sub").textContent = "Demo · alle, die gerade testen"; $("msg").maxLength = 120; }
-  /* Demo: zählt zu den Gratis-Nachrichten */
-  const FREI = WALL === "familie-demo" ? 100 : 500, DKEY = WALL === "familie-demo" ? "klowand-famdemo-n" : "klowand-demo-n";
-  const used = () => { try { return parseInt(localStorage.getItem(DKEY) || "0", 10) || 0; } catch (e) { return 0; } };
   const now = () => firebase.firestore.FieldValue.serverTimestamp();
   if (!DEMOW) try { const wd = await fsdb.collection("walls").doc(WALL).get(); if (wd.exists && wd.data().name) $("sub").textContent = wd.data().name + " · nur für eure Gruppe"; } catch (e) {}
 
@@ -296,18 +678,26 @@ form button:disabled{opacity:.5}
     let present = [];
     grp.collection("da").where("ts", ">", firebase.firestore.Timestamp.fromMillis(Date.now() - 3 * 3600e3)).onSnapshot(sn => {
       present = sn.docs.map(d => ({ id: d.id, n: d.data().n, ts: d.data().ts && d.data().ts.toMillis ? d.data().ts.toMillis() : Date.now() }));
-      drawPeople();
+      drawPeople(); primed = true;
     }, () => mod("Der Chill-Raum ist gerade nicht erreichbar. Lade die Seite neu."));
-    const drawPeople = () => { const cut = Date.now() - 90e3; const list = present.filter(p => p.ts > cut || p.id === device); if (!list.some(p => p.id === device)) list.unshift({ id: device, n: me }); list.sort((a, b) => (a.id === device ? -1 : b.id === device ? 1 : a.n.localeCompare(b.n))); placePeople(list); };
+    const drawPeople = () => { const cut = Date.now() - 90e3; const list = present.filter(p => p.ts > cut || p.id === device); if (!list.some(p => p.id === device)) list.unshift({ id: device, n: me }); list.sort((a, b) => (a.id === device ? -1 : b.id === device ? 1 : a.n.localeCompare(b.n))); placePeople(list);
+      if (ready && primed) list.forEach(p => { if (p.id !== device && !seen.has(p.id)) ring(p.n); });
+      seen = new Set(list.map(p => p.id)); };
+    let seen = new Set(), ready = false, primed = false; setTimeout(() => ready = true, 3500);
     setInterval(drawPeople, 20000);
     let first = true;
     grp.collection("chill").where("ts", ">", firebase.firestore.Timestamp.fromMillis(Date.now() - 24 * 3600e3)).orderBy("ts", "desc").limit(60).onSnapshot(sn => {
       const msgs = sn.docs.map(d => { const x = d.data(); return { id: d.id, n: x.n, t: x.t, ts: x.ts && x.ts.toMillis ? x.ts.toMillis() : Date.now() }; }).reverse();
-      $("log").innerHTML = msgs.length ? msgs.map(m => `<p><b style="color:${colorOf(m.n)}">${esc(m.n)}</b>${esc(m.t)}<time>${new Date(m.ts).toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" })}</time></p>`).join("") : `<p class="ex">Noch ruhig hier. Sag Hallo! 👋</p>`;
+      $("log").innerHTML = msgs.length ? msgs.map(m => { const g = parseGift(m.t); return `<p${g ? ' class="gift"' : ""}>${g ? giftLine(m.n, g) : `<b style="color:${colorOf(m.n)}">${esc(m.n)}</b>${esc(m.t)}`}<time>${new Date(m.ts).toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" })}</time></p>`; }).join("") : `<p class="ex">Noch ruhig hier. Sag Hallo! 👋</p>`;
       $("log").scrollTop = $("log").scrollHeight;
-      if (!first) sn.docChanges().forEach(ch => { if (ch.type === "added") { const x = ch.doc.data(); say(x.n, x.t); } });
+      if (!first) sn.docChanges().forEach(ch => { if (ch.type === "added") { const x = ch.doc.data(), g = parseGift(x.t);
+        if (g) { giftFly(x.n, g.to, g.e); if (x.n !== me && (g.to === me || g.to === "alle")) toast(`🎁 ${x.n} schenkt ${g.to === "alle" ? "allen" : "dir"} ${g.e} ${g.l}!`); }
+        else say(x.n, x.t); } });
       first = false;
     }, () => mod("Der Chill-Raum ist gerade nicht erreichbar. Lade die Seite neu."));
+    sendGift = (e, l, to) => grp.collection("chill").add({ n: me, t: `🎁 ${e} ${l} für ${to}`, ts: now() }).catch(er => toast(er && er.code === "permission-denied" ? "Hat nicht geklappt. Sind die neuen Firebase-Regeln schon drin?" : "Hat nicht geklappt."));
+    gref = grp.collection("chillspiel").doc("madn");
+    gref.onSnapshot(sn => { let n = null; if (sn.exists) try { n = JSON.parse(sn.data().s); } catch (e) {} G = valid(n) ? n : fresh(); gameUI(); }, () => {});
     $("form").addEventListener("submit", e => {
       e.preventDefault();
       const t = $("msg").value.trim().slice(0, DEMOW ? 120 : 200), err = check(t);

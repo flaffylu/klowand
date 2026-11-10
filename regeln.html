@@ -6,11 +6,11 @@ button{font:700 18px system-ui;background:#b3261e;color:#fff;border:none;border-
 .ph{position:sticky;top:0;background:#e3ebe7;padding:10px 16px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;border-top:3px solid #1d2321}.st{font-weight:700}
 .ok{background:#1f7a4d}pre{margin:0;padding:16px;font:12px/1.4 ui-monospace,monospace;white-space:pre-wrap;overflow-wrap:anywhere}
 ol{margin:8px 0 0;padding-left:20px;font-size:15px;color:#e8efec}</style></head><body>
-<div class="top"><b>Firebase-Regeln · 318 Zeilen in 4 Teilen</b>
+<div class="top"><b>Firebase-Regeln · 336 Zeilen in 4 Teilen</b>
 <ol><li>In Firebase: lange drücken → <b>Alles auswählen</b> → <b>Ausschneiden</b>. Das Feld muss <b>leer</b> sein.</li>
 <li>Hier <b>Teil 1</b> kopieren → in Firebase lange drücken → <b>Einfügen</b>.</li>
 <li>Ganz nach unten ins Feld tippen (hinter die letzte Zeile) → <b>Teil 2</b> einfügen. Dann Teil 3 und Teil 4 genauso.</li>
-<li>Prüfen: Zeile 1 = <code>rules_version = '2';</code>, letzte Zeile = <code>}</code>, insgesamt 318 Zeilen. Dann <b>Veröffentlichen</b>.</li></ol>
+<li>Prüfen: Zeile 1 = <code>rules_version = '2';</code>, letzte Zeile = <code>}</code>, insgesamt 336 Zeilen. Dann <b>Veröffentlichen</b>.</li></ol>
 <p>Tipp: Nicht über die Zwischenablage der Tastatur einfügen, sondern über „Einfügen“ beim langen Drücken.</p></div>
 <section><div class="ph"><button data-i="0">📋 Teil 1 von 4 kopieren</button><span class="st" id="st0">Zeile 1–81</span></div><pre id="p0">rules_version = &#x27;2&#x27;;
 service cloud.firestore {
@@ -167,7 +167,7 @@ service cloud.firestore {
     function famOn(wall) {
       return exists(famKeyDoc(wall));
     }
-</pre></section><section><div class="ph"><button data-i="2">📋 Teil 3 von 4 kopieren</button><span class="st" id="st2">Zeile 156–235</span></div><pre id="p2">    function famOk(wall, key) {
+</pre></section><section><div class="ph"><button data-i="2">📋 Teil 3 von 4 kopieren</button><span class="st" id="st2">Zeile 156–245</span></div><pre id="p2">    function famOk(wall, key) {
       return exists(famKeyDoc(wall)) &amp;&amp; get(famKeyDoc(wall)).data.k == key;
     }
     // Den Familien-Code sieht und ändert nur der Besitzer der Wand
@@ -229,6 +229,11 @@ service cloud.firestore {
         &amp;&amp; okName(request.resource.data.n)
         &amp;&amp; request.resource.data.ts == request.time;
     }
+    // Chill-Raum-Spiel (Mensch ärgere dich nicht): ein gemeinsamer Spielstand für die Gruppe
+    match /walls/{wall}/familie/{key}/chillspiel/{id} {
+      allow read: if famOk(wall, key);
+      allow create, update: if famOk(wall, key) &amp;&amp; okSpiel(id, request.resource.data);
+    }
     match /walls/{wall}/familie/{key}/games/{game}/scores/{id} {
       allow read: if famOk(wall, key);
       allow create: if famOk(wall, key) &amp;&amp; okScore(game, request.resource.data);
@@ -247,12 +252,12 @@ service cloud.firestore {
     }
 
     /* ---------- Inhalte einer Wand ---------- */
-</pre></section><section><div class="ph"><button data-i="3">📋 Teil 4 von 4 kopieren</button><span class="st" id="st3">Zeile 236–318</span></div><pre id="p3">    match /walls/{wall}/posts/{id} {
+    match /walls/{wall}/posts/{id} {
       allow read: if !famOn(wall) || canModerate(wall);
       allow create: if openWall(wall) &amp;&amp; !famOn(wall)
         &amp;&amp; (textPost(request.resource.data) || drawPost(request.resource.data))
         &amp;&amp; (!(&#x27;t&#x27; in request.resource.data) || !unsafe(request.resource.data.t))
-        &amp;&amp; okWeek(request.resource.data)
+</pre></section><section><div class="ph"><button data-i="3">📋 Teil 4 von 4 kopieren</button><span class="st" id="st3">Zeile 246–336</span></div><pre id="p3">        &amp;&amp; okWeek(request.resource.data)
         &amp;&amp; request.resource.data.rot is number
         &amp;&amp; request.resource.data.ts == request.time;
       allow delete: if canModerate(wall);
@@ -297,6 +302,19 @@ service cloud.firestore {
         &amp;&amp; request.resource.data.keys().hasOnly([&#x27;n&#x27;, &#x27;ts&#x27;])
         &amp;&amp; okName(request.resource.data.n) &amp;&amp; !unsafe(request.resource.data.n)
         &amp;&amp; request.resource.data.ts == request.time;
+    }
+
+    match /walls/{wall}/chillspiel/{id} {
+      allow read: if wall in [&#x27;demo&#x27;, &#x27;familie-demo&#x27;];
+      allow create, update: if wall in [&#x27;demo&#x27;, &#x27;familie-demo&#x27;] &amp;&amp; okSpiel(id, request.resource.data)
+        &amp;&amp; !unsafe(request.resource.data.s);
+    }
+    function okSpiel(id, d) {
+      return id == &#x27;madn&#x27;
+        &amp;&amp; d.keys().hasOnly([&#x27;s&#x27;, &#x27;ts&#x27;])
+        &amp;&amp; d.s is string &amp;&amp; d.s.size() &lt;= 4000
+        &amp;&amp; !dirty(d.s)
+        &amp;&amp; d.ts == request.time;
     }
 
     function okName(n) {

@@ -215,6 +215,11 @@ service cloud.firestore {
         && okName(request.resource.data.n)
         && request.resource.data.ts == request.time;
     }
+    // Chill-Raum-Spiel (Mensch ärgere dich nicht): ein gemeinsamer Spielstand für die Gruppe
+    match /walls/{wall}/familie/{key}/chillspiel/{id} {
+      allow read: if famOk(wall, key);
+      allow create, update: if famOk(wall, key) && okSpiel(id, request.resource.data);
+    }
     match /walls/{wall}/familie/{key}/games/{game}/scores/{id} {
       allow read: if famOk(wall, key);
       allow create: if famOk(wall, key) && okScore(game, request.resource.data);
@@ -283,6 +288,19 @@ service cloud.firestore {
         && request.resource.data.keys().hasOnly(['n', 'ts'])
         && okName(request.resource.data.n) && !unsafe(request.resource.data.n)
         && request.resource.data.ts == request.time;
+    }
+
+    match /walls/{wall}/chillspiel/{id} {
+      allow read: if wall in ['demo', 'familie-demo'];
+      allow create, update: if wall in ['demo', 'familie-demo'] && okSpiel(id, request.resource.data)
+        && !unsafe(request.resource.data.s);
+    }
+    function okSpiel(id, d) {
+      return id == 'madn'
+        && d.keys().hasOnly(['s', 'ts'])
+        && d.s is string && d.s.size() <= 4000
+        && !dirty(d.s)
+        && d.ts == request.time;
     }
 
     function okName(n) {
