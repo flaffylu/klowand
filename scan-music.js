@@ -6,7 +6,7 @@ window.kloScanSong = function (opt) {
   const a = new Audio("assets/scan-song.mp3"); a.loop = true; a.volume = 0.7; a.preload = "auto";
   window.__kloSong = a;
   const css = document.createElement("style");
-  css.textContent = `.songpill{position:fixed;right:12px;bottom:calc(200px + env(safe-area-inset-bottom,0px));z-index:60;display:flex;align-items:center;gap:8px;min-height:46px;padding:0 16px;border-radius:999px;
+  css.textContent = `.songpill{position:fixed;right:12px;bottom:calc(200px + env(safe-area-inset-bottom,0px));z-index:28;display:flex;align-items:center;gap:8px;min-height:46px;padding:0 16px;border-radius:999px;
     border:2px solid #ff3ea5;background:rgba(11,7,22,.88);color:#fff;font:700 1rem "Barlow Condensed",system-ui,sans-serif;box-shadow:0 0 18px rgba(255,62,165,.55);cursor:pointer}
   .songpill.off{border-color:rgba(255,255,255,.3);box-shadow:none;opacity:.85}
   .songpill .eq{display:inline-flex;gap:2px;align-items:flex-end;height:14px}
