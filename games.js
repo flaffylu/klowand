@@ -176,12 +176,13 @@
     cur = (i + songs.length) % songs.length;
     if (KloMusik.isOn()) { KloMusik.stop(); $("kgMusic").setAttribute("aria-pressed", false); $("kgMusicTxt").textContent = tr("Musik an", "Music on"); }
     if (window.__kloSong) __kloSong.pause();
+    if (window.KloSpotify) KloSpotify.stop();
     audio.src = urlOf(songs[cur]); audio.play().catch(() => {}); drawMine();
   }
   const nextSong = () => playAt(shuffle && songs.length > 1 ? (cur + 1 + Math.floor(Math.random() * (songs.length - 1))) % songs.length : cur + 1);
   audio.addEventListener("ended", nextSong);
   ["play", "pause"].forEach(ev => audio.addEventListener(ev, drawMine));
-  $("kgMusic").addEventListener("click", () => { if (KloMusik.isOn() || !audio.paused) audio.pause(); });
+  $("kgMusic").addEventListener("click", () => { if (KloMusik.isOn() || !audio.paused) audio.pause(); if (window.KloSpotify) KloSpotify.stop(); });
   let mmEl = null;
   function drawMine() {
     const playing = !audio.paused && cur >= 0 && songs[cur];
@@ -207,6 +208,9 @@
       <ul></ul>
       <label class="add">＋ ${tr("Lieder hinzufügen", "Add songs")}<input type="file" accept="audio/*" multiple></label></div>`;
     document.body.appendChild(mmEl);
+    if (window.KloSpotify) KloSpotify.panel(mmEl.querySelector(".box"), { onPlay: () => {
+      audio.pause(); if (KloMusik.isOn()) { KloMusik.stop(); $("kgMusic").setAttribute("aria-pressed", false); $("kgMusicTxt").textContent = tr("Musik an", "Music on"); }
+      if (window.__kloSong) __kloSong.pause(); mmEl && mmEl.remove(); mmEl = null; } });
     const close = () => { mmEl.remove(); mmEl = null; };
     mmEl.addEventListener("click", async e => {
       if (e.target === mmEl || e.target.closest("[data-x]")) return close();

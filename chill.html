@@ -154,7 +154,7 @@ form button:disabled{opacity:.5}
 </div></div>
 <div class="sheet" id="songBox" hidden><div class="sheetIn">
   <div class="shead"><h3>🎧 Eigene Musik</h3><button type="button" id="songX" aria-label="Schließen">✕</button></div>
-  <p class="lbl">Lade Lieder von deinem Handy rein. Sie bleiben nur auf deinem Handy – die anderen im Raum hören ihre eigene Musik. Deine Lieder von der Wand sind hier auch.</p>
+  <p class="lbl">Lade Lieder von deinem Handy rein oder spiel was von Spotify. Deine Lieder bleiben nur auf deinem Handy – die anderen im Raum hören ihre eigene Musik. Deine Lieder von der Wand sind hier auch.</p>
   <div class="snow" id="songNow" hidden><b id="songName"></b>
     <div class="sctl"><button type="button" id="sPrev" aria-label="Zurück">⏮</button><button type="button" id="sPP" aria-label="Abspielen oder Pause">▶</button><button type="button" id="sNext" aria-label="Weiter">⏭</button><button type="button" id="sShuf" aria-pressed="false" aria-label="Zufall">🔀</button></div></div>
   <ul class="slist" id="songList"></ul>
@@ -169,6 +169,7 @@ form button:disabled{opacity:.5}
 <script src="config.js"></script>
 <script src="filter.js"></script>
 <script src="music.js"></script>
+<script src="spotify.js"></script>
 <script>
 (async function () {
   const $ = id => document.getElementById(id);
@@ -852,7 +853,7 @@ form button:disabled{opacity:.5}
   requestAnimationFrame(loop);
   $("load").hidden = true;
 
-  $("music").onclick = async () => { if (!song.paused) song.pause(); await KloMusik.toggle(); $("music").setAttribute("aria-pressed", KloMusik.isOn()); };
+  $("music").onclick = async () => { if (!song.paused) song.pause(); KloSpotify.stop(); await KloMusik.toggle(); $("music").setAttribute("aria-pressed", KloMusik.isOn()); };
 
   // ---------- Eigene Musik: bleibt nur auf diesem Handy (gleiche Liste wie "Eigene Lieder" auf der Wand) ----------
   const song = new Audio(); song.preload = "auto";
@@ -876,6 +877,9 @@ form button:disabled{opacity:.5}
     $("songList").innerHTML = songs.length ? songs.map((sg, i) => `<li class="${i === sCur ? "on" : ""}"><span data-play="${i}">${i === sCur && on ? "🔊 " : "🎵 "}${esc(niceS(sg.name))}</span><button type="button" data-del="${i}" aria-label="Löschen">✕</button></li>`).join("")
       : `<li class="empty">Noch keine Lieder. Tipp unten auf „Lieder hinzufügen“.</li>`;
   }
+  KloSpotify.panel($("songBox").querySelector(".sheetIn"), { top: "calc(112px + env(safe-area-inset-top,0px))",
+    onPlay: () => { song.pause(); if (KloMusik.isOn()) { KloMusik.stop(); $("music").setAttribute("aria-pressed", false); } $("songBox").hidden = true; } });
+  song.addEventListener("play", () => KloSpotify.stop());
   $("aSong").onclick = async () => { await loadSongs(); if (sCur >= songs.length) sCur = -1; drawSongs(); $("songBox").hidden = false; };
   $("songX").onclick = () => $("songBox").hidden = true;
   $("songBox").onclick = e => { if (e.target.id === "songBox") $("songBox").hidden = true; };
