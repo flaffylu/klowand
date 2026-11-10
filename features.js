@@ -215,8 +215,8 @@
   window.addEventListener("klo-demo", demoFree);
   const db = document.querySelector(".demobar");
   if (db && !FD) db.insertAdjacentHTML("afterend", `<div class="leoclip"><video src="assets/leo-clip.mp4" poster="assets/leo-poster.jpg" controls playsinline preload="none" aria-label="${tr("Video: Leo erklärt die Klo-Wand", "Video: Leo explains the Klo-Wand", "動画：レオがKlo-Wandを説明")}"></video>
-    <div><b>${tr("Leo erklärt die Klo-Wand", "Leo explains the Klo-Wand", "レオが説明します")}</b><span>${tr("In 48 Sekunden: live schreiben, malen, spielen und deine eigene Wand. Tippen zum Abspielen.", "In 48 seconds: write live, draw, play and get your own wall. Tap to play.", "48秒で分かる：ライブで書く・描く・遊ぶ。タップで再生。")}</span>
-    <span style="font-size:.75rem;opacity:.75">${tr("KI-Stimme & KI-Figur", "AI voice & AI character", "AI音声・AIキャラクター")}</span></div></div>`);
+    <div><b>${tr("Leo zeigt, was neu ist", "Leo shows what's new", "レオが新機能を紹介")}</b><span>${tr("In 40 Sekunden: Chill-Raum, Spiele, Disco, Musik und Extras. Tippen zum Abspielen.", "In 40 seconds: chill room, games, disco, music and extras. Tap to play.", "40秒で紹介：チルルーム・ゲーム・ディスコ・音楽。タップで再生。")}</span>
+    <span style="font-size:.75rem;opacity:.75">${tr("KI-Figur", "AI character", "AIキャラクター")}</span></div></div>`);
   const what = {
     draw: KLO_APP ? tr("Malen geht auf eigenen Wänden.", "Drawing works on own walls.", "お絵かきは自分のウォールで。") : tr("Malen ist in der Vollversion frei.", "Drawing is unlocked in the full version.", "お絵かきはフルバージョンで使えます。"),
     music: KLO_APP ? tr("Musik gibt's auf eigenen Wänden.", "Music is on own walls.", "音楽は自分のウォールで。") : tr("Musik gibt's in der Vollversion.", "Music comes with the full version.", "音楽はフルバージョンで使えます。"),
