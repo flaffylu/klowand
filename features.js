@@ -194,6 +194,8 @@
   .ups .row{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
   .ups a,.ups button{font:700 .95rem var(--f-ui);letter-spacing:.06em;text-transform:uppercase;border-radius:6px;padding:10px 14px;min-height:44px;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center}
   .ups a{background:var(--red);color:#fff}.ups a+a{background:var(--ink)}
+  .ups a.buy{display:flex;justify-content:center;width:100%;box-sizing:border-box;min-height:52px;font-size:1.05rem;background:#1f9d55;color:#fff;margin-bottom:6px}
+  .ups .buyhint{font-size:.85rem;margin:0 0 12px;opacity:.85}
   .ups button{background:none;border:none;color:var(--muted);text-decoration:underline;width:100%;justify-content:center}`;
   document.head.appendChild(css);
 
@@ -247,6 +249,8 @@
         <li>${tr("QR-Sticker zum Ausdrucken", "Printable QR sticker", "印刷できるQRステッカー")}</li><li>${tr("Du löschst, was nicht passt", "You delete anything unwanted", "不適切な投稿は自分で削除")}</li></ul>`}
       ${KLO_APP ? `<div class="price" style="font-size:1rem">${tr("Auf dieser Wand nicht freigeschaltet.", "Not unlocked on this wall.", "このウォールでは未解放です。")}</div>`
         : `<div class="price">${tr("nur 4,99 € einmalig", "only €4.99 once", "一度だけ 約890円")}</div><p style="margin:-6px 0 12px">💙 ${tr("Auch mit PayPal bezahlen", "Pay with PayPal too", "PayPalでも支払えます")}</p>
+      <a class="buy" href="${BUY_LINK}" target="_blank" rel="noopener">🛒 ${tr("Jetzt direkt kaufen", "Buy it now", "今すぐ購入")}</a>
+      <p class="buyhint">${tr("Nach dem Kauf bekommst du deinen Code per E-Mail – damit legst du deine Wand an.", "After buying you get your code by email – use it to create your wall.", "購入後、コードがメールで届きます。")}</p>
       <div class="row">${FD ? `<a href="familie.html#preis">${tr("Familien-Planner holen", "Get the Family Planner")}</a>` : `<a href="familie.html">${tr("Für zu Hause", "For your home", "おうち用")}</a><a href="wirte.html">${tr("Für deine Bar", "For your bar", "お店用")}</a>`}</div>`}
       <button type="button" class="later">${tr("Weiter testen", "Keep testing", "このまま試す")}</button></div>`;
     document.body.appendChild(el);

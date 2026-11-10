@@ -89,6 +89,8 @@ const HINTERGRUND_HELL = true;
 /* Jeder Code reicht für 2 Wände. Für 2 weitere Wände kauft man ein Update (4,99 €) bei Payhip.
    Sobald es bei Payhip ein eigenes Update-Produkt gibt, hier dessen Link eintragen. */
 const UPDATE_LINK = "https://payhip.com/Pikumio";
+// Direkt zum Produkt "Klo-Wand & Familien-Planner" bei Payhip (nur in der Web-Version, nie in der Play-App)
+const BUY_LINK = "https://payhip.com/b/9Rm4x";
 const WAENDE_PRO_CODE = 2;
 const KONTAKT = { email: "kaytrut426@gmail.com", telefon: "" };
 
