@@ -24,13 +24,31 @@ window.kloScanSong = function (opt) {
   let started = false;
   const go = () => a.play().then(() => { started = true; show(); }).catch(() => show());
   a.addEventListener("play", show); a.addEventListener("pause", show);
-  go();
+  // Handys erlauben Ton erst nach einer Berührung. Klappt der Sofortstart nicht, kommt ein großer Start-Knopf.
+  const EV = ["pointerup", "touchend", "click", "keydown"];
+  let splash = null;
+  const done = () => { EV.forEach(t => document.removeEventListener(t, first, true)); if (splash) { splash.remove(); splash = null; } };
   const first = e => {
-    if (e && e.target && e.target.closest && e.target.closest(".songpill")) return;
-    document.removeEventListener("pointerdown", first, true); document.removeEventListener("keydown", first, true);
-    if (!started && a.paused) go();
+    if (e && e.target && e.target.closest && e.target.closest(".songpill")) { done(); return; }
+    if (started || !a.paused) { done(); return; }
+    a.play().then(() => { started = true; show(); done(); }).catch(() => {});
   };
-  document.addEventListener("pointerdown", first, true); document.addEventListener("keydown", first, true);
+  EV.forEach(t => document.addEventListener(t, first, true));
+  a.play().then(() => { started = true; show(); done(); }).catch(() => {
+    if (opt.splash === false) return;
+    const st = document.createElement("style");
+    st.textContent = `.songsplash{position:fixed;inset:0;z-index:60;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:24px;text-align:center;
+      background:radial-gradient(circle at 50% 42%,rgba(70,12,52,.97),rgba(6,3,13,.98) 65%);color:#fff;font-family:"Barlow Condensed",system-ui,sans-serif;cursor:pointer}
+      .songsplash b{font:400 2.4rem/1.05 "Permanent Marker",cursive;color:#ffd166;text-shadow:0 0 18px rgba(255,209,102,.5)}
+      .songsplash span{display:inline-flex;align-items:center;gap:10px;min-height:64px;padding:0 30px;border-radius:999px;background:#ff3ea5;color:#14060f;font:800 1.4rem "Barlow Condensed",system-ui,sans-serif;box-shadow:0 0 30px rgba(255,62,165,.6);animation:spp 1.4s ease-in-out infinite}
+      .songsplash small{font:600 1rem "Barlow Condensed",system-ui,sans-serif;opacity:.8}
+      @keyframes spp{50%{transform:scale(1.06)}} @media (prefers-reduced-motion:reduce){.songsplash span{animation:none}}`;
+    document.head.appendChild(st);
+    splash = document.createElement("button"); splash.type = "button"; splash.className = "songsplash"; splash.setAttribute("aria-label", "Antippen: Musik an und los geht's");
+    splash.innerHTML = `<b>Willkommen an der Klo-Wand!</b><span>🔊 Tippen – Musik an &amp; los</span><small>Ohne Ton? Einfach unten rechts „Musik aus“ tippen.</small>`;
+    splash.addEventListener("click", () => { a.play().then(() => { started = true; show(); }).catch(() => {}); done(); });
+    document.body.appendChild(splash);
+  });
   pill.onclick = () => { if (a.paused) { go(); } else a.pause(); };
   // Andere Musik startet: Lied pausieren
   window.addEventListener("klo-othermusic", () => a.pause());
