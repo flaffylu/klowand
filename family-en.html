@@ -1,0 +1,433 @@
+<!doctype html>
+<html lang="en" data-stat="familie">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="color-scheme" content="only light">
+<title>Family Planner · Timetable, photos &amp; emergency help for your family</title>
+<meta name="description" content="The Family Planner for your home: a timetable for every child, family photos just for you, emergency help for kids and a private family wall. One-off €4.99, no subscription.">
+<meta name="theme-color" content="#fbf7f1">
+<meta property="og:title" content="Family Planner – private, colourful and easy for kids">
+<meta property="og:description" content="Timetable, family photos, emergency help and a private family wall. One-off €4.99, no subscription.">
+<meta property="og:image" content="assets/family-planner-pia-en.jpg">
+<link rel="icon" href="icon-192.png">
+<link rel="alternate" hreflang="de" href="familie.html">
+<link rel="alternate" hreflang="en" href="family-en.html">
+<link rel="stylesheet" href="fonts.css">
+<style>
+/* Familien-Seite: warm, ruhig, hochwertig. Schriften liegen alle auf dem eigenen Server (kein Google-Fonts-Abruf). */
+@font-face{font-family:"Fraunces";font-style:normal;font-display:swap;font-weight:100 900;src:url(fonts/fraunces-latin-opsz-normal.woff2) format("woff2-variations"),url(fonts/fraunces-latin-opsz-normal.woff2) format("woff2")}
+@font-face{font-family:"Fraunces";font-style:italic;font-display:swap;font-weight:100 900;src:url(fonts/fraunces-latin-opsz-italic.woff2) format("woff2-variations"),url(fonts/fraunces-latin-opsz-italic.woff2) format("woff2")}
+:root{
+  --bg:#fbf7f1; --paper:#ffffff; --ink:#1f2a2e; --soft:#56635f; --line:#ece4d8;
+  --coral:#d9483b; --coral-d:#b8352a; --sun:#f6c453; --mint:#dff3e8; --sky:#e3eefc; --peach:#ffe8dc; --lilac:#ece4fb; --butter:#fff4d1;
+  --f-display:"Fraunces",Georgia,"Times New Roman",serif; --f-body:"Barlow",system-ui,sans-serif; --f-hand:"Caveat",cursive; --f-ui:"Barlow Condensed","Arial Narrow",sans-serif;
+  --r:22px; --shadow:0 1px 2px rgba(31,42,46,.06),0 12px 32px -12px rgba(31,42,46,.18);
+  color-scheme:only light;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+html,body{background:var(--bg);color:var(--ink);overflow-x:hidden}
+body{margin:0;font:400 1.08rem/1.6 var(--f-body);-webkit-font-smoothing:antialiased}
+img,video{max-width:100%;height:auto;display:block}
+a{color:inherit}
+:focus-visible{outline:3px solid var(--coral);outline-offset:3px;border-radius:6px}
+.in{max-width:1120px;margin:0 auto;padding-left:max(18px,env(safe-area-inset-left,0px));padding-right:max(18px,env(safe-area-inset-right,0px))}
+section{padding-block:clamp(56px,9vw,104px)}
+h1,h2,h3{text-wrap:balance;margin:0}
+h2{font:600 clamp(2rem,5.2vw,3.1rem)/1.08 var(--f-display);letter-spacing:-.01em;font-variation-settings:"opsz" 96}
+h2 em,h1 em{font-style:italic;font-weight:500;color:var(--coral)}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;font:600 .82rem var(--f-ui);letter-spacing:.16em;text-transform:uppercase;color:var(--soft);margin-bottom:14px}
+.eyebrow::before{content:"";width:22px;height:2px;background:var(--coral);border-radius:2px}
+.lead{font-size:clamp(1.08rem,2.2vw,1.22rem);color:var(--soft);max-width:58ch;margin:16px 0 0}
+.hand{font:700 1.55rem/1.1 var(--f-hand);color:var(--coral)}
+.center{text-align:center}.center .lead{margin-inline:auto}.center .eyebrow{justify-content:center}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;min-height:52px;padding:12px 24px;border-radius:999px;
+  font:600 1.05rem var(--f-body);text-decoration:none;cursor:pointer;border:1.5px solid var(--ink);transition:transform .15s,box-shadow .15s,background .15s}
+.btn:hover{transform:translateY(-1px)}
+.btn.main{background:var(--coral);border-color:var(--coral);color:#fff;box-shadow:0 10px 24px -10px rgba(217,72,59,.75)}
+.btn.main:hover{background:var(--coral-d)}
+.btn.line{background:var(--paper);color:var(--ink)}
+.btn.sm{min-height:42px;padding:8px 18px;font-size:.95rem}
+
+/* Kopfzeile */
+.top{position:sticky;top:0;z-index:20;background:rgba(251,247,241,.86);backdrop-filter:saturate(1.4) blur(12px);-webkit-backdrop-filter:saturate(1.4) blur(12px);border-bottom:1px solid transparent;transition:border-color .2s}
+.top.scrolled{border-color:var(--line)}
+.top .in{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:66px}
+.logo{display:flex;align-items:center;gap:10px;font:650 1.28rem var(--f-display);text-decoration:none;letter-spacing:-.01em;white-space:nowrap}
+.logo i{width:34px;height:34px;border-radius:11px;background:linear-gradient(135deg,#ffd1dc,#ffe9a8 45%,#c8f7c5);display:grid;place-items:center;font-style:normal;font-size:1.1rem;box-shadow:inset 0 0 0 1px rgba(31,42,46,.08)}
+.top nav{display:flex;align-items:center;gap:6px}
+.top nav a.link{font:500 .98rem var(--f-body);text-decoration:none;padding:8px 10px;border-radius:999px;color:var(--soft)}
+.top nav a.link:hover{color:var(--ink);background:rgba(31,42,46,.05)}
+@media(max-width:640px){.top nav a.link{display:none}.logo{font-size:1.12rem}.logo i{width:30px;height:30px}}
+.btn{white-space:nowrap}
+@media(max-width:380px){.top .btn .long{display:none}}
+
+/* Hero */
+.hero{position:relative;padding-block:clamp(28px,6vw,72px) clamp(56px,8vw,96px);isolation:isolate}
+.blob{position:absolute;z-index:-1;border-radius:50%;filter:blur(60px);opacity:.75}
+.b1{width:420px;height:420px;background:#ffd8cc;top:-120px;right:-80px}
+.b2{width:360px;height:360px;background:#d9f2e4;bottom:-60px;left:-120px}
+.b3{width:300px;height:300px;background:#e5ddfb;top:30%;right:28%;opacity:.5}
+.hero .in{display:grid;gap:44px;align-items:center}
+@media(min-width:900px){.hero .in{grid-template-columns:minmax(0,1.08fr) minmax(0,.92fr)}}
+.pill{display:inline-flex;align-items:center;gap:8px;background:var(--paper);border:1px solid var(--line);border-radius:999px;padding:6px 14px 6px 8px;font:600 .92rem var(--f-body);box-shadow:var(--shadow)}
+.pill b{background:var(--butter);border-radius:999px;padding:2px 10px;font-weight:700;font-size:.82rem}
+.hero h1{font:600 clamp(2.55rem,7.4vw,4.6rem)/1.02 var(--f-display);letter-spacing:-.025em;margin:22px 0 0;font-variation-settings:"opsz" 144}
+.hero .hand{display:inline-block;transform:rotate(-2deg);margin-top:14px}
+.ctas{display:flex;gap:12px;flex-wrap:wrap;margin-top:28px}
+.trust{display:flex;flex-wrap:wrap;gap:8px 20px;margin:24px 0 0;padding:0;list-style:none;color:var(--soft);font:500 .98rem var(--f-body)}
+.trust li::before{content:"✓";color:#2f8a5b;font-weight:700;margin-right:7px}
+.stage{position:relative;justify-self:center;width:min(330px,80vw);margin-block:10px 20px}
+.device{border-radius:42px;background:#1f2a2e;padding:11px;box-shadow:0 40px 70px -30px rgba(31,42,46,.55),0 0 0 1px rgba(31,42,46,.2);transform:rotate(2.5deg)}
+.device img{border-radius:32px}
+.float{position:absolute;display:flex;align-items:center;gap:8px;background:var(--paper);border-radius:16px;padding:10px 14px;font:600 .95rem/1.2 var(--f-body);box-shadow:var(--shadow);white-space:nowrap}
+.float span{font-size:1.35rem}
+.f1{left:-34px;top:18%;transform:rotate(-4deg)}
+.f2{right:-30px;top:52%;transform:rotate(3deg)}
+.f3{left:-14px;bottom:4%;transform:rotate(-2deg)}
+@media(max-width:600px){.stage{width:min(250px,64vw)}.float{font-size:.82rem;padding:8px 11px;border-radius:13px}.float span{font-size:1.1rem}
+  .f1{left:-58px;top:10%}.f2{right:-62px;top:44%}.f3{left:-48px;bottom:2%}}
+
+/* Tagesablauf */
+.day{display:grid;gap:18px;margin-top:44px}
+@media(min-width:760px){.day{grid-template-columns:repeat(4,minmax(0,1fr))}}
+.moment{background:var(--paper);border:1px solid var(--line);border-radius:var(--r);padding:22px 20px 20px;box-shadow:var(--shadow);position:relative}
+.moment time{font:600 .8rem var(--f-ui);letter-spacing:.14em;text-transform:uppercase;color:var(--soft)}
+.moment .ico{font-size:2rem;margin:8px 0 6px;display:block}
+.moment h3{font:600 1.3rem/1.2 var(--f-display);margin-bottom:6px}
+.moment p{margin:0;color:var(--soft);font-size:1rem}
+
+/* Funktionen */
+.features{display:grid;gap:18px;margin-top:44px}
+@media(min-width:760px){.features{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(min-width:1040px){.features{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.feat{border-radius:var(--r);padding:26px 24px;position:relative;overflow:hidden;border:1px solid rgba(31,42,46,.06)}
+.feat .ico{width:54px;height:54px;border-radius:16px;background:rgba(255,255,255,.75);display:grid;place-items:center;font-size:1.7rem;margin-bottom:16px;box-shadow:inset 0 0 0 1px rgba(31,42,46,.06)}
+.feat h3{font:600 1.45rem/1.15 var(--f-display);margin-bottom:8px}
+.feat p{margin:0;color:#3f4a47}
+.feat ul{margin:12px 0 0;padding:0;list-style:none;display:grid;gap:6px;color:#3f4a47;font-size:1rem}
+.feat li::before{content:"•";color:var(--coral);font-weight:700;margin-right:8px}
+.t-peach{background:var(--peach)}.t-mint{background:var(--mint)}.t-sky{background:var(--sky)}.t-lilac{background:var(--lilac)}.t-butter{background:var(--butter)}.t-rose{background:#fde6ea}
+
+/* Bilder-Galerie */
+.gallery{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin-top:44px;align-items:start}
+@media(min-width:900px){.gallery{grid-template-columns:repeat(4,minmax(0,1fr))}}
+.gallery figure{margin:0}
+.gallery .frame{border-radius:28px;background:#1f2a2e;padding:7px;box-shadow:0 22px 40px -22px rgba(31,42,46,.5)}
+.gallery .frame img{border-radius:22px}
+.gallery figure:nth-child(even){margin-top:36px}
+.gallery figcaption{font:700 1.25rem/1.1 var(--f-hand);color:var(--soft);text-align:center;margin-top:12px}
+
+/* Privat */
+.private{background:#1f2a2e;color:#eef1ef;border-radius:36px;padding:clamp(30px,6vw,64px);display:grid;gap:36px;position:relative;overflow:hidden}
+@media(min-width:900px){.private{grid-template-columns:minmax(0,1fr) minmax(0,1fr);align-items:center}}
+.private::after{content:"";position:absolute;width:420px;height:420px;border-radius:50%;background:radial-gradient(closest-side,rgba(246,196,83,.22),transparent);right:-120px;top:-140px}
+.private .eyebrow{color:#b7c2bd}
+.private h2 em{color:var(--sun)}
+.private .lead{color:#c3cdc8}
+.checks{list-style:none;margin:0;padding:0;display:grid;gap:14px;position:relative;z-index:1}
+.checks li{display:grid;grid-template-columns:44px minmax(0,1fr);gap:14px;align-items:start;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:18px;padding:14px 16px}
+.checks span{width:44px;height:44px;border-radius:14px;background:rgba(246,196,83,.15);display:grid;place-items:center;font-size:1.3rem}
+.checks b{display:block;font:600 1.1rem var(--f-body);color:#fff}
+.checks small{display:block;color:#b7c2bd;font-size:.98rem;line-height:1.45;margin-top:2px}
+
+/* Video */
+.film{display:grid;gap:40px;align-items:center}
+@media(min-width:860px){.film{grid-template-columns:minmax(0,.85fr) minmax(0,1.15fr)}}
+.film video{width:min(330px,80vw);aspect-ratio:9/16;border-radius:30px;background:#1f2a2e;justify-self:center;box-shadow:0 40px 70px -30px rgba(31,42,46,.55);object-fit:cover}
+
+/* Schritte */
+.steps{display:grid;gap:18px;margin-top:44px;counter-reset:s}
+@media(min-width:760px){.steps{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.step{background:var(--paper);border:1px solid var(--line);border-radius:var(--r);padding:26px 24px;box-shadow:var(--shadow)}
+.step::before{counter-increment:s;content:counter(s);display:grid;place-items:center;width:44px;height:44px;border-radius:50%;background:var(--coral);color:#fff;font:600 1.25rem var(--f-display);margin-bottom:16px}
+.step h3{font:600 1.35rem var(--f-display);margin-bottom:6px}
+.step p{margin:0;color:var(--soft)}
+
+/* Anleitung */
+.guide{display:grid;gap:36px;align-items:center;background:linear-gradient(135deg,#e3eefc,#ece4fb);border-radius:36px;padding:clamp(28px,6vw,60px)}
+@media(min-width:860px){.guide{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}}
+.pages{position:relative;height:clamp(300px,52vw,420px)}
+.pages img{position:absolute;width:clamp(170px,30vw,240px);border-radius:10px;box-shadow:0 24px 44px -20px rgba(31,42,46,.55);background:#fff}
+.pages img:nth-child(1){left:6%;top:6%;transform:rotate(-7deg);z-index:1}
+.pages img:nth-child(2){left:28%;top:0;transform:rotate(-1deg);z-index:2}
+.pages img:nth-child(3){left:50%;top:8%;transform:rotate(6deg);z-index:3}
+.guide ul{list-style:none;margin:18px 0 0;padding:0;display:grid;gap:8px;color:#3f4a47}
+.guide li::before{content:"✓";color:#2f8a5b;font-weight:700;margin-right:8px}
+
+/* Preis */
+.pricing{display:grid;gap:20px;margin-top:44px;align-items:stretch}
+@media(min-width:860px){.pricing{grid-template-columns:minmax(0,.8fr) minmax(0,1.2fr)}}
+.plan{background:var(--paper);border:1px solid var(--line);border-radius:28px;padding:30px 28px;box-shadow:var(--shadow);display:flex;flex-direction:column}
+.plan.hero-plan{border:2px solid var(--coral);position:relative;background:linear-gradient(180deg,#fff,#fff8f4)}
+.badge{position:absolute;top:-14px;left:28px;background:var(--coral);color:#fff;font:600 .8rem var(--f-ui);letter-spacing:.14em;text-transform:uppercase;padding:6px 14px;border-radius:999px}
+.plan h3{font:600 1.5rem var(--f-display)}
+.amount{font:600 3.6rem/1 var(--f-display);margin:14px 0 4px;letter-spacing:-.02em}
+.amount small{font:500 1.05rem var(--f-body);color:var(--soft);letter-spacing:0}
+.plan ul{list-style:none;margin:18px 0 0;padding:0;display:grid;gap:10px}
+.plan li{position:relative;padding-left:32px}
+.plan li::before{content:"✓";position:absolute;left:0;top:0;width:22px;height:22px;border-radius:50%;background:var(--mint);color:#2f8a5b;font:700 .8rem/22px var(--f-body);text-align:center;margin-top:3px}
+.plan .btn{margin-top:auto;width:100%}
+.plan .spacer{height:24px}
+.fine{font-size:.92rem;color:var(--soft);margin-top:14px}
+
+/* Kay */
+.maker{display:grid;gap:26px;align-items:center;background:var(--paper);border:1px solid var(--line);border-radius:32px;padding:clamp(26px,5vw,48px);box-shadow:var(--shadow)}
+@media(min-width:760px){.maker{grid-template-columns:auto minmax(0,1fr)}}
+.avatar{width:120px;height:120px;border-radius:50%;background:url(assets/kay.jpg) center/cover;box-shadow:0 0 0 6px var(--butter),0 12px 30px -14px rgba(31,42,46,.5)}
+.maker blockquote{margin:0;font:500 clamp(1.25rem,2.6vw,1.6rem)/1.4 var(--f-display);font-style:italic}
+.maker cite{display:block;margin-top:12px;font:600 1rem var(--f-body);font-style:normal;color:var(--soft)}
+
+/* FAQ */
+.faq{max-width:820px;margin:44px auto 0}
+details{background:var(--paper);border:1px solid var(--line);border-radius:18px;padding:0 22px;margin-top:12px;transition:box-shadow .2s}
+details[open]{box-shadow:var(--shadow)}
+summary{cursor:pointer;list-style:none;padding:18px 0;font:600 1.12rem var(--f-body);display:flex;justify-content:space-between;align-items:center;gap:14px}
+summary::-webkit-details-marker{display:none}
+summary::after{content:"+";flex:none;width:30px;height:30px;border-radius:50%;background:var(--bg);display:grid;place-items:center;font:500 1.3rem/1 var(--f-body);color:var(--coral)}
+details[open] summary::after{content:"–"}
+details p{margin:0 0 18px;color:var(--soft)}
+
+/* Schluss */
+.final{text-align:center;background:linear-gradient(135deg,#ffe3d8,#fff1c9 45%,#dff3e8);border-radius:36px;padding:clamp(36px,7vw,72px) 22px}
+.final .ctas{justify-content:center}
+footer{padding-block:40px 56px;color:var(--soft);font-size:.95rem}
+footer .in{display:flex;flex-wrap:wrap;gap:12px 22px;justify-content:space-between;align-items:center;border-top:1px solid var(--line);padding-top:26px}
+footer nav{display:flex;flex-wrap:wrap;gap:6px 18px}
+footer a{color:var(--soft)}
+.note{font-size:.85rem;color:var(--soft)}
+
+/* sanftes Einblenden */
+.reveal{opacity:0;transform:translateY(18px);transition:opacity .7s ease,transform .7s ease}
+.reveal.on{opacity:1;transform:none}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}.reveal{opacity:1;transform:none;transition:none}.btn{transition:none}}
+[hidden]{display:none!important}
+.paypal{display:inline-flex;align-items:center;gap:8px;margin:12px auto 0;padding:8px 16px;border-radius:999px;background:#eef5ff;border:1.5px solid #b9d4ff;color:#0b2a5c;font:600 1rem var(--f-body,inherit)}
+.paypal b{color:#0b3c91}
+.paywrap{text-align:center}
+</style>
+</head>
+<body>
+
+<header class="top" id="top">
+  <div class="in">
+    <a class="logo" href="#"><i aria-hidden="true">🏡</i>Family Planner</a>
+    <nav aria-label="Main menu">
+      <a class="link" href="#features">Features</a>
+      <a class="link" href="#privacy">Privacy</a>
+      <a class="link" href="#price">Price</a>
+      <a class="link" href="familie.html" hreflang="de" lang="de">Deutsch</a>
+      <a class="btn main sm" href="#price"><span><span class="long">Get it for </span>€4.99</span></a>
+    </nav>
+  </div>
+</header>
+
+<main>
+<section class="hero">
+  <div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div>
+  <div class="in">
+    <div>
+      <span class="pill"><b>New</b> Timetable, photos &amp; emergency help</span>
+      <h1>The family planner your <em>kids will love</em>.</h1>
+      <span class="hand">… and so will you.</span>
+      <p class="lead">One shared place for your family: a timetable for every child, family photos just for you, emergency help with pictures and a private family wall for writing, drawing and playing.</p>
+      <div class="ctas">
+        <a class="btn main" href="#price">Get it for €4.99</a>
+        <a class="btn line" href="./?wand=familie-demo&amp;lang=en" target="_blank" rel="noopener">Try it free</a>
+      </div>
+      <ul class="trust"><li>No subscription</li><li>No app store</li><li>Private – just your family</li><li>Pay with <b>PayPal</b> too</li></ul>
+    </div>
+    <div class="stage">
+      <div class="device"><img src="assets/en-plan.jpg" alt="Timetable in the Family Planner: today Maths, Reading and PE, every subject with a picture" width="540" height="699"></div>
+      <div class="float f1"><span>🔊</span>Reads the day aloud</div>
+      <div class="float f2"><span>🔒</span>Just for your family</div>
+      <div class="float f3"><span>🦊</span>An animal for every child</div>
+    </div>
+  </div>
+</section>
+
+<section style="padding-top:0">
+  <div class="in center reveal">
+    <span class="eyebrow">An ordinary day</span>
+    <h2>From breakfast to <em>bedtime</em>.</h2>
+    <p class="lead">The Family Planner keeps your day together – no more sticky-note chaos and no ten different apps.</p>
+  </div>
+  <div class="in day">
+    <article class="moment reveal"><time>7:10 am</time><span class="ico">📅</span><h3>What’s on today?</h3><p>Mia taps her fox and hears: “Today you have Maths, Reading and PE.”</p></article>
+    <article class="moment reveal"><time>3:30 pm</time><span class="ico">📷</span><h3>Look at this!</h3><p>Ben posts a photo from football practice. Grandma sees it right away – nobody else.</p></article>
+    <article class="moment reveal"><time>5:45 pm</time><span class="ico">🩹</span><h3>Little emergency</h3><p>Grazed knee? The emergency button shows in big pictures what helps right now.</p></article>
+    <article class="moment reveal"><time>7:30 pm</time><span class="ico">🎮</span><h3>Who wins tonight?</h3><p>Dad against daughter on the family leaderboard. Then a heart on the wall.</p></article>
+  </div>
+</section>
+
+<section id="features" style="background:var(--paper)">
+  <div class="in center reveal">
+    <span class="eyebrow">Everything in one place</span>
+    <h2>Made for <em>real families</em>.</h2>
+    <p class="lead">Big buttons, lots of pictures and a read-aloud function – so even kids from age 7 can manage on their own.</p>
+  </div>
+  <div class="in features">
+    <article class="feat t-peach reveal"><div class="ico">📅</div><h3>A timetable for every child</h3><p>Today at a glance, every subject with a picture.</p><ul><li>Own animal instead of reading names</li><li>🔊 Read aloud at the tap of a button</li><li>Parents fill in the week</li></ul></article>
+    <article class="feat t-sky reveal"><div class="ico">📷</div><h3>Family photos</h3><p>Take a photo or pick one from the gallery, add a caption, done.</p><ul><li>Only visible with your family code</li><li>Parents can delete anytime</li></ul></article>
+    <article class="feat t-rose reveal"><div class="ico">🚑</div><h3>Emergency help for kids</h3><p>Big pictures and short sentences – with a read-aloud button.</p><ul><li>Nosebleed, cuts, burns, stings …</li><li>“Call 112 / 911” with one tap</li><li>Always: get an adult first</li></ul></article>
+    <article class="feat t-mint reveal"><div class="ico">✏️</div><h3>Your private family wall</h3><p>Messages, doodles and replies – like the family fridge, only more colourful.</p><ul><li>“Pizza on Friday?” – “Yesss!”</li><li>Draw with your finger</li></ul></article>
+    <article class="feat t-butter reveal"><div class="ico">🏆</div><h3>Games &amp; weekly challenge</h3><p>Eight mini games with your own leaderboard and a new family challenge every week.</p><ul><li>“Draw your favourite animal”</li><li>“What are you thankful for today?”</li></ul></article>
+    <article class="feat t-lilac reveal"><div class="ico">🎨</div><h3>Your own style</h3><p>12 backgrounds from rainbow to outer space – or your own photo. Everyone on their own phone.</p><ul><li>Cosy music to go with it</li><li>English, Deutsch, 日本語</li></ul></article>
+  </div>
+  <div class="in gallery">
+    <figure class="reveal"><div class="frame"><img src="assets/en-wall.jpg" alt="Family wall with the Family Planner buttons" width="540" height="858"></div><figcaption>The family wall</figcaption></figure>
+    <figure class="reveal"><div class="frame"><img src="assets/en-photos.jpg" alt="Family photos with short captions" width="540" height="796"></div><figcaption>Family photos</figcaption></figure>
+    <figure class="reveal"><div class="frame"><img src="assets/en-nosebleed.jpg" alt="Emergency card for a nosebleed with pictures and short steps" width="540" height="969"></div><figcaption>Emergency card</figcaption></figure>
+    <figure class="reveal"><div class="frame"><img src="assets/en-styles.jpg" alt="Choice of 12 backgrounds or your own photo" width="540" height="796"></div><figcaption>12 backgrounds</figcaption></figure>
+  </div>
+</section>
+
+<section id="privacy">
+  <div class="in">
+    <div class="private reveal">
+      <div style="position:relative;z-index:1">
+        <span class="eyebrow">Privacy</span>
+        <h2>Private. <em>Really private.</em></h2>
+        <p class="lead">Your family wall is not a social network. No likes from strangers, no ads and no “live for everyone”. Just you.</p>
+      </div>
+      <ul class="checks">
+        <li><span>🔑</span><div><b>Secret family code</b><small>Only phones that have scanned your family QR code can see the wall, photos and timetable.</small></div></li>
+        <li><span>🚪</span><div><b>Strangers stay out</b><small>Without the code you only see “This wall is private.” – and you can’t write anything either.</small></div></li>
+        <li><span>🧑‍🍼</span><div><b>Parents stay in control</b><small>Delete posts and photos anytime. Code in the wrong hands? Create a new one with one tap.</small></div></li>
+        <li><span>🇪🇺</span><div><b>No ads, no selling of data</b><small>Stored with Google Firebase in Frankfurt, Germany. No account for kids, no app store, no permissions.</small></div></li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section style="padding-top:0">
+  <div class="in film">
+    <video src="assets/family-planner-pia-en.mp4" poster="assets/family-planner-pia-en.jpg" controls playsinline preload="none" aria-label="Explainer video: Pia shows the Family Planner"></video>
+    <div class="reveal">
+      <span class="eyebrow">Explained in under a minute</span>
+      <h2>Meet Pia – she’ll <em>show you around</em>.</h2>
+      <p class="lead">Our friendly AI assistant walks you through the timetable, family photos, the emergency button and everything else – with real pictures from the app.</p>
+      <p class="note" style="margin-top:14px">Pia’s voice and character are AI-generated. All app screens are real.</p>
+    </div>
+  </div>
+</section>
+
+<section style="background:var(--paper)">
+  <div class="in center reveal">
+    <span class="eyebrow">Ready in 2 minutes</span>
+    <h2>That’s how <em>easy</em> it is.</h2>
+  </div>
+  <div class="in steps">
+    <div class="step reveal"><h3>Buy</h3><p>For a one-off €4.99 you get your personal code by email right away.</p></div>
+    <div class="step reveal"><h3>Set up</h3><p>Enter the code on “My wall”, choose a name – e.g. “The Millers” – and switch on the Family Planner.</p></div>
+    <div class="step reveal"><h3>Share</h3><p>Send the family link via WhatsApp or print the fridge card. Scan once – done.</p></div>
+  </div>
+</section>
+
+<section id="price">
+  <div class="in center reveal">
+    <span class="eyebrow">Price</span>
+    <h2>Pay once. <em>Yours forever.</em></h2>
+    <p class="lead">No subscription, no hidden costs. Also a lovely gift for the first day of school or for Christmas.</p>
+  </div>
+  <div class="in pricing">
+    <div class="plan reveal">
+      <h3>Try it first</h3>
+      <div class="amount">€0 <small>demo wall</small></div>
+      <ul><li>Family wall to write, draw &amp; play</li><li>See timetable &amp; photos as an example</li><li>🔒 Editing, photos &amp; emergency help after purchase</li><li>No sign-up</li></ul>
+      <div class="spacer"></div>
+      <a class="btn line" href="./?wand=familie-demo&amp;lang=en" target="_blank" rel="noopener">Open the demo</a>
+    </div>
+    <div class="plan hero-plan reveal">
+      <span class="badge">For your family</span>
+      <h3>Your Family Planner</h3>
+      <div class="amount">€4.99 <small>one-off</small></div>
+      <ul>
+        <li>A timetable for every child – with read aloud</li>
+        <li>Family photos, just for you</li>
+        <li>Emergency help with picture cards</li>
+        <li>Private family wall, games, challenges &amp; music</li>
+        <li>QR poster &amp; fridge card to print</li>
+        <li>Parent area to manage and delete</li>
+        <li><b>2 walls included</b> – e.g. one for you and one for the grandparents</li>
+      </ul>
+      <div class="spacer"></div>
+      <a class="btn main" href="https://payhip.com/Pikumio" target="_blank" rel="noopener">Get it now for €4.99</a>
+      <div class="paywrap"><span class="paypal"><span>💙</span><span>You can also pay easily with <b>PayPal</b></span></span></div>
+      <p class="fine center">Secure payment via Payhip · your code arrives instantly by email</p>
+    </div>
+  </div>
+</section>
+
+<section style="padding-top:0">
+  <div class="in">
+    <div class="maker reveal">
+      <div class="avatar" role="img" aria-label="Kay, the maker of the Family Planner, as a drawn character"></div>
+      <div>
+        <blockquote>“I wanted a place where the whole family comes together – without ads, without a subscription and without strangers reading along. So I built it myself.”</blockquote>
+        <cite>Kay from Leipzig, Germany · Questions? <a href="mailto:kaytrut426@gmail.com">kaytrut426@gmail.com</a></cite>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section style="padding-top:0">
+  <div class="in center reveal">
+    <span class="eyebrow">Questions &amp; answers</span>
+    <h2>Good to <em>know</em>.</h2>
+  </div>
+  <div class="in faq">
+    <details><summary>Is it an app?</summary><p>No – on purpose. The Family Planner runs in your phone’s browser. You don’t need to download anything from the App Store or Play Store and you don’t grant any permissions. If you like, you can add it to your home screen with one tap.</p></details>
+    <details><summary>Who can see our wall, photos and timetables?</summary><p>Only phones that have scanned your secret family QR code. Without the code you just see “This wall is private” and can’t write anything. If the code ends up in the wrong hands, create a new one on “My wall” with one tap.</p></details>
+    <details><summary>Is it suitable for kids?</summary><p>Yes. Big buttons, pictures and the read-aloud function make it easy for kids from age 7. A word filter blocks swear words, phone numbers and links. Parents can see every post on “My wall” and delete it.</p></details>
+    <details><summary>Does everyone need an account?</summary><p>No. The family just scans the family code once – no account. Only the person who manages the planner signs in once with Google.</p></details>
+    <details><summary>Will it cost anything later?</summary><p>No. You pay €4.99 once – no subscription, no running costs, no ads.</p></details>
+    <details><summary>How many walls do I get?</summary><p>Every code sets up <b>2 walls</b>, e.g. one for you and one for the grandparents. Need more? There’s an update: 2 more walls for €4.99.</p></details>
+    <details><summary>Can I give the Family Planner as a gift?</summary><p>Yes. Buy it and forward the email with the code. Whoever redeems the code gets the planner.</p></details>
+    <details><summary>Does the emergency button replace a first-aid course?</summary><p>No. It helps kids remember the most important things in a stressful moment: get an adult, and if in doubt, call the emergency number (112 in Europe, 911 in the USA).</p></details>
+    <details><summary>Where is our data stored?</summary><p>With Google Firebase in a data centre in Frankfurt, Germany. No ads and no selling of data. Photos are made smaller before uploading, and you can delete them anytime. The <a href="datenschutz.html">privacy policy</a> is available in German.</p></details>
+  </div>
+</section>
+
+<section style="padding-top:0">
+  <div class="in">
+    <div class="final reveal">
+      <span class="hand">Ready?</span>
+      <h2 style="margin-top:6px">Get your <em>Family Planner</em>.</h2>
+      <p class="lead" style="margin-inline:auto">One-off €4.99 – set up in 2 minutes.</p>
+      <div class="ctas">
+        <a class="btn main" href="https://payhip.com/Pikumio" target="_blank" rel="noopener">Get it now</a>
+        <a class="btn line" href="./?wand=familie-demo&amp;lang=en" target="_blank" rel="noopener">Try it first</a>
+      </div>
+    </div>
+  </div>
+</section>
+</main>
+
+<footer>
+  <div class="in">
+    <span>© Family Planner · made with ❤️ in Leipzig, Germany</span>
+    <nav aria-label="More pages"><a href="meine-wand.html?lang=en">My wall</a><a href="./?wand=familie-demo&amp;lang=en">Demo</a><a href="familie.html" hreflang="de" lang="de">Deutsch</a><a href="impressum.html">Legal notice</a><a href="datenschutz.html">Privacy</a></nav>
+  </div>
+</footer>
+
+<script>
+/* Kopfzeile bekommt beim Scrollen eine feine Linie, Abschnitte blenden sanft ein */
+(function () {
+  const top = document.getElementById("top");
+  const onScroll = () => top.classList.toggle("scrolled", window.scrollY > 8);
+  window.addEventListener("scroll", onScroll, { passive: true }); onScroll();
+  const els = document.querySelectorAll(".reveal");
+  if (!("IntersectionObserver" in window)) { els.forEach(e => e.classList.add("on")); return; }
+  const io = new IntersectionObserver(list => list.forEach(x => { if (x.isIntersecting) { x.target.classList.add("on"); io.unobserve(x.target); } }), { rootMargin: "0px 0px -8% 0px" });
+  els.forEach(e => io.observe(e));
+})();
+</script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="config.js"></script>
+<script src="counter.js"></script>
+</body>
+</html>

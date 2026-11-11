@@ -1,0 +1,336 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isAdmin() {
+      return request.auth != null
+        && request.auth.token.email == 'kaytrut426@gmail.com'
+        && request.auth.token.email_verified == true;
+    }
+
+    // Deine festen Wände aus config.js. Alle anderen Wände entstehen über einen gekauften Code.
+    function fixedWall(wall) {
+      return wall in ['prestigio', 'goldener-hahn', 'zuhause', 'demo', 'familie-demo'];
+    }
+    function wallDoc(wall) {
+      return /databases/$(database)/documents/walls/$(wall);
+    }
+    // Auf diese Wand darf geschrieben werden: feste Wand oder gekaufte Wand
+    function openWall(wall) {
+      return fixedWall(wall) || exists(wallDoc(wall));
+    }
+    // Der Käufer einer Wand darf dort löschen
+    function isOwner(wall) {
+      return request.auth != null && !fixedWall(wall) && exists(wallDoc(wall))
+        && get(wallDoc(wall)).data.owner == request.auth.uid;
+    }
+    function canModerate(wall) {
+      return isAdmin() || isOwner(wall);
+    }
+
+    // Grobe Wortsperre auf dem Server. Die Wand selbst prüft vorher eine viel längere Liste.
+    function dirty(t) {
+      return t.lower().matches('(?s).*(fick|fuck|fotze|wichs|titten|pimmel|muschi|sperma|porn|penis|vagina|hure|nutte|schlampe|bums|vögeln|orgasm|dildo|blowjob|pussy|nackt|arschloch|arschfick|missgeburt|spast|schwuchtel|kanake|neger|nigger|nazi|hitler|bitch|umbringen|vergewaltig|sexy).*')
+        || t.lower().matches('(?s)(.*[^a-zäöüß])?(sex|anal|geil|arsch|schwanz|titte)([^a-zäöüß].*)?');
+    }
+
+    // Kindersicher: auf öffentlichen Wänden keine Kontaktdaten, Politik, Drogen oder Gewalt
+    function unsafe(t) {
+      return t.lower().matches('(?s).*(snapchat|instagram|whatsapp|telegram|discord|handynummer|telefonnummer|meine nummer|deine nummer|wie alt bist|wo wohnst|wohnst du|bist du allein|allein zuhause|alleine zuhause|foto von dir|bild von dir|fotos von dir|zeig dich|webcam|lass uns treffen|treffen wir uns|unser geheimnis|sag es niemandem|nicht deinen eltern|how old are you|where do you live|send pic|our secret|politik|bundestag|bundesregierung|wahlkampf|kanzler|partei|flüchtling|migrant|remigration|volksverräter|lügenpresse|reichsbürger|sieg heil|weltkrieg|kokain|heroin|crystal meth|amoklauf|erschieß|abknallen|selbstmord|suizid).*')
+        || t.lower().matches('(?s)(.*[^a-zäöüß0-9])?(afd|cdu|csu|spd|fdp|bsw|npd|nsdap|merz|scholz|habeck|weidel|höcke|söder|putin|trump|biden|hamas|antifa|snap|insta|kik|adde mich|add mich|koks|meth|weed|kiffen)([^a-zäöüß0-9].*)?');
+    }
+
+    function okText(t, max) {
+      return t is string && t.size() >= 3 && t.size() <= max
+        && !t.matches('(?s).*[0-9][0-9 /-]{6,}[0-9].*')
+        && !t.lower().matches('(?s).*(https?://|www[.]|@).*')
+        && !dirty(t);
+    }
+
+    // Name und Unterzeile einer gekauften Wand
+    function okLabel(t, min, max) {
+      return t is string && t.size() >= min && t.size() <= max
+        && !t.lower().matches('(?s).*(https?://|www[.]|@|<|>).*')
+        && !dirty(t);
+    }
+
+    function okWeek(d) {
+      return !('ch' in d) || (d.ch is string && d.ch.matches('[0-9]{4}-W[0-9]{2}'));
+    }
+
+    // Striche und Meldungen: Zeitstempel ist neu, ältere Versionen schicken ihn noch nicht mit
+    function okMark(d, id) {
+      return d.keys().hasOnly(['p', 'ts'])
+        && d.p is string
+        && id.matches(d.p + '_[a-zA-Z0-9]{8,40}')
+        && (!('ts' in d) || d.ts == request.time);
+    }
+
+    function textPost(d) {
+      return d.keys().hasOnly(['t', 'color', 'font', 'rot', 'ts', 'ch'])
+        && okText(d.t, 120)
+        && d.color in ['ink', 'red', 'blue', 'green', 'silver']
+        && d.font in ['hand', 'marker', 'scrawl'];
+    }
+
+    function drawPost(d) {
+      return d.keys().hasOnly(['img', 'rot', 'ts', 'ch'])
+        && d.img is string && d.img.size() <= 150000
+        && d.img.matches('data:image/png;base64,[A-Za-z0-9+/=]+');
+    }
+
+    /* ---------- Gekaufte Wände ---------- */
+    match /walls/{wall} {
+      // Einzelne Wand lesen darf jeder (Name fürs Türschild). Auflisten nur der Besitzer seine eigenen.
+      allow get: if true;
+      allow list: if isAdmin() || (request.auth != null && resource.data.owner == request.auth.uid);
+      // Einlösen eines Codes: Wand anlegen und Code im selben Schritt als benutzt markieren
+      allow create: if isAdmin() || (
+        request.auth != null
+        && wall.matches('[a-z0-9-]{2,40}-[0-9]{4}')
+        && request.resource.data.keys().hasOnly(['name', 'sub', 'owner', 'code', 'ts'])
+        && okLabel(request.resource.data.name, 2, 30)
+        && okLabel(request.resource.data.sub, 0, 40)
+        && request.resource.data.owner == request.auth.uid
+        && request.resource.data.ts == request.time
+        && request.resource.data.code is string
+        && exists(/databases/$(database)/documents/codes/$(request.resource.data.code))
+        && codeUses(get(/databases/$(database)/documents/codes/$(request.resource.data.code)).data) < 2
+        && getAfter(/databases/$(database)/documents/codes/$(request.resource.data.code)).data.wall == wall
+      );
+      // Besitzer darf Name und Unterzeile ändern
+      allow update: if isAdmin() || (
+        request.auth != null && resource.data.owner == request.auth.uid
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['name', 'sub'])
+        && okLabel(request.resource.data.name, 2, 30)
+        && okLabel(request.resource.data.sub, 0, 40)
+      );
+      allow delete: if isAdmin();
+    }
+
+    /* ---------- Codes aus Payhip: jeder Code reicht für 2 Wände desselben Kontos ---------- */
+    // Wie oft wurde der Code schon benutzt? Alte Codes ohne Zähler: einmal, wenn "used" gesetzt ist.
+    function codeUses(c) {
+      return c.get('n', c.get('used', false) == true ? 1 : 0);
+    }
+    function codeWalls(c) {
+      return c.get('walls', ('wall' in c) ? [c.wall] : []);
+    }
+    match /codes/{code} {
+      allow get: if request.auth != null;
+      allow list, create, delete: if isAdmin();
+      allow update: if isAdmin() || (
+        request.auth != null
+        && codeUses(resource.data) < 2
+        && (!('by' in resource.data) || resource.data.by == request.auth.uid)
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['used', 'wall', 'walls', 'n', 'by', 'at'])
+        && request.resource.data.n == codeUses(resource.data) + 1
+        && request.resource.data.used == (request.resource.data.n >= 2)
+        && request.resource.data.walls == codeWalls(resource.data).concat([request.resource.data.wall])
+        && request.resource.data.by == request.auth.uid
+        && request.resource.data.at == request.time
+        && request.resource.data.wall is string
+        && getAfter(/databases/$(database)/documents/walls/$(request.resource.data.wall)).data.code == code
+        && getAfter(/databases/$(database)/documents/walls/$(request.resource.data.wall)).data.owner == request.auth.uid
+      );
+    }
+
+    /* ---------- Besucherzähler der Infoseiten: nur eine Zahl pro Seite und Tag ---------- */
+    match /stats/{id} {
+      allow read: if isAdmin();
+      allow create: if id.matches('(familie|wirte|scanbar|scanfam)_[0-9]{4}-[0-9]{2}-[0-9]{2}')
+        && request.resource.data.keys().hasOnly(['n'])
+        && request.resource.data.n == 1;
+      allow update: if request.resource.data.keys().hasOnly(['n'])
+        && request.resource.data.n == resource.data.n + 1;
+    }
+
+    /* ---------- Familien-Bereich: Stundenplan und Fotos, nur mit dem geheimen Familien-Code ---------- */
+    function famKeyDoc(wall) {
+      return /databases/$(database)/documents/walls/$(wall)/private/key;
+    }
+    // Familien-Planner eingeschaltet: Die Wand ist privat, öffentlich kann dort niemand mehr lesen oder schreiben
+    function famOn(wall) {
+      return exists(famKeyDoc(wall));
+    }
+    function famOk(wall, key) {
+      return exists(famKeyDoc(wall)) && get(famKeyDoc(wall)).data.k == key;
+    }
+    // Den Familien-Code sieht und ändert nur der Besitzer der Wand
+    match /walls/{wall}/private/{doc} {
+      allow read, delete: if doc == 'key' && isOwner(wall);
+      allow create, update: if doc == 'key' && isOwner(wall)
+        && request.resource.data.keys().hasOnly(['k', 'ts'])
+        && request.resource.data.k is string
+        && request.resource.data.k.matches('[A-Za-z0-9]{24,40}')
+        && request.resource.data.ts == request.time;
+    }
+    match /walls/{wall}/familie/{key}/plaene/{id} {
+      allow read, delete: if famOk(wall, key);
+      allow create, update: if famOk(wall, key)
+        && id.matches('[a-z0-9]{6,30}')
+        && request.resource.data.keys().hasOnly(['name', 'z', 'ts'])
+        && request.resource.data.name is string
+        && request.resource.data.name.size() >= 1 && request.resource.data.name.size() <= 20
+        && request.resource.data.z is string && request.resource.data.z.size() <= 4000
+        && request.resource.data.ts == request.time;
+    }
+    // Sprüche und Kritzeleien, die jemand nur für die Familie an die Wand hängt
+    match /walls/{wall}/familie/{key}/posts/{id} {
+      allow read: if famOk(wall, key);
+      allow create: if famOk(wall, key)
+        && (textPost(request.resource.data) || drawPost(request.resource.data))
+        && okWeek(request.resource.data)
+        && request.resource.data.rot is number
+        && request.resource.data.ts == request.time;
+      allow delete: if isOwner(wall) && famOk(wall, key);
+    }
+    match /walls/{wall}/familie/{key}/replies/{id} {
+      allow read: if famOk(wall, key);
+      allow create: if famOk(wall, key)
+        && request.resource.data.keys().hasOnly(['p', 't', 'ts'])
+        && request.resource.data.p is string
+        && okText(request.resource.data.t, 60)
+        && request.resource.data.ts == request.time;
+      allow delete: if isOwner(wall) && famOk(wall, key);
+    }
+    match /walls/{wall}/familie/{key}/likes/{id} {
+      allow read: if famOk(wall, key);
+      allow create: if famOk(wall, key) && okMark(request.resource.data, id);
+    }
+    // Chill-Raum: alle aus der privaten Gruppe schreiben zusammen, die Eltern können löschen
+    match /walls/{wall}/familie/{key}/chill/{id} {
+      allow read: if famOk(wall, key);
+      allow create: if famOk(wall, key)
+        && request.resource.data.keys().hasOnly(['n', 't', 'ts'])
+        && okName(request.resource.data.n)
+        && okText(request.resource.data.t, 200)
+        && request.resource.data.ts == request.time;
+      allow delete: if isOwner(wall) && famOk(wall, key);
+    }
+    match /walls/{wall}/familie/{key}/da/{dev} {
+      allow read: if famOk(wall, key);
+      allow create, update: if famOk(wall, key) && dev.matches('[a-zA-Z0-9]{8,40}')
+        && request.resource.data.keys().hasOnly(['n', 'ts'])
+        && okName(request.resource.data.n)
+        && request.resource.data.ts == request.time;
+    }
+    // Chill-Raum-Spiel (Mensch ärgere dich nicht): ein gemeinsamer Spielstand für die Gruppe
+    match /walls/{wall}/familie/{key}/chillspiel/{id} {
+      allow read: if famOk(wall, key);
+      allow create, update: if famOk(wall, key) && okSpiel(id, request.resource.data);
+    }
+    match /walls/{wall}/familie/{key}/games/{game}/scores/{id} {
+      allow read: if famOk(wall, key);
+      allow create: if famOk(wall, key) && okScore(game, request.resource.data);
+      allow delete: if isOwner(wall) && famOk(wall, key);
+    }
+    match /walls/{wall}/familie/{key}/fotos/{id} {
+      allow read: if famOk(wall, key);
+      allow create: if famOk(wall, key)
+        && request.resource.data.keys().hasOnly(['img', 'cap', 'ts'])
+        && request.resource.data.img is string && request.resource.data.img.size() <= 300000
+        && request.resource.data.img.matches('data:image/jpeg;base64,[A-Za-z0-9+/=]+')
+        && (!('cap' in request.resource.data) || (request.resource.data.cap is string && request.resource.data.cap.size() <= 80))
+        && request.resource.data.ts == request.time;
+      // Löschen: nur die Eltern (Besitzer der Wand)
+      allow delete: if isOwner(wall) && famOk(wall, key);
+    }
+
+    /* ---------- Inhalte einer Wand ---------- */
+    match /walls/{wall}/posts/{id} {
+      allow read: if !famOn(wall) || canModerate(wall);
+      allow create: if openWall(wall) && !famOn(wall)
+        && (textPost(request.resource.data) || drawPost(request.resource.data))
+        && (!('t' in request.resource.data) || !unsafe(request.resource.data.t))
+        && okWeek(request.resource.data)
+        && request.resource.data.rot is number
+        && request.resource.data.ts == request.time;
+      allow delete: if canModerate(wall);
+    }
+
+    match /walls/{wall}/replies/{id} {
+      allow read: if !famOn(wall) || canModerate(wall);
+      allow create: if openWall(wall) && !famOn(wall)
+        && request.resource.data.keys().hasOnly(['p', 't', 'ts'])
+        && request.resource.data.p is string
+        && okText(request.resource.data.t, 60)
+        && !unsafe(request.resource.data.t)
+        && request.resource.data.ts == request.time;
+      allow delete: if canModerate(wall);
+    }
+
+    match /walls/{wall}/likes/{id} {
+      allow read: if !famOn(wall) || canModerate(wall);
+      allow create: if openWall(wall) && !famOn(wall) && okMark(request.resource.data, id);
+      allow delete: if canModerate(wall);
+    }
+
+    match /walls/{wall}/reports/{id} {
+      allow read: if !famOn(wall) || canModerate(wall);
+      allow create: if openWall(wall) && !famOn(wall) && okMark(request.resource.data, id);
+      allow delete: if canModerate(wall);
+    }
+
+    // Öffentlicher Chill-Raum nur auf den Demo-Wänden: strenger Filter wie auf der Wand, Admin kann löschen
+    match /walls/{wall}/chill/{id} {
+      allow read: if wall in ['demo', 'familie-demo'];
+      allow create: if wall in ['demo', 'familie-demo']
+        && request.resource.data.keys().hasOnly(['n', 't', 'ts'])
+        && okName(request.resource.data.n) && !unsafe(request.resource.data.n)
+        && okText(request.resource.data.t, 120) && !unsafe(request.resource.data.t)
+        && request.resource.data.ts == request.time;
+      allow delete: if isAdmin();
+    }
+    match /walls/{wall}/da/{dev} {
+      allow read: if wall in ['demo', 'familie-demo'];
+      allow create, update: if wall in ['demo', 'familie-demo'] && dev.matches('[a-zA-Z0-9]{8,40}')
+        && request.resource.data.keys().hasOnly(['n', 'ts'])
+        && okName(request.resource.data.n) && !unsafe(request.resource.data.n)
+        && request.resource.data.ts == request.time;
+    }
+
+    match /walls/{wall}/chillspiel/{id} {
+      allow read: if wall in ['demo', 'familie-demo'];
+      allow create, update: if wall in ['demo', 'familie-demo'] && okSpiel(id, request.resource.data)
+        && !unsafe(request.resource.data.s);
+    }
+    function okSpiel(id, d) {
+      return id in ['madn', 'macke', 'vier', 'poker', 'roulette', 'snooker']
+        && d.keys().hasOnly(['s', 'ts'])
+        && d.s is string && d.s.size() <= 4000
+        && !dirty(d.s)
+        && d.ts == request.time;
+    }
+
+    function okName(n) {
+      return n is string && n.size() >= 2 && n.size() <= 12
+        && n.matches('[A-Za-zÄÖÜäöüß0-9 ._-]+')
+        && !dirty(n);
+    }
+
+    function okScore(game, d) {
+      return d.keys().hasOnly(['name', 'score', 'day', 'ts'])
+        && okName(d.name)
+        && d.score is int
+        && d.day is string
+        && d.day.matches('[0-9]{4}-[0-9]{2}-[0-9]{2}')
+        && d.ts == request.time
+        && ((game == 'fang' && d.score >= 0 && d.score <= 300)
+          || (game == 'reflex' && d.score >= 100 && d.score <= 3000)
+          || (game == 'stapel' && d.score >= 0 && d.score <= 500)
+          || (game == 'fliege' && d.score >= 0 && d.score <= 300)
+          || (game == 'memory' && d.score >= 8 && d.score <= 300)
+          || (game == 'ente' && d.score >= 0 && d.score <= 500)
+          || (game == 'simon' && d.score >= 0 && d.score <= 100)
+          || (game == 'zahlen' && d.score >= 2000 && d.score <= 600000));
+    }
+
+    match /walls/{wall}/games/{game}/scores/{id} {
+      allow read: if !famOn(wall) || canModerate(wall);
+      allow create: if openWall(wall) && !famOn(wall) && okScore(game, request.resource.data)
+        && !unsafe(request.resource.data.name);
+      allow delete: if canModerate(wall);
+    }
+  }
+}

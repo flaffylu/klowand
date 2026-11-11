@@ -1,0 +1,554 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="color-scheme" content="only light">
+<title>Meine Wand</title>
+<meta name="description" content="Code einlösen und deinen Familien-Planner oder deine Klo-Wand einrichten.">
+<meta name="theme-color" content="#1d2321">
+<link rel="icon" href="icon-192.png">
+<link rel="stylesheet" href="fonts.css">
+<link rel="stylesheet" href="fonts-ja.css">
+<style>
+/* Käufer-Seite: hell und ruhig wie ein Türschild. Oben Anmeldung, dann die eigenen Wände als Karten, darunter Code einlösen */
+:root{
+  --bg:#dfe6e1; --card:#f7f9f7; --line:#c3cec7; --ink:#1d2321; --muted:#56635c;
+  --red:#b3261e; --gold:#f2c14e; --dark:#1d2321;
+  --f-marker:"Permanent Marker","Yusei Magic","Gochi Hand",cursive; --f-hand:"Gochi Hand","Yusei Magic","Comic Sans MS",cursive;
+  --f-ui:"Barlow Condensed","Arial Narrow",system-ui,sans-serif; --f-body:"Barlow",system-ui,sans-serif;
+}
+html,body{background:var(--bg);color:var(--ink)}
+body{margin:0;font:500 1rem/1.45 var(--f-body)}
+[hidden]{display:none!important}
+.wrap{max-width:640px;margin:0 auto;padding:0 max(16px,env(safe-area-inset-left,0px)) 48px}
+.top{background:var(--dark);color:#fff;margin:0 calc(-1 * max(16px,env(safe-area-inset-left,0px)));padding:18px max(16px,env(safe-area-inset-left,0px)) 20px}
+.top h1{margin:0;font:400 2rem/1 var(--f-marker)}
+.top p{margin:6px 0 0;color:#c9d3ce;font:600 .85rem var(--f-ui);letter-spacing:.12em;text-transform:uppercase}
+.who{display:flex;gap:8px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin:14px 0 0;font:600 .95rem var(--f-ui);color:var(--muted)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px;margin-top:16px;box-shadow:0 2px 0 rgba(0,0,0,.04)}
+h2{margin:0 0 4px;font:700 1.45rem/1.15 var(--f-ui);letter-spacing:.01em}
+h3{margin:14px 0 6px;font:700 1.05rem var(--f-ui);letter-spacing:.04em;text-transform:uppercase}
+.sub{margin:0;color:var(--muted)}
+.steps{margin:10px 0 0;padding-left:22px}.steps li{margin:4px 0}
+button,.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;font:700 .95rem var(--f-ui);letter-spacing:.05em;text-transform:uppercase;border-radius:7px;border:1.5px solid var(--ink);background:transparent;color:var(--ink);padding:9px 14px;min-height:44px;cursor:pointer;text-decoration:none;box-sizing:border-box}
+button.primary,.btn.primary{background:var(--red);border-color:var(--red);color:#fff}
+button.dark,.btn.dark{background:var(--ink);color:#fff}
+button:disabled{opacity:.5;cursor:default}
+:focus-visible{outline:2px dashed #1f4fa3;outline-offset:2px}
+.row{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+label{display:block;margin-top:12px;font:700 .85rem var(--f-ui);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+input{display:block;width:100%;box-sizing:border-box;margin-top:4px;font:600 1.1rem var(--f-body);padding:10px 12px;border:1.5px solid var(--line);border-radius:7px;background:#fff;color:var(--ink);min-height:46px}
+input:focus{border-color:var(--ink);outline:none}
+input.code{font:700 1.25rem ui-monospace,Menlo,monospace;letter-spacing:.08em;text-transform:uppercase}
+.hint{font-size:.88rem;color:var(--muted);margin:6px 0 0}
+.msg{margin:10px 0 0;padding:9px 12px;border-radius:7px;font-weight:600}
+.msg.err{background:#fbe5e3;color:#8a1c16}
+.msg.ok{background:#e1f2e4;color:#1f5a2c}
+.msg:empty{display:none}
+.wallhead{display:flex;gap:14px;align-items:flex-start}
+.wallhead .info{flex:1;min-width:0}
+.qr{flex:none;width:112px;height:112px;background:#fff;border:1px solid var(--line);border-radius:6px;padding:6px;box-sizing:border-box;image-rendering:pixelated}
+.link{display:block;margin-top:6px;font:600 .9rem ui-monospace,Menlo,monospace;color:#1f4fa3;overflow-wrap:anywhere}
+details{margin-top:12px;border-top:1px dashed var(--line);padding-top:10px}
+summary{cursor:pointer;font:700 1rem var(--f-ui);letter-spacing:.04em;text-transform:uppercase}
+.feed{display:flex;flex-direction:column;gap:8px;margin-top:10px}
+.item{background:#b9c7bf;border-radius:8px;padding:10px 12px;border-left:6px solid transparent}
+.item.flag{border-left-color:var(--red)}
+.item .t{font:1.35rem/1.15 var(--f-hand);overflow-wrap:anywhere}
+.item img{display:block;max-width:100%;max-height:200px}
+.item .m{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:6px;font:600 .85rem var(--f-ui);color:#46524b}
+.item .m .sp{margin-right:auto}
+.item .r{display:flex;gap:8px;align-items:center;justify-content:space-between;font:700 1.15rem/1.1 "Caveat",var(--f-hand);margin:4px 0 0 8px}
+.item button{min-height:36px;padding:4px 10px;font-size:.8rem}
+.del{color:var(--red);border-color:var(--red)}
+.del.confirm{background:var(--red);color:#fff}
+.empty{text-align:center;color:var(--muted);font:1.3rem var(--f-hand);padding:18px 0}
+.fambox{margin-top:12px;border:1.5px solid var(--ink);border-radius:9px;padding:12px;background:#fff}
+.fambox h3{margin:0 0 6px}
+.fambox .warn{background:#fff6d6;border:1px solid #e0a92e;border-radius:7px;padding:8px 10px;font-size:.9rem;margin:8px 0 0}
+.famgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px;margin-top:10px}
+.famgrid figure{margin:0;border:1px solid var(--line);border-radius:7px;overflow:hidden;background:var(--card)}
+.famgrid img{display:block;width:100%;aspect-ratio:1;object-fit:cover}
+.famgrid figcaption{padding:5px;font-size:.8rem;overflow-wrap:anywhere}
+.famgrid button{width:100%;min-height:36px;font-size:.8rem;margin-top:4px}
+.legal{margin-top:28px;text-align:center;font-size:.9rem;color:var(--muted)}.legal a{color:var(--muted)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <h1>Meine Wand</h1>
+    <p>Einrichten · QR-Code · Beiträge verwalten</p>
+  </div>
+
+  <!-- Nicht angemeldet -->
+  <section class="card" id="out" hidden>
+    <h2>Deine eigene Wand</h2>
+    <p class="sub">In zwei Minuten fertig, ganz ohne Technik:</p>
+    <ol class="steps">
+      <li>Mit deinem Google-Konto anmelden.</li>
+      <li>Den <b>Code aus deiner Kauf-E-Mail</b> und einen Namen eintragen, z. B. deine Bar oder „Familie Müller“.</li>
+      <li>Familie: „Familien-Planner“ einschalten und den Familien-Link teilen. Bar: QR-Code ausdrucken und an die Kabinentür kleben. Fertig!</li>
+    </ol>
+    <div class="row"><button type="button" class="primary" id="login">Mit Google anmelden</button></div>
+    <p class="hint">Mit diesem Konto verwaltest du später deine Wand und kannst Beiträge löschen.</p>
+    <p class="hint">📖 <a href="assets/familien-planner-anleitung.pdf" target="_blank" rel="noopener">Anleitung mit Bildern ansehen (PDF)</a></p>
+  </section>
+
+  <!-- Angemeldet -->
+  <div id="in" hidden>
+    <div class="who"><span id="who"></span><button type="button" id="logout">Abmelden</button></div>
+    <div id="walls"></div>
+
+    <section class="card" id="redeem">
+      <h2 id="redeemTitle">Code einlösen</h2>
+      <p class="sub" id="redeemSub">Trag den Code aus deiner Kauf-E-Mail ein. Danach ist deine Wand sofort fertig.</p>
+      <form id="redeemForm" autocomplete="off">
+        <label for="code">Dein Code</label>
+        <input id="code" class="code" maxlength="20" placeholder="KLO-XXXX-XXXX" autocapitalize="characters" spellcheck="false" required>
+        <label for="name">Name der Wand</label>
+        <input id="name" maxlength="30" placeholder="z. B. Zum Anker oder Familie Müller" required>
+        <label for="sub">Unterzeile (freiwillig)</label>
+        <input id="sub" maxlength="40" placeholder="z. B. Herren · Kabine 1 oder Gästeklo">
+        <p class="hint">Steht oben auf dem Türschild der Wand. Kannst du später ändern.</p>
+        <div class="row"><button type="submit" class="primary" id="redeemBtn">Wand einrichten</button></div>
+        <div class="row" id="updateBox" hidden><a class="btn dark" id="updateLink" href="#" target="_blank" rel="noopener">⭐ Update kaufen: 2 weitere Wände · 4,99 €</a></div>
+        <p class="msg" id="redeemMsg"></p>
+      </form>
+    </section>
+  </div>
+
+  <p class="msg err" id="notice"></p>
+  <nav class="legal" id="legalNav"><a href="impressum.html">Impressum</a> · <a href="datenschutz.html">Datenschutz</a> · <a href="konto-loeschen.html">Konto löschen</a></nav>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="lang-ja.js"></script>
+<script src="lang.js"></script>
+<script src="config.js"></script>
+<script src="filter.js"></script>
+<script src="qrcode.js"></script>
+<script>
+document.title = tr("Meine Wand", "My wall");
+document.getElementById("legalNav").insertAdjacentHTML("beforeend", " · " + langButton());
+translateStatic([
+  [".top h1", "text", "My wall"], [".top p", "text", "Set up · QR code · Manage posts"],
+  ["#out h2", "text", "Your own wall"], ["#out .sub", "text", "Ready in two minutes, no tech skills needed:"],
+  ["#out .steps li:nth-child(1)", "text", "Sign in with your Google account."],
+  ["#out .steps li:nth-child(2)", "text", "Enter the code from your purchase email and a name, e.g. your bar or “The Millers”."],
+  ["#out .steps li:nth-child(3)", "text", "Family: turn on the “Family Planner” and share the family link. Bar: print the QR code and stick it on the cubicle door. Done!"],
+  ["#login", "text", "Sign in with Google"], ["#out .hint", "text", "With this account you manage your wall later and can delete posts."],
+  ["#logout", "text", "Sign out"], ["#redeemTitle", "text", "Redeem code"], ["#redeemSub", "text", "Enter the code from your purchase email. Your wall is ready right away."],
+  ["label[for=code]", "text", "Your code"], ["label[for=name]", "text", "Name of the wall"], ["#name", "placeholder", "e.g. The Anchor or The Millers"],
+  ["label[for=sub]", "text", "Subtitle (optional)"], ["#sub", "placeholder", "e.g. Men · Stall 1 or Guest loo"],
+  ["#redeemForm .hint", "text", "Shown at the top of the wall’s door sign. You can change it later."], ["#redeemBtn", "text", "Set up wall"],
+  [".legal a[href='impressum.html']", "text", "Imprint"], [".legal a[href='datenschutz.html']", "text", "Privacy"],
+]);
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"]/g, m => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[m]));
+const DAY = 864e5;
+const ms = d => (d && d.ts && d.ts.toMillis) ? d.ts.toMillis() : Date.now();
+const ago = ts => { const m = Math.round((Date.now() - ts) / 6e4); if (m < 1) return tr("gerade eben", "just now"); if (m < 60) return tr(`vor ${m} Min.`, `${m} min ago`, `${m}分前`); const h = Math.floor(m / 60); if (h < 24) return tr(`vor ${h} Std.`, `${h} h ago`, `${h}時間前`); const d = Math.floor(h / 24); return d === 1 ? tr("gestern", "yesterday") : tr(`vor ${d} Tagen`, `${d} days ago`, `${d}日前`); };
+const isDrawing = s => typeof s === "string" && s.startsWith("data:image/png;base64,");
+const wallUrl = id => new URL("./?wand=" + encodeURIComponent(id), location.href).href;
+
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth(), fs = firebase.firestore();
+const now = () => firebase.firestore.FieldValue.serverTimestamp();
+let user = null, walls = [], unsubWalls = null, openMod = null, modUnsubs = [], mod = null, confirmKey = null, editing = null;
+
+function notice(t) { $("notice").textContent = t || ""; }
+
+/* ---------- Anmeldung ---------- */
+$("login").onclick = async () => {
+  const provider = new firebase.auth.GoogleAuthProvider();
+  provider.setCustomParameters({ prompt: "select_account" });
+  try { await auth.signInWithPopup(provider); }
+  catch (e) {
+    if (e.code === "auth/popup-blocked" || e.code === "auth/operation-not-supported-in-this-environment") auth.signInWithRedirect(provider);
+    else if (e.code !== "auth/popup-closed-by-user" && e.code !== "auth/cancelled-popup-request") notice(tr("Anmeldung hat nicht geklappt. Versuch es nochmal.", "Sign-in didn't work. Please try again."));
+  }
+};
+$("logout").onclick = () => auth.signOut();
+auth.getRedirectResult().catch(() => notice(tr("Anmeldung hat nicht geklappt. Versuch es nochmal.", "Sign-in didn't work. Please try again.")));
+auth.onAuthStateChanged(u => {
+  user = u; notice("");
+  $("out").hidden = !!u; $("in").hidden = !u;
+  if (unsubWalls) { unsubWalls(); unsubWalls = null; }
+  closeMod(); famReset();
+  if (!u) { walls = []; return; }
+  $("who").textContent = tr("Angemeldet: ", "Signed in: ") + (u.email || tr("Google-Konto", "Google account"));
+  unsubWalls = fs.collection("walls").where("owner", "==", u.uid).onSnapshot(s => {
+    walls = s.docs.map(d => ({ id: d.id, ...d.data() })).sort((a, b) => ms(a) - ms(b));
+    renderWalls();
+  }, () => notice(tr("Deine Wände konnten nicht geladen werden. Lade die Seite neu.", "Your walls couldn't be loaded. Reload the page.")));
+});
+
+/* ---------- QR-Code ---------- */
+function qrMatrix(text) { const q = qrcode(0, "M"); q.addData(text); q.make(); return q; }
+function drawQr(canvas, text, size) {
+  const q = qrMatrix(text), n = q.getModuleCount(), quiet = 2, cell = Math.floor(size / (n + quiet * 2));
+  const dim = cell * (n + quiet * 2); canvas.width = canvas.height = dim;
+  const c = canvas.getContext("2d"); c.fillStyle = "#fff"; c.fillRect(0, 0, dim, dim); c.fillStyle = "#1d2321";
+  for (let r = 0; r < n; r++) for (let k = 0; k < n; k++) if (q.isDark(r, k)) c.fillRect((k + quiet) * cell, (r + quiet) * cell, cell, cell);
+  return canvas;
+}
+function download(canvas, name) {
+  const a = document.createElement("a"); a.href = canvas.toDataURL("image/png"); a.download = name; document.body.appendChild(a); a.click(); a.remove();
+}
+/* Sticker zum Ausdrucken: Titel, Bar-Name, großer QR-Code, Aufforderung */
+async function sticker(w) {
+  try { await Promise.all(['400 80px "Permanent Marker"', '700 40px "Barlow Condensed"', '400 40px "Gochi Hand"'].map(f => document.fonts.load(f))); } catch (e) {}
+  const W = 1200, H = 1700, cv = document.createElement("canvas"); cv.width = W; cv.height = H;
+  const c = cv.getContext("2d");
+  c.fillStyle = "#1d2321"; c.fillRect(0, 0, W, H);
+  c.fillStyle = "#b9c7bf"; roundRect(c, 50, 50, W - 100, H - 100, 40); c.fill();
+  c.fillStyle = "#1d2321"; c.textAlign = "center";
+  c.font = '400 150px "Permanent Marker", cursive'; c.fillText("Klo-Wand", W / 2, 260);
+  c.font = '700 64px "Barlow Condensed", sans-serif'; c.fillText(fit(c, w.name.toUpperCase(), W - 220), W / 2, 360);
+  const q = drawQr(document.createElement("canvas"), wallUrl(w.id), 760);
+  c.fillStyle = "#fff"; roundRect(c, (W - 820) / 2, 420, 820, 820, 30); c.fill();
+  c.imageSmoothingEnabled = false; c.drawImage(q, (W - 760) / 2, 450, 760, 760);
+  c.fillStyle = "#b3261e"; c.font = '400 92px "Gochi Hand", cursive'; c.fillText(tr("Scan mich & schreib", "Scan me & write"), W / 2, 1380); c.fillText(tr("an die Wand!", "on the wall!"), W / 2, 1480);
+  c.fillStyle = "#46524b"; c.font = '700 44px "Barlow Condensed", sans-serif'; c.fillText(tr("ANONYM · OHNE APP · OHNE ANMELDUNG", "ANONYMOUS · NO APP · NO SIGN-UP"), W / 2, 1580);
+  download(cv, "klowand-sticker-" + w.id + ".png");
+}
+function fit(c, t, max) { while (c.measureText(t).width > max && t.length > 4) t = t.slice(0, -2) + "…"; return t; }
+function roundRect(c, x, y, w, h, r) { c.beginPath(); c.moveTo(x + r, y); c.arcTo(x + w, y, x + w, y + h, r); c.arcTo(x + w, y + h, x, y + h, r); c.arcTo(x, y + h, x, y, r); c.arcTo(x, y, x + w, y, r); c.closePath(); }
+
+/* ---------- Update-Link (2 weitere Wände) ---------- */
+$("updateLink").href = typeof UPDATE_LINK !== "undefined" ? UPDATE_LINK : "https://payhip.com/Pikumio";
+if (EN) $("updateLink").textContent = tr("", "⭐ Buy update: 2 more walls · €4.99", "⭐ アップデート：ウォール2つ追加 · 4.99€");
+
+/* ---------- Eigene Wände ---------- */
+function renderWalls() {
+  const has = walls.length > 0;
+  // Jeder Code reicht für 2 Wände: Hat einer meiner Codes noch einen freien Platz?
+  const perCode = {}; walls.forEach(w => { if (w.code) perCode[w.code] = (perCode[w.code] || 0) + 1; });
+  const free = Object.keys(perCode).find(c => perCode[c] < WAENDE_PRO_CODE);
+  $("redeemTitle").textContent = has ? tr("Weitere Wand einrichten", "Set up another wall") : tr("Code einlösen", "Redeem code");
+  $("redeemSub").textContent = !has ? tr("Trag den Code aus deiner Kauf-E-Mail ein. Danach ist deine Wand sofort fertig. Jeder Code reicht für 2 Wände.", "Enter the code from your purchase email. Your wall is ready right away. Each code is good for 2 walls.")
+    : free ? tr(`Mit deinem Code ${free} kannst du noch 1 Wand einrichten – ohne Zusatzkosten. Er ist schon eingetragen.`, `You can set up 1 more wall with your code ${free} – at no extra cost. It's already filled in.`)
+    : KLO_APP ? tr("Deine 2 Wände sind eingerichtet. Für weitere Wände trägst du hier einen neuen Code ein.", "Your 2 walls are set up. For more walls, enter a new code here.")
+    : tr("Deine 2 Wände sind eingerichtet. Für 2 weitere Wände brauchst du ein Update für 4,99 €. Den neuen Code trägst du dann hier ein.", "Your 2 walls are set up. For 2 more walls you need an update for €4.99. Then enter the new code here.");
+  const ub = $("updateBox"); if (ub) ub.hidden = !has || !!free || KLO_APP;
+  if (free && !$("code").value) $("code").value = free;
+  $("walls").innerHTML = walls.map(w => {
+    const url = wallUrl(w.id), ed = editing === w.id;
+    return `<section class="card" data-wall="${esc(w.id)}">
+      <div class="wallhead">
+        <div class="info"><h2>${esc(w.name)}</h2><p class="sub">${esc(w.sub || "")}</p><a class="link" href="${esc(url)}" target="_blank" rel="noopener">${esc(url)}</a></div>
+        <canvas class="qr" data-qr="${esc(w.id)}" aria-label="${tr("QR-Code für", "QR code for")} ${esc(w.name)}"></canvas>
+      </div>
+      <div class="row">
+        <a class="btn primary" href="${esc(url)}" target="_blank" rel="noopener">${tr("Wand öffnen", "Open wall")}</a>
+        <button type="button" data-act="sticker">${tr("Sticker speichern", "Save sticker")}</button>
+        <button type="button" data-act="qr">${tr("Nur QR-Code", "QR code only")}</button>
+        <button type="button" data-act="copy">${tr("Link kopieren", "Copy link")}</button>
+      </div>
+      ${ed ? `<form class="editForm" data-id="${esc(w.id)}" autocomplete="off">
+          <label>${tr("Name der Wand", "Name of the wall")}<input name="name" maxlength="30" value="${esc(w.name)}" required></label>
+          <label>${tr("Unterzeile", "Subtitle")}<input name="sub" maxlength="40" value="${esc(w.sub || "")}"></label>
+          <div class="row"><button type="submit" class="dark">${tr("Speichern", "Save")}</button><button type="button" data-act="cancel">${tr("Abbrechen", "Cancel")}</button></div>
+        </form>` : `<div class="row"><button type="button" data-act="edit">${tr("Name ändern", "Rename")}</button>
+          <button type="button" data-act="mod" aria-expanded="${openMod === w.id}">${openMod === w.id ? tr("Beiträge schließen", "Close posts") : tr("Beiträge verwalten", "Manage posts")}</button></div>`}
+      ${famHtml(w)}
+      ${openMod === w.id ? `<div class="feed" id="modFeed"><p class="empty">${tr("Beiträge werden geladen …", "Loading posts …")}</p></div>` : ""}
+      <details><summary>${tr("Als App aufs Handy legen", "Add to your phone as an app")}</summary>
+        ${tr(`<ol class="steps"><li>Tippe auf <b>„Wand öffnen“</b>.</li><li>Im Chrome-Menü <b>⋮</b> auf <b>„Zum Startbildschirm hinzufügen“</b> tippen. Beim iPhone: Teilen-Symbol, dann „Zum Home-Bildschirm“.</li>
+        <li>Fertig: Deine Wand liegt jetzt wie eine App auf deinem Handy.</li></ol>
+        <p class="hint">Diese Verwaltungsseite kannst du genauso als App ablegen.</p>`, `<ol class="steps"><li>Tap <b>“Open wall”</b>.</li><li>In the Chrome menu <b>⋮</b> tap <b>“Add to Home screen”</b>. On iPhone: the Share icon, then “Add to Home Screen”.</li>
+        <li>Done: the Klo-Wand now sits on your phone like an app.</li></ol>
+        <p class="hint">You can add this management page as an app the same way.</p>`, `<ol class="steps"><li><b>「ウォールを開く」</b>をタップ。</li><li>Chromeのメニュー <b>⋮</b> から<b>「ホーム画面に追加」</b>。iPhoneは共有ボタンから「ホーム画面に追加」。</li>
+        <li>完成：Klo-Wandがアプリのようにスマホに並びます。</li></ol>
+        <p class="hint">この管理ページも同じ方法で追加できます。</p>`)}</details>
+    </section>`;
+  }).join("");
+  document.querySelectorAll("[data-qr]").forEach(cv => drawQr(cv, wallUrl(cv.dataset.qr), 220));
+  document.querySelectorAll("[data-famqr]").forEach(cv => drawQr(cv, famUrl(cv.dataset.famqr, famKeys[cv.dataset.famqr]), 220));
+  if (openMod) renderMod();
+}
+
+$("walls").addEventListener("click", async e => {
+  const b = e.target.closest("[data-act]"), card = e.target.closest("[data-wall]");
+  if (b && card) {
+    const w = walls.find(x => x.id === card.dataset.wall); if (!w) return;
+    const act = b.dataset.act;
+    if (act === "sticker") sticker(w);
+    if (act === "qr") download(drawQr(document.createElement("canvas"), wallUrl(w.id), 1000), "klowand-qr-" + w.id + ".png");
+    if (act === "copy") { try { await navigator.clipboard.writeText(wallUrl(w.id)); b.textContent = tr("Kopiert ✓", "Copied ✓"); } catch (err) { b.textContent = tr("Bitte Link oben markieren", "Please select the link above"); } setTimeout(() => b.textContent = tr("Link kopieren", "Copy link"), 2000); }
+    if (act === "edit") { editing = w.id; renderWalls(); }
+    if (act === "cancel") { editing = null; renderWalls(); }
+    if (act === "mod") { if (openMod === w.id) closeMod(); else startMod(w.id); renderWalls(); }
+    if (act.startsWith("fam")) famAction(act, w, b);
+    return;
+  }
+  const d = e.target.closest("[data-del]");
+  if (d) del(d);
+});
+$("walls").addEventListener("submit", async e => {
+  e.preventDefault();
+  const f = e.target; if (!f.classList.contains("editForm")) return;
+  const name = f.name.value.trim(), sub = f.sub.value.trim(), err = labelError(name, sub);
+  if (err) { notice(err); return; }
+  try { await fs.collection("walls").doc(f.dataset.id).update({ name, sub }); editing = null; notice(""); renderWalls(); }
+  catch (x) { notice(tr("Speichern hat nicht geklappt. Prüf den Namen und versuch es nochmal.", "Saving didn't work. Check the name and try again.")); }
+});
+
+function labelError(name, sub) {
+  if (name.length < 2) return tr("Der Name ist zu kurz.", "The name is too short.");
+  if (/(https?:\/\/|www\.|@|<|>)/i.test(name + sub)) return tr("Bitte keine Links, Mails oder Sonderzeichen wie < >.", "No links, emails or characters like < > please.");
+  if (KloFilter.bad(name) || (sub && KloFilter.bad(sub))) return tr("Bitte einen anderen Namen wählen.", "Please choose a different name.");
+  return null;
+}
+
+/* ---------- Code einlösen ---------- */
+function normCode(v) {
+  let c = v.toUpperCase().replace(/[^A-Z0-9]/g, "");
+  if (c.startsWith("KLO")) c = c.slice(3);
+  return c.length === 8 ? `KLO-${c.slice(0, 4)}-${c.slice(4)}` : v.trim().toUpperCase();
+}
+function slug(name) {
+  const s = name.toLowerCase().replace(/ä/g, "ae").replace(/ö/g, "oe").replace(/ü/g, "ue").replace(/ß/g, "ss")
+    .normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 30).replace(/-+$/g, "");
+  return s.length >= 2 ? s : "bar";
+}
+function redeemMsg(t, ok) { const m = $("redeemMsg"); m.textContent = t || ""; m.className = "msg " + (ok ? "ok" : "err"); }
+$("redeemForm").addEventListener("submit", async e => {
+  e.preventDefault();
+  if (!user) return;
+  const code = normCode($("code").value), name = $("name").value.trim(), sub = $("sub").value.trim();
+  $("code").value = code;
+  const err = labelError(name, sub); if (err) { redeemMsg(err); return; }
+  $("redeemBtn").disabled = true; redeemMsg(tr("Einen Moment …", "One moment …"), true);
+  try {
+    const cref = fs.collection("codes").doc(code), c = await cref.get();
+    if (!c.exists) { redeemMsg(tr("Diesen Code gibt es nicht. Prüf ihn nochmal in deiner Kauf-E-Mail.", "This code doesn't exist. Check it again in your purchase email.")); return; }
+    const cd = c.data(), uses = typeof cd.n === "number" ? cd.n : (cd.used ? 1 : 0);
+    if (cd.by && cd.by !== user.uid) { redeemMsg(tr("Dieser Code wurde schon von einem anderen Konto eingelöst.", "This code has already been redeemed by another account.")); return; }
+    if (uses >= WAENDE_PRO_CODE) { redeemMsg(KLO_APP ? tr("Mit diesem Code wurden schon 2 Wände eingerichtet. Für weitere Wände brauchst du einen neuen Code.", "This code has already been used for 2 walls. You need a new code for more walls.") : tr("Mit diesem Code wurden schon 2 Wände eingerichtet. Für 2 weitere Wände brauchst du ein Update für 4,99 €.", "This code has already been used for 2 walls. For 2 more walls you need an update for €4.99.")); $("updateBox").hidden = false; return; }
+    const prevWalls = Array.isArray(cd.walls) ? cd.walls : (cd.wall ? [cd.wall] : []);
+    let id = null;
+    for (let i = 0; i < 6 && !id; i++) {
+      const cand = slug(name) + "-" + String(Math.floor(1000 + Math.random() * 9000));
+      if (!(await fs.collection("walls").doc(cand).get()).exists) id = cand;
+    }
+    if (!id) { redeemMsg(tr("Hat nicht geklappt. Versuch es nochmal.", "That didn't work. Please try again.")); return; }
+    const batch = fs.batch();
+    batch.set(fs.collection("walls").doc(id), { name, sub, owner: user.uid, code, ts: now() });
+    batch.update(cref, { n: uses + 1, used: uses + 1 >= WAENDE_PRO_CODE, wall: id, walls: prevWalls.concat([id]), by: user.uid, at: now() });
+    await batch.commit();
+    $("redeemForm").reset();
+    const left = WAENDE_PRO_CODE - uses - 1;
+    redeemMsg(tr("Fertig! Deine Wand ist eingerichtet. Für die Familie: Tippe auf „Familien-Planner“. Für die Bar: Speichere den Sticker und kleb ihn an die Kabinentür.", "Done! Your wall is set up. For a family: tap “Family Planner”. For a bar: save the sticker and put it on the cubicle door.")
+      + (left > 0 ? " " + tr(`Mit deinem Code kannst du noch ${left} weitere Wand einrichten.`, `You can set up ${left} more wall with your code.`) : ""), true);
+    setTimeout(() => { const el = document.querySelector(`[data-wall="${id}"]`); if (el) el.scrollIntoView({ behavior: "smooth", block: "start" }); }, 600);
+  } catch (x) {
+    redeemMsg(x && x.code === "permission-denied" ? tr("Der Code konnte nicht eingelöst werden. Ist er schon benutzt? Sonst schreib uns.", "The code couldn't be redeemed. Has it been used already? Otherwise, contact us.") : tr("Hat nicht geklappt. Prüf deine Verbindung und versuch es nochmal.", "That didn't work. Check your connection and try again."));
+  } finally { $("redeemBtn").disabled = false; }
+});
+
+/* ---------- Beiträge verwalten ---------- */
+function closeMod() { modUnsubs.forEach(u => u()); modUnsubs = []; openMod = null; mod = null; confirmKey = null; }
+function startMod(id) {
+  closeMod(); openMod = id; mod = { posts: [], replies: {}, reports: {}, loaded: false };
+  const base = fs.collection("walls").doc(id), since = firebase.firestore.Timestamp.fromMillis(Date.now() - 60 * DAY);
+  modUnsubs.push(base.collection("posts").where("ts", ">", since).orderBy("ts", "desc").limit(300).onSnapshot(s => {
+    mod.posts = s.docs.map(d => { const x = d.data(); return { id: d.id, t: typeof x.t === "string" ? x.t : "", img: isDrawing(x.img) ? x.img : null, ts: ms(x) }; });
+    mod.loaded = true; renderMod();
+  }, () => { mod.loaded = true; renderMod(); }));
+  modUnsubs.push(base.collection("replies").where("ts", ">", since).limit(2000).onSnapshot(s => {
+    mod.replies = {}; s.docs.forEach(d => { const r = d.data(); if (typeof r.t === "string") (mod.replies[r.p] ||= []).push({ id: d.id, t: r.t, ts: ms(r) }); }); renderMod();
+  }, () => {}));
+  modUnsubs.push(base.collection("reports").where("ts", ">", since).limit(5000).onSnapshot(s => {
+    mod.reports = {}; s.docs.forEach(d => { const p = d.data().p; mod.reports[p] = (mod.reports[p] || 0) + 1; }); renderMod();
+  }, () => {}));
+  // Familien-Beiträge (nur für die Familie) mit anzeigen, wenn der Familien-Planner eingeschaltet ist
+  mod.famPosts = []; mod.famReplies = {};
+  famKeyRef(id).get().then(d => {
+    if (!d.exists || openMod !== id) return;
+    const fb = base.collection("familie").doc(d.data().k); mod.famBase = fb;
+    modUnsubs.push(fb.collection("posts").where("ts", ">", since).orderBy("ts", "desc").limit(300).onSnapshot(s => {
+      mod.famPosts = s.docs.map(x => { const v = x.data(); return { id: x.id, t: typeof v.t === "string" ? v.t : "", img: isDrawing(v.img) ? v.img : null, ts: ms(v), fam: true }; }); renderMod();
+    }, () => {}));
+    modUnsubs.push(fb.collection("replies").where("ts", ">", since).limit(2000).onSnapshot(s => {
+      mod.famReplies = {}; s.docs.forEach(x => { const r = x.data(); if (typeof r.t === "string") (mod.famReplies[r.p] ||= []).push({ id: x.id, t: r.t, ts: ms(r) }); }); renderMod();
+    }, () => {}));
+  }).catch(() => {});
+}
+function renderMod() {
+  const el = $("modFeed"); if (!el || !mod) return;
+  if (!mod.loaded) return;
+  const all = mod.posts.concat(mod.famPosts || []);
+  if (!all.length) { el.innerHTML = `<p class="empty">${tr("Noch nichts an der Wand.", "Nothing on the wall yet.")}</p>`; return; }
+  const list = all.slice().sort((a, b) => (mod.reports[b.id] || 0) - (mod.reports[a.id] || 0) || b.ts - a.ts);
+  el.innerHTML = list.map(p => {
+    const rep = p.fam ? 0 : (mod.reports[p.id] || 0), k = (p.fam ? "fp/" : "p/") + p.id, rk = p.fam ? "fr/" : "r/";
+    const rs = ((p.fam ? (mod.famReplies || {}) : mod.replies)[p.id] || []).slice().sort((a, b) => a.ts - b.ts);
+    return `<div class="item${rep ? " flag" : ""}">
+      ${p.fam ? `<div class="hint" style="font-weight:700">🔒 ${tr("Nur Familie", "Family only")}</div>` : ""}
+      ${p.img ? `<img src="${p.img}" alt="Zeichnung">` : `<div class="t">${esc(p.t)}</div>`}
+      ${rs.map(r => `<div class="r"><span>↳ ${esc(r.t)}</span><button type="button" class="del${confirmKey === rk + r.id ? " confirm" : ""}" data-del="${rk}${r.id}">${confirmKey === rk + r.id ? tr("Wirklich?", "Sure?") : tr("Löschen", "Delete")}</button></div>`).join("")}
+      <div class="m"><span class="sp">${ago(p.ts)}${rep ? ` · <b style="color:#b3261e">${rep}× ${tr("gemeldet", "reported")}</b>` : ""}</span>
+        <button type="button" class="del${confirmKey === k ? " confirm" : ""}" data-del="${k}">${confirmKey === k ? tr("Wirklich löschen?", "Really delete?") : tr("Löschen", "Delete")}</button></div>
+    </div>`;
+  }).join("");
+}
+async function del(b) {
+  const key = b.dataset.del;
+  if (confirmKey !== key) { confirmKey = key; renderMod(); setTimeout(() => { if (confirmKey === key) { confirmKey = null; renderMod(); } }, 4000); return; }
+  confirmKey = null; b.disabled = true;
+  const [kind, id] = key.split("/"), base = fs.collection("walls").doc(openMod);
+  try {
+    if (kind === "p") {
+      await base.collection("posts").doc(id).delete();
+      (mod.replies[id] || []).forEach(r => base.collection("replies").doc(r.id).delete().catch(() => {}));
+    } else if (kind === "fp" && mod.famBase) {
+      await mod.famBase.collection("posts").doc(id).delete();
+      ((mod.famReplies || {})[id] || []).forEach(r => mod.famBase.collection("replies").doc(r.id).delete().catch(() => {}));
+    } else if (kind === "fr" && mod.famBase) await mod.famBase.collection("replies").doc(id).delete();
+    else await base.collection("replies").doc(id).delete();
+    notice("");
+  } catch (x) { notice(tr("Löschen hat nicht geklappt. Versuch es nochmal.", "Deleting didn't work. Please try again.")); renderMod(); }
+}
+
+/* ---------- Familien-Bereich: Stundenplan und Fotos mit geheimem Familien-QR-Code ---------- */
+let famKeys = {}, famOpen = null, famArm = false, famUnsub = null, famFotos = null, famConfirm = null;
+const famUrl = (id, k) => wallUrl(id) + "&k=" + encodeURIComponent(k || "");
+function famReset() { if (famUnsub) famUnsub(); famUnsub = null; famFotos = null; famKeys = {}; famOpen = null; famArm = false; famConfirm = null; }
+function newFamKey() {
+  const A = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789", r = new Uint32Array(28); crypto.getRandomValues(r);
+  return Array.from(r, x => A[x % A.length]).join("");
+}
+const famKeyRef = id => fs.collection("walls").doc(id).collection("private").doc("key");
+function loadFamKey(id) {
+  famKeyRef(id).get().then(d => { famKeys[id] = d.exists ? d.data().k : null; renderWalls(); })
+    .catch(() => { famKeys[id] = "err"; renderWalls(); });
+}
+function stopFamFotos() { if (famUnsub) famUnsub(); famUnsub = null; famFotos = null; famConfirm = null; }
+function famHtml(w) {
+  if (famOpen !== w.id) return `<div class="row"><button type="button" data-act="fam">👨‍👩‍👧 ${tr("Familien-Planner: Stundenplan, Fotos & Notfall", "Family Planner: timetable, photos & emergency", "ファミリープランナー")}</button></div>`;
+  const k = famKeys[w.id];
+  let inner;
+  if (k === undefined) inner = `<p class="hint">${tr("Lädt …", "Loading …")}</p>`;
+  else if (k === "err") inner = `<p class="msg err">${tr("Konnte nicht geladen werden. Lade die Seite neu und versuch es nochmal.", "Couldn't be loaded. Reload the page and try again.")}</p>`;
+  else if (!k) inner = `<p class="sub">${tr("Für jedes Kind ein Stundenplan und Familienfotos, die nur ihr seht. Dafür bekommt ihr einen eigenen, geheimen Familien-QR-Code. Gäste mit dem normalen QR-Code sehen davon nichts.", "A timetable for each child and family photos only you can see. You get your own secret family QR code. Guests using the normal QR code see none of it.")}</p>
+    <div class="row"><button type="button" class="primary" data-act="famOn">${tr("Familien-Planner einschalten", "Turn on Family Planner")}</button></div>`;
+  else {
+    const url = famUrl(w.id, k);
+    inner = `<div class="wallhead"><div class="info"><p class="sub">${tr("Diesen QR-Code scannt jedes Familienmitglied einmal mit dem Handy. Danach sind Stundenplan und Fotos auf diesem Handy immer an der Wand zu sehen.", "Each family member scans this QR code once. After that, the timetable and photos always show on the wall on that phone.")}</p></div>
+      <canvas class="qr" data-famqr="${esc(w.id)}" aria-label="${tr("Familien-QR-Code", "Family QR code")}"></canvas></div>
+      <p class="warn">🔒 <b>${tr("Nur an die Familie geben!", "Only share with family!")}</b> ${tr("Wer diesen Code hat, sieht eure Fotos. Häng ihn nicht für Gäste sichtbar auf, schick ihn lieber per WhatsApp an die Familie.", "Anyone with this code sees your photos. Don't hang it where guests can see it; send it to your family via WhatsApp instead.")}</p>
+      <div class="row">
+        <a class="btn primary" href="${esc(url)}" target="_blank" rel="noopener">📱 ${tr("Auf diesem Handy öffnen", "Open on this phone")}</a>
+        <button type="button" class="dark" data-act="famPoster">🖼️ ${tr("Familien-Poster speichern", "Save family poster")}</button>
+        <button type="button" class="dark" data-act="famFridge">🧲 ${tr("Kühlschrank-Karte (A4 drucken)", "Fridge card (print A4)")}</button>
+        <button type="button" data-act="famQr">${tr("Familien-QR speichern", "Save family QR")}</button>
+        <button type="button" data-act="famCopy">${tr("Familien-Link kopieren", "Copy family link")}</button>
+        <button type="button" data-act="famFotos">${famFotos ? tr("Fotos schließen", "Close photos") : tr("Fotos verwalten", "Manage photos")}</button>
+      </div>
+      ${famFotos ? (famFotos.length ? `<div class="famgrid">${famFotos.map(f => `<figure><img src="${f.img}" alt=""><figcaption>${esc(f.cap || "")} <span class="hint">${ago(f.ts)}</span>
+          <button type="button" class="del${famConfirm === f.id ? " confirm" : ""}" data-act="famDel" data-id="${esc(f.id)}">${famConfirm === f.id ? tr("Wirklich löschen?", "Really delete?") : tr("Löschen", "Delete")}</button></figcaption></figure>`).join("")}</div>`
+        : `<p class="empty">${tr("Noch keine Fotos.", "No photos yet.")}</p>`) : ""}
+      <div class="row"><button type="button" class="del${famArm ? " confirm" : ""}" data-act="famNew">${famArm ? tr("Sicher? Alte Fotos & Pläne verschwinden!", "Sure? Old photos & timetables disappear!") : tr("Neuen Familien-Code erstellen", "Create new family code")}</button></div>
+      <p class="hint">${tr("Nur nötig, wenn der Code in falsche Hände geraten ist. Danach muss jeder den neuen QR-Code scannen.", "Only needed if the code got into the wrong hands. Everyone must then scan the new QR code.")}</p>`;
+  }
+  return `<div class="fambox"><h3>👨‍👩‍👧 ${tr("Familien-Planner", "Family Planner")}</h3>${inner}
+    <div class="row"><button type="button" data-act="fam">${tr("Schließen", "Close")}</button></div></div>`;
+}
+async function famAction(act, w, b) {
+  const k = famKeys[w.id];
+  if (act === "fam") {
+    stopFamFotos(); famArm = false;
+    famOpen = famOpen === w.id ? null : w.id;
+    if (famOpen && famKeys[w.id] === undefined) loadFamKey(w.id);
+    renderWalls(); return;
+  }
+  if (act === "famOn" || (act === "famNew" && famArm)) {
+    b.disabled = true;
+    try { const nk = newFamKey(); await famKeyRef(w.id).set({ k: nk, ts: now() }); famKeys[w.id] = nk; famArm = false; stopFamFotos(); notice(""); }
+    catch (x) { notice(tr("Das hat nicht geklappt. Lade die Seite neu und versuch es nochmal.", "That didn't work. Reload the page and try again.")); }
+    renderWalls(); return;
+  }
+  if (act === "famNew") { famArm = true; renderWalls(); setTimeout(() => { if (famArm) { famArm = false; renderWalls(); } }, 5000); return; }
+  if (!k || k === "err") return;
+  if (act === "famPoster") famPoster(w, k);
+  if (act === "famFridge") famFridge(w, k);
+  if (act === "famQr") download(drawQr(document.createElement("canvas"), famUrl(w.id, k), 1000), "klowand-familien-qr-" + w.id + ".png");
+  if (act === "famCopy") { try { await navigator.clipboard.writeText(famUrl(w.id, k)); b.textContent = tr("Kopiert ✓", "Copied ✓"); } catch (err) { b.textContent = tr("Kopieren ging nicht", "Couldn't copy"); } setTimeout(() => renderWalls(), 2000); }
+  if (act === "famFotos") {
+    if (famFotos) { stopFamFotos(); renderWalls(); return; }
+    famFotos = [];
+    famUnsub = fs.collection("walls").doc(w.id).collection("familie").doc(k).collection("fotos").orderBy("ts", "desc").limit(60)
+      .onSnapshot(s => { famFotos = s.docs.map(d => ({ id: d.id, img: String(d.data().img || ""), cap: d.data().cap || "", ts: ms(d.data()) })).filter(f => f.img.startsWith("data:image/jpeg;base64,")); renderWalls(); },
+        () => { notice(tr("Fotos konnten nicht geladen werden.", "Photos couldn't be loaded.")); stopFamFotos(); renderWalls(); });
+    renderWalls();
+  }
+  if (act === "famDel") {
+    const id = b.dataset.id;
+    if (famConfirm !== id) { famConfirm = id; renderWalls(); setTimeout(() => { if (famConfirm === id) { famConfirm = null; renderWalls(); } }, 4000); return; }
+    famConfirm = null; b.disabled = true;
+    try { await fs.collection("walls").doc(w.id).collection("familie").doc(k).collection("fotos").doc(id).delete(); notice(""); }
+    catch (x) { notice(tr("Löschen hat nicht geklappt. Versuch es nochmal.", "Deleting didn't work. Please try again.")); renderWalls(); }
+  }
+}
+
+/* Familien-Poster zum Ausdrucken (A6 hoch, 300 dpi): bunt, großer QR-Code, was man damit machen kann */
+async function makePoster(w, k) {
+  try { await Promise.all(['400 80px "Permanent Marker"', '700 40px "Barlow Condensed"', '600 40px "Barlow Condensed"'].map(f => document.fonts.load(f))); } catch (e) {}
+  const W = 1240, H = 1748, cv = document.createElement("canvas"); cv.width = W; cv.height = H;
+  const c = cv.getContext("2d");
+  const g = c.createLinearGradient(0, 0, W * 0.6, H);
+  ["#ffd1dc", "#ffe9a8", "#c8f7c5", "#bde0fe", "#e3c8ff"].forEach((col, i) => g.addColorStop(i / 4, col));
+  c.fillStyle = g; c.fillRect(0, 0, W, H);
+  // Konfetti
+  const cols = ["#b3261e", "#f2c14e", "#1f4fa3", "#2f6b3a", "#e86fa0", "#8e5bd6"];
+  let seed = 7; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+  for (let i = 0; i < 90; i++) { c.save(); c.translate(rnd() * W, rnd() * H); c.rotate(rnd() * 6.3); c.fillStyle = cols[i % cols.length]; c.globalAlpha = .55;
+    if (i % 3) c.fillRect(-9, -4, 18, 8); else { c.beginPath(); c.arc(0, 0, 7, 0, 7); c.fill(); } c.restore(); }
+  c.globalAlpha = 1; c.textAlign = "center"; c.fillStyle = "#1d2321";
+  c.font = '110px "Noto Color Emoji","Apple Color Emoji","Segoe UI Emoji",sans-serif'; c.fillText("🦊 🐻 🐼 🐸", W / 2, 170);
+  c.font = '400 128px "Permanent Marker", cursive'; c.fillText(tr("Familien-", "Family"), W / 2, 330); c.fillText(tr("Planner", "Planner"), W / 2, 460);
+  c.font = '700 64px "Barlow Condensed", sans-serif'; c.fillText(fit(c, w.name.toUpperCase(), W - 200), W / 2, 550);
+  // QR-Code
+  const S = 700, x = (W - S) / 2, y = 600;
+  c.fillStyle = "rgba(0,0,0,.18)"; roundRect(c, x - 30, y - 22, S + 60, S + 60, 44); c.fill();
+  c.fillStyle = "#fff"; roundRect(c, x - 36, y - 36, S + 72, S + 72, 44); c.fill();
+  c.lineWidth = 10; c.strokeStyle = "#1d2321"; c.stroke();
+  const q = drawQr(document.createElement("canvas"), famUrl(w.id, k), S);
+  c.imageSmoothingEnabled = false; c.drawImage(q, x, y, S, S);
+  c.fillStyle = "#b3261e"; c.font = '400 84px "Permanent Marker", cursive'; c.fillText(tr("Scannen & loslegen!", "Scan & go!"), W / 2, 1470);
+  c.fillStyle = "#1d2321"; c.font = '600 50px "Barlow Condensed", "Noto Color Emoji", sans-serif';
+  c.fillText(tr("📅 Stundenplan  ·  📷 Fotos  ·  🚑 Notfall", "📅 Timetable  ·  📷 Photos  ·  🚑 Emergency"), W / 2, 1556);
+  c.fillStyle = "#1d2321"; roundRect(c, 170, 1600, W - 340, 84, 42); c.fill();
+  c.fillStyle = "#fff"; c.font = '700 42px "Barlow Condensed", "Noto Color Emoji", sans-serif';
+  c.fillText(tr("🔒 Nur für unsere Familie – nicht für Gäste", "🔒 Family only – not for guests"), W / 2, 1656);
+  return cv;
+}
+async function famPoster(w, k) { download(await makePoster(w, k), "familien-planner-poster-" + w.id + ".png"); }
+/* Kühlschrank-Karte: zwei kleine Karten (ca. 9 × 12,7 cm) auf einem A4-Blatt mit Schnittlinien, 300 dpi */
+async function famFridge(w, k) {
+  const card = await makePoster(w, k);
+  const W = 2480, H = 3508, cw = 1063, ch = Math.round(cw * card.height / card.width), gap = Math.round((W - 2 * cw) / 3), top = 420;
+  const cv = document.createElement("canvas"); cv.width = W; cv.height = H;
+  const c = cv.getContext("2d"); c.fillStyle = "#fff"; c.fillRect(0, 0, W, H);
+  c.fillStyle = "#1d2321"; c.textAlign = "center";
+  c.font = '400 92px "Permanent Marker", cursive'; c.fillText(tr("Ausschneiden & an den Kühlschrank!", "Cut out & stick on the fridge!"), W / 2, 200);
+  c.font = '600 54px "Barlow Condensed", "Noto Color Emoji", sans-serif';
+  c.fillText(tr("✂️ An der gestrichelten Linie ausschneiden · 🧲 Mit Magnet oder Klebeband aufhängen", "✂️ Cut along the dashed line · 🧲 Hang up with a magnet or tape"), W / 2, 300);
+  for (let i = 0; i < 2; i++) {
+    const x = gap + i * (cw + gap);
+    c.drawImage(card, x, top, cw, ch);
+    c.setLineDash([24, 18]); c.lineWidth = 4; c.strokeStyle = "#8b958f"; c.strokeRect(x - 2, top - 2, cw + 4, ch + 4); c.setLineDash([]);
+  }
+  c.fillStyle = "#56635c"; c.font = '600 46px "Barlow Condensed", sans-serif';
+  c.fillText(tr("Beim Drucken: Papier A4 und „Tatsächliche Größe“ bzw. 100 % wählen.", "When printing: A4 paper and “Actual size” / 100 %."), W / 2, top + ch + 140);
+  c.fillText(tr("Zweite Karte z. B. für Oma & Opa oder als Ersatz.", "Second card e.g. for grandparents or as a spare."), W / 2, top + ch + 210);
+  download(cv, "familien-planner-kuehlschrank-A4-" + w.id + ".png");
+}
+</script>
+</body>
+</html>

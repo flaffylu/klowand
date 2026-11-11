@@ -1,0 +1,354 @@
+<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex">
+<title>Firebase-Regeln kopieren</title>
+<style>body{margin:0;font:16px/1.4 system-ui,sans-serif;background:#f4f7f5;color:#1d2321}
+.top{background:#1d2321;color:#fff;padding:14px 16px}.top p{margin:6px 0 0;font-size:15px;color:#cfd8d4}
+button{font:700 18px system-ui;background:#b3261e;color:#fff;border:none;border-radius:10px;padding:14px 22px;min-height:52px}
+.ph{position:sticky;top:0;background:#e3ebe7;padding:10px 16px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;border-top:3px solid #1d2321}.st{font-weight:700}
+.ok{background:#1f7a4d}pre{margin:0;padding:16px;font:12px/1.4 ui-monospace,monospace;white-space:pre-wrap;overflow-wrap:anywhere}
+ol{margin:8px 0 0;padding-left:20px;font-size:15px;color:#e8efec}</style></head><body>
+<div class="top"><b>Firebase-Regeln · 336 Zeilen in 4 Teilen</b>
+<ol><li>In Firebase: lange drücken → <b>Alles auswählen</b> → <b>Ausschneiden</b>. Das Feld muss <b>leer</b> sein.</li>
+<li>Hier <b>Teil 1</b> kopieren → in Firebase lange drücken → <b>Einfügen</b>.</li>
+<li>Ganz nach unten ins Feld tippen (hinter die letzte Zeile) → <b>Teil 2</b> einfügen. Dann Teil 3 und Teil 4 genauso.</li>
+<li>Prüfen: Zeile 1 = <code>rules_version = '2';</code>, letzte Zeile = <code>}</code>, insgesamt 336 Zeilen. Dann <b>Veröffentlichen</b>.</li></ol>
+<p>Tipp: Nicht über die Zwischenablage der Tastatur einfügen, sondern über „Einfügen“ beim langen Drücken.</p></div>
+<section><div class="ph"><button data-i="0">📋 Teil 1 von 4 kopieren</button><span class="st" id="st0">Zeile 1–81</span></div><pre id="p0">rules_version = &#x27;2&#x27;;
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isAdmin() {
+      return request.auth != null
+        &amp;&amp; request.auth.token.email == &#x27;kaytrut426@gmail.com&#x27;
+        &amp;&amp; request.auth.token.email_verified == true;
+    }
+
+    // Deine festen Wände aus config.js. Alle anderen Wände entstehen über einen gekauften Code.
+    function fixedWall(wall) {
+      return wall in [&#x27;prestigio&#x27;, &#x27;goldener-hahn&#x27;, &#x27;zuhause&#x27;, &#x27;demo&#x27;, &#x27;familie-demo&#x27;];
+    }
+    function wallDoc(wall) {
+      return /databases/$(database)/documents/walls/$(wall);
+    }
+    // Auf diese Wand darf geschrieben werden: feste Wand oder gekaufte Wand
+    function openWall(wall) {
+      return fixedWall(wall) || exists(wallDoc(wall));
+    }
+    // Der Käufer einer Wand darf dort löschen
+    function isOwner(wall) {
+      return request.auth != null &amp;&amp; !fixedWall(wall) &amp;&amp; exists(wallDoc(wall))
+        &amp;&amp; get(wallDoc(wall)).data.owner == request.auth.uid;
+    }
+    function canModerate(wall) {
+      return isAdmin() || isOwner(wall);
+    }
+
+    // Grobe Wortsperre auf dem Server. Die Wand selbst prüft vorher eine viel längere Liste.
+    function dirty(t) {
+      return t.lower().matches(&#x27;(?s).*(fick|fuck|fotze|wichs|titten|pimmel|muschi|sperma|porn|penis|vagina|hure|nutte|schlampe|bums|vögeln|orgasm|dildo|blowjob|pussy|nackt|arschloch|arschfick|missgeburt|spast|schwuchtel|kanake|neger|nigger|nazi|hitler|bitch|umbringen|vergewaltig|sexy).*&#x27;)
+        || t.lower().matches(&#x27;(?s)(.*[^a-zäöüß])?(sex|anal|geil|arsch|schwanz|titte)([^a-zäöüß].*)?&#x27;);
+    }
+
+    // Kindersicher: auf öffentlichen Wänden keine Kontaktdaten, Politik, Drogen oder Gewalt
+    function unsafe(t) {
+      return t.lower().matches(&#x27;(?s).*(snapchat|instagram|whatsapp|telegram|discord|handynummer|telefonnummer|meine nummer|deine nummer|wie alt bist|wo wohnst|wohnst du|bist du allein|allein zuhause|alleine zuhause|foto von dir|bild von dir|fotos von dir|zeig dich|webcam|lass uns treffen|treffen wir uns|unser geheimnis|sag es niemandem|nicht deinen eltern|how old are you|where do you live|send pic|our secret|politik|bundestag|bundesregierung|wahlkampf|kanzler|partei|flüchtling|migrant|remigration|volksverräter|lügenpresse|reichsbürger|sieg heil|weltkrieg|kokain|heroin|crystal meth|amoklauf|erschieß|abknallen|selbstmord|suizid).*&#x27;)
+        || t.lower().matches(&#x27;(?s)(.*[^a-zäöüß0-9])?(afd|cdu|csu|spd|fdp|bsw|npd|nsdap|merz|scholz|habeck|weidel|höcke|söder|putin|trump|biden|hamas|antifa|snap|insta|kik|adde mich|add mich|koks|meth|weed|kiffen)([^a-zäöüß0-9].*)?&#x27;);
+    }
+
+    function okText(t, max) {
+      return t is string &amp;&amp; t.size() &gt;= 3 &amp;&amp; t.size() &lt;= max
+        &amp;&amp; !t.matches(&#x27;(?s).*[0-9][0-9 /-]{6,}[0-9].*&#x27;)
+        &amp;&amp; !t.lower().matches(&#x27;(?s).*(https?://|www[.]|@).*&#x27;)
+        &amp;&amp; !dirty(t);
+    }
+
+    // Name und Unterzeile einer gekauften Wand
+    function okLabel(t, min, max) {
+      return t is string &amp;&amp; t.size() &gt;= min &amp;&amp; t.size() &lt;= max
+        &amp;&amp; !t.lower().matches(&#x27;(?s).*(https?://|www[.]|@|&lt;|&gt;).*&#x27;)
+        &amp;&amp; !dirty(t);
+    }
+
+    function okWeek(d) {
+      return !(&#x27;ch&#x27; in d) || (d.ch is string &amp;&amp; d.ch.matches(&#x27;[0-9]{4}-W[0-9]{2}&#x27;));
+    }
+
+    // Striche und Meldungen: Zeitstempel ist neu, ältere Versionen schicken ihn noch nicht mit
+    function okMark(d, id) {
+      return d.keys().hasOnly([&#x27;p&#x27;, &#x27;ts&#x27;])
+        &amp;&amp; d.p is string
+        &amp;&amp; id.matches(d.p + &#x27;_[a-zA-Z0-9]{8,40}&#x27;)
+        &amp;&amp; (!(&#x27;ts&#x27; in d) || d.ts == request.time);
+    }
+
+    function textPost(d) {
+      return d.keys().hasOnly([&#x27;t&#x27;, &#x27;color&#x27;, &#x27;font&#x27;, &#x27;rot&#x27;, &#x27;ts&#x27;, &#x27;ch&#x27;])
+        &amp;&amp; okText(d.t, 120)
+        &amp;&amp; d.color in [&#x27;ink&#x27;, &#x27;red&#x27;, &#x27;blue&#x27;, &#x27;green&#x27;, &#x27;silver&#x27;]
+        &amp;&amp; d.font in [&#x27;hand&#x27;, &#x27;marker&#x27;, &#x27;scrawl&#x27;];
+    }
+
+    function drawPost(d) {
+      return d.keys().hasOnly([&#x27;img&#x27;, &#x27;rot&#x27;, &#x27;ts&#x27;, &#x27;ch&#x27;])
+        &amp;&amp; d.img is string &amp;&amp; d.img.size() &lt;= 150000
+        &amp;&amp; d.img.matches(&#x27;data:image/png;base64,[A-Za-z0-9+/=]+&#x27;);
+    }
+
+</pre></section><section><div class="ph"><button data-i="1">📋 Teil 2 von 4 kopieren</button><span class="st" id="st1">Zeile 82–155</span></div><pre id="p1">    /* ---------- Gekaufte Wände ---------- */
+    match /walls/{wall} {
+      // Einzelne Wand lesen darf jeder (Name fürs Türschild). Auflisten nur der Besitzer seine eigenen.
+      allow get: if true;
+      allow list: if isAdmin() || (request.auth != null &amp;&amp; resource.data.owner == request.auth.uid);
+      // Einlösen eines Codes: Wand anlegen und Code im selben Schritt als benutzt markieren
+      allow create: if isAdmin() || (
+        request.auth != null
+        &amp;&amp; wall.matches(&#x27;[a-z0-9-]{2,40}-[0-9]{4}&#x27;)
+        &amp;&amp; request.resource.data.keys().hasOnly([&#x27;name&#x27;, &#x27;sub&#x27;, &#x27;owner&#x27;, &#x27;code&#x27;, &#x27;ts&#x27;])
+        &amp;&amp; okLabel(request.resource.data.name, 2, 30)
+        &amp;&amp; okLabel(request.resource.data.sub, 0, 40)
+        &amp;&amp; request.resource.data.owner == request.auth.uid
+        &amp;&amp; request.resource.data.ts == request.time
+        &amp;&amp; request.resource.data.code is string
+        &amp;&amp; exists(/databases/$(database)/documents/codes/$(request.resource.data.code))
+        &amp;&amp; codeUses(get(/databases/$(database)/documents/codes/$(request.resource.data.code)).data) &lt; 2
+        &amp;&amp; getAfter(/databases/$(database)/documents/codes/$(request.resource.data.code)).data.wall == wall
+      );
+      // Besitzer darf Name und Unterzeile ändern
+      allow update: if isAdmin() || (
+        request.auth != null &amp;&amp; resource.data.owner == request.auth.uid
+        &amp;&amp; request.resource.data.diff(resource.data).affectedKeys().hasOnly([&#x27;name&#x27;, &#x27;sub&#x27;])
+        &amp;&amp; okLabel(request.resource.data.name, 2, 30)
+        &amp;&amp; okLabel(request.resource.data.sub, 0, 40)
+      );
+      allow delete: if isAdmin();
+    }
+
+    /* ---------- Codes aus Payhip: jeder Code reicht für 2 Wände desselben Kontos ---------- */
+    // Wie oft wurde der Code schon benutzt? Alte Codes ohne Zähler: einmal, wenn &quot;used&quot; gesetzt ist.
+    function codeUses(c) {
+      return c.get(&#x27;n&#x27;, c.get(&#x27;used&#x27;, false) == true ? 1 : 0);
+    }
+    function codeWalls(c) {
+      return c.get(&#x27;walls&#x27;, (&#x27;wall&#x27; in c) ? [c.wall] : []);
+    }
+    match /codes/{code} {
+      allow get: if request.auth != null;
+      allow list, create, delete: if isAdmin();
+      allow update: if isAdmin() || (
+        request.auth != null
+        &amp;&amp; codeUses(resource.data) &lt; 2
+        &amp;&amp; (!(&#x27;by&#x27; in resource.data) || resource.data.by == request.auth.uid)
+        &amp;&amp; request.resource.data.diff(resource.data).affectedKeys().hasOnly([&#x27;used&#x27;, &#x27;wall&#x27;, &#x27;walls&#x27;, &#x27;n&#x27;, &#x27;by&#x27;, &#x27;at&#x27;])
+        &amp;&amp; request.resource.data.n == codeUses(resource.data) + 1
+        &amp;&amp; request.resource.data.used == (request.resource.data.n &gt;= 2)
+        &amp;&amp; request.resource.data.walls == codeWalls(resource.data).concat([request.resource.data.wall])
+        &amp;&amp; request.resource.data.by == request.auth.uid
+        &amp;&amp; request.resource.data.at == request.time
+        &amp;&amp; request.resource.data.wall is string
+        &amp;&amp; getAfter(/databases/$(database)/documents/walls/$(request.resource.data.wall)).data.code == code
+        &amp;&amp; getAfter(/databases/$(database)/documents/walls/$(request.resource.data.wall)).data.owner == request.auth.uid
+      );
+    }
+
+    /* ---------- Besucherzähler der Infoseiten: nur eine Zahl pro Seite und Tag ---------- */
+    match /stats/{id} {
+      allow read: if isAdmin();
+      allow create: if id.matches(&#x27;(familie|wirte|scanbar|scanfam)_[0-9]{4}-[0-9]{2}-[0-9]{2}&#x27;)
+        &amp;&amp; request.resource.data.keys().hasOnly([&#x27;n&#x27;])
+        &amp;&amp; request.resource.data.n == 1;
+      allow update: if request.resource.data.keys().hasOnly([&#x27;n&#x27;])
+        &amp;&amp; request.resource.data.n == resource.data.n + 1;
+    }
+
+    /* ---------- Familien-Bereich: Stundenplan und Fotos, nur mit dem geheimen Familien-Code ---------- */
+    function famKeyDoc(wall) {
+      return /databases/$(database)/documents/walls/$(wall)/private/key;
+    }
+    // Familien-Planner eingeschaltet: Die Wand ist privat, öffentlich kann dort niemand mehr lesen oder schreiben
+    function famOn(wall) {
+      return exists(famKeyDoc(wall));
+    }
+</pre></section><section><div class="ph"><button data-i="2">📋 Teil 3 von 4 kopieren</button><span class="st" id="st2">Zeile 156–245</span></div><pre id="p2">    function famOk(wall, key) {
+      return exists(famKeyDoc(wall)) &amp;&amp; get(famKeyDoc(wall)).data.k == key;
+    }
+    // Den Familien-Code sieht und ändert nur der Besitzer der Wand
+    match /walls/{wall}/private/{doc} {
+      allow read, delete: if doc == &#x27;key&#x27; &amp;&amp; isOwner(wall);
+      allow create, update: if doc == &#x27;key&#x27; &amp;&amp; isOwner(wall)
+        &amp;&amp; request.resource.data.keys().hasOnly([&#x27;k&#x27;, &#x27;ts&#x27;])
+        &amp;&amp; request.resource.data.k is string
+        &amp;&amp; request.resource.data.k.matches(&#x27;[A-Za-z0-9]{24,40}&#x27;)
+        &amp;&amp; request.resource.data.ts == request.time;
+    }
+    match /walls/{wall}/familie/{key}/plaene/{id} {
+      allow read, delete: if famOk(wall, key);
+      allow create, update: if famOk(wall, key)
+        &amp;&amp; id.matches(&#x27;[a-z0-9]{6,30}&#x27;)
+        &amp;&amp; request.resource.data.keys().hasOnly([&#x27;name&#x27;, &#x27;z&#x27;, &#x27;ts&#x27;])
+        &amp;&amp; request.resource.data.name is string
+        &amp;&amp; request.resource.data.name.size() &gt;= 1 &amp;&amp; request.resource.data.name.size() &lt;= 20
+        &amp;&amp; request.resource.data.z is string &amp;&amp; request.resource.data.z.size() &lt;= 4000
+        &amp;&amp; request.resource.data.ts == request.time;
+    }
+    // Sprüche und Kritzeleien, die jemand nur für die Familie an die Wand hängt
+    match /walls/{wall}/familie/{key}/posts/{id} {
+      allow read: if famOk(wall, key);
+      allow create: if famOk(wall, key)
+        &amp;&amp; (textPost(request.resource.data) || drawPost(request.resource.data))
+        &amp;&amp; okWeek(request.resource.data)
+        &amp;&amp; request.resource.data.rot is number
+        &amp;&amp; request.resource.data.ts == request.time;
+      allow delete: if isOwner(wall) &amp;&amp; famOk(wall, key);
+    }
+    match /walls/{wall}/familie/{key}/replies/{id} {
+      allow read: if famOk(wall, key);
+      allow create: if famOk(wall, key)
+        &amp;&amp; request.resource.data.keys().hasOnly([&#x27;p&#x27;, &#x27;t&#x27;, &#x27;ts&#x27;])
+        &amp;&amp; request.resource.data.p is string
+        &amp;&amp; okText(request.resource.data.t, 60)
+        &amp;&amp; request.resource.data.ts == request.time;
+      allow delete: if isOwner(wall) &amp;&amp; famOk(wall, key);
+    }
+    match /walls/{wall}/familie/{key}/likes/{id} {
+      allow read: if famOk(wall, key);
+      allow create: if famOk(wall, key) &amp;&amp; okMark(request.resource.data, id);
+    }
+    // Chill-Raum: alle aus der privaten Gruppe schreiben zusammen, die Eltern können löschen
+    match /walls/{wall}/familie/{key}/chill/{id} {
+      allow read: if famOk(wall, key);
+      allow create: if famOk(wall, key)
+        &amp;&amp; request.resource.data.keys().hasOnly([&#x27;n&#x27;, &#x27;t&#x27;, &#x27;ts&#x27;])
+        &amp;&amp; okName(request.resource.data.n)
+        &amp;&amp; okText(request.resource.data.t, 200)
+        &amp;&amp; request.resource.data.ts == request.time;
+      allow delete: if isOwner(wall) &amp;&amp; famOk(wall, key);
+    }
+    match /walls/{wall}/familie/{key}/da/{dev} {
+      allow read: if famOk(wall, key);
+      allow create, update: if famOk(wall, key) &amp;&amp; dev.matches(&#x27;[a-zA-Z0-9]{8,40}&#x27;)
+        &amp;&amp; request.resource.data.keys().hasOnly([&#x27;n&#x27;, &#x27;ts&#x27;])
+        &amp;&amp; okName(request.resource.data.n)
+        &amp;&amp; request.resource.data.ts == request.time;
+    }
+    // Chill-Raum-Spiel (Mensch ärgere dich nicht): ein gemeinsamer Spielstand für die Gruppe
+    match /walls/{wall}/familie/{key}/chillspiel/{id} {
+      allow read: if famOk(wall, key);
+      allow create, update: if famOk(wall, key) &amp;&amp; okSpiel(id, request.resource.data);
+    }
+    match /walls/{wall}/familie/{key}/games/{game}/scores/{id} {
+      allow read: if famOk(wall, key);
+      allow create: if famOk(wall, key) &amp;&amp; okScore(game, request.resource.data);
+      allow delete: if isOwner(wall) &amp;&amp; famOk(wall, key);
+    }
+    match /walls/{wall}/familie/{key}/fotos/{id} {
+      allow read: if famOk(wall, key);
+      allow create: if famOk(wall, key)
+        &amp;&amp; request.resource.data.keys().hasOnly([&#x27;img&#x27;, &#x27;cap&#x27;, &#x27;ts&#x27;])
+        &amp;&amp; request.resource.data.img is string &amp;&amp; request.resource.data.img.size() &lt;= 300000
+        &amp;&amp; request.resource.data.img.matches(&#x27;data:image/jpeg;base64,[A-Za-z0-9+/=]+&#x27;)
+        &amp;&amp; (!(&#x27;cap&#x27; in request.resource.data) || (request.resource.data.cap is string &amp;&amp; request.resource.data.cap.size() &lt;= 80))
+        &amp;&amp; request.resource.data.ts == request.time;
+      // Löschen: nur die Eltern (Besitzer der Wand)
+      allow delete: if isOwner(wall) &amp;&amp; famOk(wall, key);
+    }
+
+    /* ---------- Inhalte einer Wand ---------- */
+    match /walls/{wall}/posts/{id} {
+      allow read: if !famOn(wall) || canModerate(wall);
+      allow create: if openWall(wall) &amp;&amp; !famOn(wall)
+        &amp;&amp; (textPost(request.resource.data) || drawPost(request.resource.data))
+        &amp;&amp; (!(&#x27;t&#x27; in request.resource.data) || !unsafe(request.resource.data.t))
+</pre></section><section><div class="ph"><button data-i="3">📋 Teil 4 von 4 kopieren</button><span class="st" id="st3">Zeile 246–336</span></div><pre id="p3">        &amp;&amp; okWeek(request.resource.data)
+        &amp;&amp; request.resource.data.rot is number
+        &amp;&amp; request.resource.data.ts == request.time;
+      allow delete: if canModerate(wall);
+    }
+
+    match /walls/{wall}/replies/{id} {
+      allow read: if !famOn(wall) || canModerate(wall);
+      allow create: if openWall(wall) &amp;&amp; !famOn(wall)
+        &amp;&amp; request.resource.data.keys().hasOnly([&#x27;p&#x27;, &#x27;t&#x27;, &#x27;ts&#x27;])
+        &amp;&amp; request.resource.data.p is string
+        &amp;&amp; okText(request.resource.data.t, 60)
+        &amp;&amp; !unsafe(request.resource.data.t)
+        &amp;&amp; request.resource.data.ts == request.time;
+      allow delete: if canModerate(wall);
+    }
+
+    match /walls/{wall}/likes/{id} {
+      allow read: if !famOn(wall) || canModerate(wall);
+      allow create: if openWall(wall) &amp;&amp; !famOn(wall) &amp;&amp; okMark(request.resource.data, id);
+      allow delete: if canModerate(wall);
+    }
+
+    match /walls/{wall}/reports/{id} {
+      allow read: if !famOn(wall) || canModerate(wall);
+      allow create: if openWall(wall) &amp;&amp; !famOn(wall) &amp;&amp; okMark(request.resource.data, id);
+      allow delete: if canModerate(wall);
+    }
+
+    // Öffentlicher Chill-Raum nur auf den Demo-Wänden: strenger Filter wie auf der Wand, Admin kann löschen
+    match /walls/{wall}/chill/{id} {
+      allow read: if wall in [&#x27;demo&#x27;, &#x27;familie-demo&#x27;];
+      allow create: if wall in [&#x27;demo&#x27;, &#x27;familie-demo&#x27;]
+        &amp;&amp; request.resource.data.keys().hasOnly([&#x27;n&#x27;, &#x27;t&#x27;, &#x27;ts&#x27;])
+        &amp;&amp; okName(request.resource.data.n) &amp;&amp; !unsafe(request.resource.data.n)
+        &amp;&amp; okText(request.resource.data.t, 120) &amp;&amp; !unsafe(request.resource.data.t)
+        &amp;&amp; request.resource.data.ts == request.time;
+      allow delete: if isAdmin();
+    }
+    match /walls/{wall}/da/{dev} {
+      allow read: if wall in [&#x27;demo&#x27;, &#x27;familie-demo&#x27;];
+      allow create, update: if wall in [&#x27;demo&#x27;, &#x27;familie-demo&#x27;] &amp;&amp; dev.matches(&#x27;[a-zA-Z0-9]{8,40}&#x27;)
+        &amp;&amp; request.resource.data.keys().hasOnly([&#x27;n&#x27;, &#x27;ts&#x27;])
+        &amp;&amp; okName(request.resource.data.n) &amp;&amp; !unsafe(request.resource.data.n)
+        &amp;&amp; request.resource.data.ts == request.time;
+    }
+
+    match /walls/{wall}/chillspiel/{id} {
+      allow read: if wall in [&#x27;demo&#x27;, &#x27;familie-demo&#x27;];
+      allow create, update: if wall in [&#x27;demo&#x27;, &#x27;familie-demo&#x27;] &amp;&amp; okSpiel(id, request.resource.data)
+        &amp;&amp; !unsafe(request.resource.data.s);
+    }
+    function okSpiel(id, d) {
+      return id in [&#x27;madn&#x27;, &#x27;macke&#x27;, &#x27;vier&#x27;, &#x27;poker&#x27;, &#x27;roulette&#x27;, &#x27;snooker&#x27;]
+        &amp;&amp; d.keys().hasOnly([&#x27;s&#x27;, &#x27;ts&#x27;])
+        &amp;&amp; d.s is string &amp;&amp; d.s.size() &lt;= 4000
+        &amp;&amp; !dirty(d.s)
+        &amp;&amp; d.ts == request.time;
+    }
+
+    function okName(n) {
+      return n is string &amp;&amp; n.size() &gt;= 2 &amp;&amp; n.size() &lt;= 12
+        &amp;&amp; n.matches(&#x27;[A-Za-zÄÖÜäöüß0-9 ._-]+&#x27;)
+        &amp;&amp; !dirty(n);
+    }
+
+    function okScore(game, d) {
+      return d.keys().hasOnly([&#x27;name&#x27;, &#x27;score&#x27;, &#x27;day&#x27;, &#x27;ts&#x27;])
+        &amp;&amp; okName(d.name)
+        &amp;&amp; d.score is int
+        &amp;&amp; d.day is string
+        &amp;&amp; d.day.matches(&#x27;[0-9]{4}-[0-9]{2}-[0-9]{2}&#x27;)
+        &amp;&amp; d.ts == request.time
+        &amp;&amp; ((game == &#x27;fang&#x27; &amp;&amp; d.score &gt;= 0 &amp;&amp; d.score &lt;= 300)
+          || (game == &#x27;reflex&#x27; &amp;&amp; d.score &gt;= 100 &amp;&amp; d.score &lt;= 3000)
+          || (game == &#x27;stapel&#x27; &amp;&amp; d.score &gt;= 0 &amp;&amp; d.score &lt;= 500)
+          || (game == &#x27;fliege&#x27; &amp;&amp; d.score &gt;= 0 &amp;&amp; d.score &lt;= 300)
+          || (game == &#x27;memory&#x27; &amp;&amp; d.score &gt;= 8 &amp;&amp; d.score &lt;= 300)
+          || (game == &#x27;ente&#x27; &amp;&amp; d.score &gt;= 0 &amp;&amp; d.score &lt;= 500)
+          || (game == &#x27;simon&#x27; &amp;&amp; d.score &gt;= 0 &amp;&amp; d.score &lt;= 100)
+          || (game == &#x27;zahlen&#x27; &amp;&amp; d.score &gt;= 2000 &amp;&amp; d.score &lt;= 600000));
+    }
+
+    match /walls/{wall}/games/{game}/scores/{id} {
+      allow read: if !famOn(wall) || canModerate(wall);
+      allow create: if openWall(wall) &amp;&amp; !famOn(wall) &amp;&amp; okScore(game, request.resource.data)
+        &amp;&amp; !unsafe(request.resource.data.name);
+      allow delete: if canModerate(wall);
+    }
+  }
+}
+</pre></section>
+<script>document.querySelectorAll("button[data-i]").forEach(b=>b.onclick=async()=>{const i=b.dataset.i,t=document.getElementById("p"+i).textContent,o=document.getElementById("st"+i);
+try{await navigator.clipboard.writeText(t);}catch(e){const s=getSelection(),g=document.createRange();g.selectNodeContents(document.getElementById("p"+i));s.removeAllRanges();s.addRange(g);document.execCommand("copy");}
+o.textContent="✓ Teil "+(+i+1)+" kopiert – jetzt einfügen";b.classList.add("ok");});</script></body></html>

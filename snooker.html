@@ -1,0 +1,386 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Snooker · Klo-Wand</title>
+<meta name="theme-color" content="#06030d">
+<meta name="color-scheme" content="only dark">
+<link rel="icon" href="icon-192.png">
+<link rel="stylesheet" href="fonts.css">
+<style>
+:root{--night:#06030d;--ink:#f6f0ff;--muted:#b3a8d6;--lime:#c6ff6a;--gold:#ffc867;--line:rgba(255,255,255,.16);
+  --f-sign:"Permanent Marker",cursive;--f-ui:"Barlow Condensed",system-ui,sans-serif}
+[hidden]{display:none!important}
+html,body{height:100%;margin:0;background:var(--night);color:var(--ink);font-family:var(--f-ui);overflow:hidden;-webkit-tap-highlight-color:transparent;user-select:none}
+#stage{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none}
+.top{position:fixed;left:0;right:0;top:0;z-index:3;padding:calc(10px + env(safe-area-inset-top,0px)) 12px 10px;display:flex;align-items:center;gap:8px;background:linear-gradient(180deg,rgba(6,3,13,.92),rgba(6,3,13,0))}
+.top h1{margin:0;flex:1;font:400 1.6rem/1 var(--f-sign);color:#7dffa1;text-shadow:0 0 14px rgba(125,255,161,.5)}
+.top a,.top button{min-height:42px;padding:0 14px;border-radius:999px;border:1.5px solid var(--line);background:rgba(255,255,255,.07);color:var(--ink);font:700 .95rem var(--f-ui);text-decoration:none;display:inline-flex;align-items:center;cursor:pointer}
+.score{position:fixed;left:12px;right:12px;top:calc(62px + env(safe-area-inset-top,0px));z-index:3;display:flex;gap:8px}
+.score div{flex:1;padding:6px 10px;border-radius:12px;background:rgba(10,6,18,.82);border:1.5px solid var(--line);font:700 1.05rem/1.15 var(--f-ui)}
+.score div.on{border-color:var(--lime);box-shadow:0 0 14px rgba(198,255,106,.35)}
+.score b{display:block;font-size:1.6rem;color:var(--gold)}
+.msg{position:fixed;left:12px;right:12px;top:calc(132px + env(safe-area-inset-top,0px));z-index:3;text-align:center;font:700 1.05rem var(--f-ui);color:var(--lime);text-shadow:0 1px 3px #000}
+.panel{position:fixed;left:0;right:0;bottom:0;z-index:4;padding:8px 12px calc(12px + env(safe-area-inset-bottom,0px));background:linear-gradient(0deg,rgba(6,3,13,.96) 75%,rgba(6,3,13,0));display:flex;flex-direction:column;gap:8px}
+.row{display:flex;gap:8px;align-items:center}
+.btn{min-height:48px;padding:0 14px;border-radius:12px;border:1.5px solid var(--line);background:rgba(255,255,255,.07);color:var(--ink);font:700 1.05rem var(--f-ui);cursor:pointer}
+.btn.go{flex:1;background:var(--lime);border-color:var(--lime);color:#0b0716;font-size:1.25rem}
+.btn:disabled{opacity:.4}
+.pow{flex:1;display:flex;flex-direction:column;gap:2px;font:700 .9rem var(--f-ui);color:var(--muted)}
+.pow input{width:100%;height:34px;accent-color:#ff6a3d}
+.hint{font:600 .9rem var(--f-ui);color:var(--muted);text-align:center}
+.start{position:fixed;inset:0;z-index:6;background:rgba(6,3,13,.88);display:flex;align-items:center;justify-content:center;padding:20px}
+.start .box{width:min(420px,100%);background:#1d1230;border:1.5px solid var(--line);border-radius:20px;padding:20px;text-align:center}
+.start h2{margin:0 0 6px;font:400 2rem var(--f-sign);color:#7dffa1}
+.start p{margin:0 0 14px;color:var(--muted);font:600 1rem/1.35 var(--f-ui)}
+.start .btn{width:100%;margin-bottom:8px}
+.start .lvl{display:flex;gap:6px;margin-bottom:12px}
+.start .lvl button{flex:1;min-height:42px;border-radius:999px;border:1.5px solid var(--line);background:transparent;color:var(--ink);font:700 1rem var(--f-ui);cursor:pointer}
+.start .lvl button[aria-pressed=true]{background:var(--lime);color:#0b0716;border-color:var(--lime)}
+</style>
+</head>
+<body>
+<canvas id="stage" aria-label="3D-Snooker-Tisch"></canvas>
+<div class="top"><h1>Snooker</h1><button type="button" id="bView">🎥 Ansicht</button><button type="button" id="bNew">Neu</button><a href="chill.html" id="back">Zurück</a></div>
+<div class="score"><div id="s0">Du<b>0</b></div><div id="s1">Bot<b>0</b></div></div>
+<div class="msg" id="msg" aria-live="polite"></div>
+<div class="panel">
+  <p class="hint" id="hint">Tipp auf den Tisch, wohin du zielen willst. Mit ◀ ▶ fein einstellen.</p>
+  <div class="row">
+    <button type="button" class="btn" id="aL" aria-label="Ziel nach links">◀</button>
+    <label class="pow" for="power">Stoßkraft <input type="range" id="power" min="5" max="100" value="45"></label>
+    <button type="button" class="btn" id="aR" aria-label="Ziel nach rechts">▶</button>
+  </div>
+  <div class="row"><button type="button" class="btn go" id="shoot">Stoßen</button></div>
+</div>
+<div class="start" id="start"><div class="box">
+  <h2>🎱 Snooker</h2>
+  <p>Erst eine Rote, dann eine Farbe – immer abwechselnd. Wer am Ende mehr Punkte hat, gewinnt.</p>
+  <div class="lvl" id="lvl"><button type="button" data-l="0" aria-pressed="false">Leicht</button><button type="button" data-l="1" aria-pressed="true">Mittel</button><button type="button" data-l="2" aria-pressed="false">Profi</button></div>
+  <button type="button" class="btn go" id="vsBot">🤖 Gegen den Bot</button>
+  <button type="button" class="btn" id="vs2">👥 Zu zweit an einem Handy</button>
+  <button type="button" class="btn" id="vsOn" hidden>🌐 Online zu zweit</button>
+  <p id="onInfo" hidden></p>
+</div></div>
+
+<script src="three.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="lang.js"></script>
+<script src="config.js"></script>
+<script>
+(function () {
+  "use strict";
+  const $ = id => document.getElementById(id);
+  const q = new URLSearchParams(location.search); q.delete("k");
+  $("back").href = "chill.html" + (location.search || "");
+  // Maße in Metern (Turniertisch)
+  const L = 3.569, W = 1.778, R = .02625, Y0 = R;
+  const BAULK = L / 2 - .737, DR = .292;
+  const SPOT = { yellow: [-DR, BAULK], green: [DR, BAULK], brown: [0, BAULK], blue: [0, 0], pink: [0, -L / 4], black: [0, -L / 2 + .324] };
+  const VAL = { red: 1, yellow: 2, green: 3, brown: 4, blue: 5, pink: 6, black: 7 }, ORDER = ["yellow", "green", "brown", "blue", "pink", "black"];
+  const COL = { cue: "#f6f4ea", red: "#c8102e", yellow: "#ffd400", green: "#0b9a45", brown: "#7a4a1f", blue: "#1f56e0", pink: "#ff86b8", black: "#121214" };
+  const NAME = { red: "Rot", yellow: "Gelb", green: "Grün", brown: "Braun", blue: "Blau", pink: "Pink", black: "Schwarz" };
+  const POCKETS = [[-W / 2, -L / 2], [W / 2, -L / 2], [-W / 2, 0], [W / 2, 0], [-W / 2, L / 2], [W / 2, L / 2]];
+  const CAP = [.072, .072, .064, .064, .072, .072];
+
+  // ---------- 3D ----------
+  const canvas = $("stage"), renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+  renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+  const scene = new THREE.Scene(); scene.background = new THREE.Color("#0d0717");
+  const camera = new THREE.PerspectiveCamera(45, 1, .05, 50);
+  scene.add(new THREE.HemisphereLight("#fff6e6", "#2a1640", .55));
+  [-1, 0, 1].forEach(k => { const l = new THREE.SpotLight("#fff3dc", .9, 8, .75, .5, 1.2); l.position.set(0, 2.3, k * 1.1); l.target.position.set(0, 0, k * 1.1); scene.add(l); scene.add(l.target); });
+  // Tuch mit Linien
+  const clothTex = (() => { const c = document.createElement("canvas"); c.width = 512; c.height = 1024; const x = c.getContext("2d");
+    x.fillStyle = "#16793a"; x.fillRect(0, 0, 512, 1024); for (let i = 0; i < 4000; i++) { x.fillStyle = `rgba(0,0,0,${Math.random() * .05})`; x.fillRect(Math.random() * 512, Math.random() * 1024, 2, 2); }
+    const sx = 512 / W, sz = 1024 / L, by = (BAULK + L / 2) * sz; x.strokeStyle = "rgba(255,255,255,.55)"; x.lineWidth = 2;
+    x.beginPath(); x.moveTo(0, by); x.lineTo(512, by); x.stroke(); x.beginPath(); x.arc(256, by, DR * sx, 0, Math.PI); x.stroke();
+    Object.values(SPOT).forEach(([sx2, sz2]) => { x.fillStyle = "rgba(255,255,255,.6)"; x.beginPath(); x.arc((sx2 + W / 2) * sx, (sz2 + L / 2) * sz, 3, 0, 7); x.fill(); });
+    const t = new THREE.CanvasTexture(c); t.anisotropy = 4; return t; })();
+  const cloth = new THREE.Mesh(new THREE.PlaneGeometry(W, L), new THREE.MeshStandardMaterial({ map: clothTex, roughness: 1 })); cloth.rotation.x = -Math.PI / 2; scene.add(cloth);
+  const cushM = new THREE.MeshStandardMaterial({ color: "#11592b", roughness: .9 }), woodM = new THREE.MeshStandardMaterial({ color: "#5a2f14", roughness: .55, metalness: .1 });
+  const boxM = (w, h, d, m, x, y, z) => { const o = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), m); o.position.set(x, y, z); scene.add(o); return o; };
+  const cg = .09; // Lücke an den Taschen
+  [[-1], [1]].forEach(([sd]) => { boxM(.05, .045, L / 2 - cg * 1.6, cushM, sd * (W / 2 + .025), .022, -L / 4); boxM(.05, .045, L / 2 - cg * 1.6, cushM, sd * (W / 2 + .025), .022, L / 4); });
+  [-1, 1].forEach(sd => boxM(W - cg * 1.6, .045, .05, cushM, 0, .022, sd * (L / 2 + .025)));
+  [-1, 1].forEach(sd => { boxM(.14, .09, L + .38, woodM, sd * (W / 2 + .12), .03, 0); boxM(W + .38, .09, .14, woodM, 0, .03, sd * (L / 2 + .12)); });
+  boxM(W + .2, .2, L + .2, woodM, 0, -.12, 0);
+  POCKETS.forEach(([px, pz]) => { const p = new THREE.Mesh(new THREE.CylinderGeometry(.058, .058, .1, 24), new THREE.MeshBasicMaterial({ color: "#050307" })); p.position.set(px * 1.0, .005, pz); scene.add(p); });
+  const floor = new THREE.Mesh(new THREE.PlaneGeometry(14, 14), new THREE.MeshStandardMaterial({ color: "#1a0f24", roughness: 1 })); floor.rotation.x = -Math.PI / 2; floor.position.y = -.9; scene.add(floor);
+
+  // Kugeln
+  const balls = [];
+  const ballGeo = new THREE.SphereGeometry(R, 28, 20);
+  function addBall(kind, x, z) {
+    const m = new THREE.Mesh(ballGeo, new THREE.MeshStandardMaterial({ color: COL[kind], roughness: .18, metalness: .05 })); m.position.set(x, Y0, z); scene.add(m);
+    const b = { kind, x, z, vx: 0, vz: 0, on: true, m }; balls.push(b); return b;
+  }
+  let cue;
+  function rack() {
+    balls.forEach(b => scene.remove(b.m)); balls.length = 0;
+    cue = addBall("cue", -DR / 2, BAULK + .08);
+    ORDER.forEach(c => addBall(c, SPOT[c][0], SPOT[c][1]));
+    const top = SPOT.pink[1] - 2 * R - .002; let n = 0;
+    for (let row = 0; row < 5; row++) for (let k = 0; k <= row; k++) { addBall("red", (k - row / 2) * (2 * R + .001), top - row * (Math.sqrt(3) * R + .001)); n++; }
+  }
+  // Queue und Ziellinie
+  const cueStick = new THREE.Mesh(new THREE.CylinderGeometry(.006, .013, 1.45, 12), new THREE.MeshStandardMaterial({ color: "#d9b27a", roughness: .5 }));
+  const tip = new THREE.Mesh(new THREE.CylinderGeometry(.006, .006, .02, 10), new THREE.MeshStandardMaterial({ color: "#3a6bd8" })); tip.position.y = -.735; cueStick.add(tip);
+  const stickPiv = new THREE.Group(); stickPiv.add(cueStick); scene.add(stickPiv);
+  const aimGeo = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(), new THREE.Vector3()]);
+  const aimLine = new THREE.Line(aimGeo, new THREE.LineBasicMaterial({ color: "#ffffff", transparent: true, opacity: .7 })); scene.add(aimLine);
+  const ghost = new THREE.Mesh(new THREE.RingGeometry(R * .85, R, 24), new THREE.MeshBasicMaterial({ color: "#ffffff", transparent: true, opacity: .8, side: THREE.DoubleSide })); ghost.rotation.x = -Math.PI / 2; scene.add(ghost);
+  const tgtLine = new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(), new THREE.Vector3()]), new THREE.LineBasicMaterial({ color: "#c6ff6a", transparent: true, opacity: .6 })); scene.add(tgtLine);
+
+  // ---------- Spielstand ----------
+  let mode = "bot", lvl = 1, turn = 0, score = [0, 0], onBall = "red", aim = -Math.PI / 2, moving = false, shot = null, view = 0, over = false, strikeAt = 0;
+  const names = () => mode === "bot" ? ["Du", "Bot"] : mode === "online" ? [0, 1].map(i => OS && OS.p[i] ? (OS.p[i].id === device ? "Du" : safeN(OS.p[i].n)) : "…") : ["Spieler 1", "Spieler 2"];
+  const myShot = () => mode === "online" ? !!(OS && OS.st === "play" && OS.p[turn] && OS.p[turn].id === device && !replay) : !(mode === "bot" && turn === 1);
+  const reds = () => balls.filter(b => b.on && b.kind === "red").length;
+  const lowestColor = () => ORDER.find(c => balls.some(b => b.on && b.kind === c));
+  const onSet = () => onBall === "red" ? ["red"] : onBall === "color" ? ORDER : [onBall];
+  const onText = () => onBall === "red" ? "eine Rote" : onBall === "color" ? "eine Farbe" : NAME[onBall];
+  function ui(extra) {
+    const n = names(); [0, 1].forEach(i => { $("s" + i).innerHTML = `${n[i]}<b>${score[i]}</b>`; $("s" + i).classList.toggle("on", i === turn && !over); });
+    $("msg").textContent = extra || (over ? "" : `${n[turn]} ${n[turn] === "Du" ? "bist" : "ist"} dran – ziel auf ${onText()}.`);
+    const mine = !moving && !over && myShot();
+    $("shoot").disabled = !mine; $("aL").disabled = $("aR").disabled = !mine;
+  }
+  function freeSpot(x, z) { return !balls.some(b => b.on && Math.hypot(b.x - x, b.z - z) < 2 * R + .001); }
+  function respot(b) {
+    const order = [b.kind, "black", "pink", "blue", "brown", "green", "yellow"];
+    for (const c of order) { const [x, z] = SPOT[c]; if (freeSpot(x, z)) { b.x = x; b.z = z; b.vx = b.vz = 0; b.on = true; b.m.visible = true; return; } }
+    let [x, z] = SPOT[b.kind]; while (!freeSpot(x, z) && z > -L / 2 + R) z -= .005; b.x = x; b.z = z; b.on = true; b.m.visible = true;
+  }
+  function cueInHand() { const tries = [[-DR / 2, BAULK + .08], [0, BAULK + .1], [DR / 2, BAULK + .08], [-DR / 3, BAULK + .2]];
+    for (const [x, z] of tries) if (freeSpot(x, z)) { cue.x = x; cue.z = z; break; } cue.vx = cue.vz = 0; cue.on = true; cue.m.visible = true; }
+
+  // ---------- Physik ----------
+  const FRIC = .65, DT = 1 / 360;
+  function step() {
+    for (const b of balls) { if (!b.on) continue; const sp = Math.hypot(b.vx, b.vz); if (sp > 0) { const ns = Math.max(0, sp - FRIC * DT); b.vx *= ns / sp; b.vz *= ns / sp; } b.x += b.vx * DT; b.z += b.vz * DT; }
+    for (let i = 0; i < balls.length; i++) { const a = balls[i]; if (!a.on) continue;
+      for (let j = i + 1; j < balls.length; j++) { const b = balls[j]; if (!b.on) continue; const dx = b.x - a.x, dz = b.z - a.z, d2 = dx * dx + dz * dz;
+        if (d2 < 4 * R * R && d2 > 1e-12) { const d = Math.sqrt(d2), nx = dx / d, nz = dz / d, rel = (a.vx - b.vx) * nx + (a.vz - b.vz) * nz;
+          const ov = (2 * R - d) / 2; a.x -= nx * ov; a.z -= nz * ov; b.x += nx * ov; b.z += nz * ov;
+          if (rel > 0) { const imp = rel * .975; a.vx -= imp * nx; a.vz -= imp * nz; b.vx += imp * nx; b.vz += imp * nz;
+            if (shot && !shot.first && (a === cue || b === cue)) shot.first = (a === cue ? b : a).kind; if (shot && rel > .3) shot.clack = Math.max(shot.clack || 0, rel); } } } }
+    for (const b of balls) { if (!b.on) continue;
+      for (let k = 0; k < 6; k++) if (Math.hypot(b.x - POCKETS[k][0], b.z - POCKETS[k][1]) < CAP[k]) { b.on = false; b.m.visible = false; b.vx = b.vz = 0; if (shot) shot.pot.push(b); break; }
+      if (!b.on) continue;
+      const nearCornerZ = Math.abs(b.z) > L / 2 - cg, nearMid = Math.abs(b.z) < cg * .7, nearCornerX = Math.abs(b.x) > W / 2 - cg;
+      if (Math.abs(b.x) > W / 2 - R && !nearCornerZ && !nearMid) { b.x = Math.sign(b.x) * (W / 2 - R); b.vx = -b.vx * .78; b.vz *= .96; }
+      if (Math.abs(b.z) > L / 2 - R && !nearCornerX) { b.z = Math.sign(b.z) * (L / 2 - R); b.vz = -b.vz * .78; b.vx *= .96; }
+      if (Math.abs(b.x) > W / 2 + .04 || Math.abs(b.z) > L / 2 + .04) { b.on = false; b.m.visible = false; b.vx = b.vz = 0; if (shot) shot.pot.push(b); } }
+  }
+  const allStill = () => balls.every(b => !b.on || Math.hypot(b.vx, b.vz) < .004);
+
+  // ---------- Klang ----------
+  let AC = null; const ac = () => { try { AC = AC || new (window.AudioContext || window.webkitAudioContext)(); if (AC.state === "suspended") AC.resume(); } catch (e) {} };
+  addEventListener("pointerdown", ac);
+  function click(v) { if (!AC) return; const t = AC.currentTime, o = AC.createOscillator(), g = AC.createGain(); o.type = "triangle"; o.frequency.setValueAtTime(1800 + Math.random() * 600, t); o.frequency.exponentialRampToValueAtTime(600, t + .04);
+    g.gain.setValueAtTime(Math.min(.35, v * .12), t); g.gain.exponentialRampToValueAtTime(.001, t + .06); o.connect(g); g.connect(AC.destination); o.start(t); o.stop(t + .08); }
+
+  // ---------- Stoß und Regeln ----------
+  let shotFrom = null, shotAim = 0, shotPow = 0, replay = false;
+  function shoot(power, isReplay) {
+    if (moving || over) return; power = Math.max(5, Math.min(100, +power || 40));
+    if (!isReplay) { if (mode === "online" && !myShot()) return; shotFrom = pack(); shotAim = aim; shotPow = power; } const v = .4 + power / 100 * 4.6;
+    strikeAt = performance.now(); moving = true; ui("");
+    setTimeout(() => { cue.vx = Math.cos(aim) * v; cue.vz = Math.sin(aim) * v; shot = { first: null, pot: [], on: onBall }; click(2); }, 140);
+  }
+  function judge() {
+    const s = shot; shot = null; const on = s.on, set = on === "red" ? ["red"] : on === "color" ? ORDER : [on];
+    const pots = s.pot.filter(b => b !== cue), cuePot = s.pot.includes(cue);
+    let foul = false, fv = 4; const val = k => VAL[k] || 0;
+    if (!s.first) foul = true; else if (!set.includes(s.first)) { foul = true; fv = Math.max(fv, val(s.first)); }
+    if (on === "color" && s.first && pots.some(b => b.kind !== s.first)) { foul = true; pots.forEach(b => fv = Math.max(fv, val(b.kind))); }
+    if (on !== "color" && pots.some(b => !set.includes(b.kind))) { foul = true; pots.forEach(b => fv = Math.max(fv, val(b.kind))); }
+    if (cuePot) foul = true;
+    if (on !== "red" && on !== "color") fv = Math.max(fv, val(on));
+    const n = names(), other = 1 - turn;
+    if (foul) {
+      score[other] += fv; pots.forEach(b => { if (b.kind !== "red") respot(b); }); if (cuePot) cueInHand();
+      const msgTxt = `Foul! ${n[other]} ${n[other] === "Du" ? "bekommst" : "bekommt"} ${fv} Punkte.`;
+      turn = other; onBall = reds() ? "red" : (lowestColor() || "black"); endCheck(); ui(msgTxt); return;
+    }
+    if (pots.length) {
+      const pts = pots.reduce((a, b) => a + val(b.kind), 0); score[turn] += pts;
+      const wasColor = pots.find(b => b.kind !== "red");
+      if (wasColor && (on === "color")) { if (reds() || onBall === "color") respot(wasColor); }
+      if (on === "red") onBall = "color";
+      else if (on === "color") onBall = reds() ? "red" : (lowestColor() || "black");
+      else onBall = lowestColor() || "black";
+      endCheck(); ui(`+${pts}! ${n[turn]} ${n[turn] === "Du" ? "darfst" : "darf"} weiter – jetzt ${onText()}.`); return;
+    }
+    turn = other; onBall = reds() ? "red" : (lowestColor() || "black"); endCheck(); ui();
+  }
+  function endCheck() {
+    if (balls.some(b => b.on && b.kind !== "cue")) return;
+    over = true; const n = names(); const w = score[0] === score[1] ? -1 : score[0] > score[1] ? 0 : 1;
+    setTimeout(() => ui(w < 0 ? `Unentschieden ${score[0]}:${score[1]}!` : `🏆 ${n[w]} ${n[w] === "Du" ? "gewinnst" : "gewinnt"} ${Math.max(...score)}:${Math.min(...score)}!`), 50);
+  }
+
+  // ---------- Bot ----------
+  function clear(ax, az, bx, bz, skip) { const dx = bx - ax, dz = bz - az, len = Math.hypot(dx, dz); if (len < 1e-6) return true;
+    for (const b of balls) { if (!b.on || b === cue || skip.includes(b)) continue; const t = ((b.x - ax) * dx + (b.z - az) * dz) / (len * len); if (t < 0 || t > 1) continue;
+      const px = ax + dx * t, pz = az + dz * t; if (Math.hypot(b.x - px, b.z - pz) < 2 * R + .004) return false; } return true; }
+  function botPlan() {
+    const set = onSet(); let bestP = null;
+    for (const t of balls) { if (!t.on || !set.includes(t.kind)) continue;
+      POCKETS.forEach(([px0, pz0]) => { const px = px0 * .97, pz = pz0 * (Math.abs(pz0) > .1 ? .985 : 1), dx = px - t.x, dz = pz - t.z, dl = Math.hypot(dx, dz), ux = dx / dl, uz = dz / dl;
+        const gx = t.x - ux * 2 * R, gz = t.z - uz * 2 * R, cx = gx - cue.x, cz = gz - cue.z, cl = Math.hypot(cx, cz); if (cl < 1e-4) return;
+        const cut = (cx * ux + cz * uz) / cl; if (cut < .3) return;
+        if (!clear(cue.x, cue.z, gx, gz, [t]) || !clear(t.x, t.z, px, pz, [t])) return;
+        const sc = cut * 1.4 - (cl + dl) * .25 + VAL[t.kind] * .04; if (!bestP || sc > bestP.sc) bestP = { sc, a: Math.atan2(cz, cx), p: Math.min(100, 12 + (cl + dl / Math.max(.35, cut)) * 22) }; }); }
+    if (!bestP) { let nb = null, nd = 1e9; for (const t of balls) if (t.on && set.includes(t.kind)) { const d = Math.hypot(t.x - cue.x, t.z - cue.z); if (d < nd && clear(cue.x, cue.z, t.x, t.z, [t])) { nd = d; nb = t; } }
+      if (!nb) { nb = balls.filter(t => t.on && set.includes(t.kind)).sort((a, b) => Math.hypot(a.x - cue.x, a.z - cue.z) - Math.hypot(b.x - cue.x, b.z - cue.z))[0]; nd = nb ? Math.hypot(nb.x - cue.x, nb.z - cue.z) : 1; }
+      if (!nb) return { a: aim, p: 30 }; bestP = { a: Math.atan2(nb.z - cue.z, nb.x - cue.x), p: Math.min(70, 25 + nd * 14) }; }
+    const err = [.022, .008, .0025][lvl]; bestP.a += (Math.random() - .5) * 2 * err; return bestP;
+  }
+  function botTurn() {
+    if (mode !== "bot" || turn !== 1 || moving || over) return;
+    const plan = botPlan(); const a0 = aim; const t0 = performance.now(); let d = plan.a - a0; d = Math.atan2(Math.sin(d), Math.cos(d));
+    const anim = () => { const k = Math.min(1, (performance.now() - t0) / 900); aim = a0 + d * (1 - Math.pow(1 - k, 3)); if (k < 1) requestAnimationFrame(anim); else setTimeout(() => shoot(plan.p), 350); }; anim();
+  }
+
+  // ---------- Steuerung ----------
+  const ray = new THREE.Raycaster(), ndc = new THREE.Vector2(), plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), -Y0), hitP = new THREE.Vector3();
+  let downX = 0, downY = 0, dragA = null;
+  canvas.addEventListener("pointerdown", e => { downX = e.clientX; downY = e.clientY; dragA = aim; });
+  canvas.addEventListener("pointerup", e => { if (moving || over || !myShot()) return; if (Math.hypot(e.clientX - downX, e.clientY - downY) > 10) return;
+    ndc.set(e.clientX / innerWidth * 2 - 1, -(e.clientY / innerHeight) * 2 + 1); ray.setFromCamera(ndc, camera); if (ray.ray.intersectPlane(plane, hitP)) aim = Math.atan2(hitP.z - cue.z, hitP.x - cue.x); });
+  canvas.addEventListener("pointermove", e => { if (e.buttons !== 1 || dragA === null || moving || over || !myShot()) return; if (Math.hypot(e.clientX - downX, e.clientY - downY) < 10) return;
+    aim = dragA + (e.clientX - downX) * .004; });
+  let hold = 0; const nudge = d => { aim += d; };
+  [["aL", -1], ["aR", 1]].forEach(([id, s]) => { const el = $(id); el.addEventListener("pointerdown", () => { nudge(s * .002); clearInterval(hold); hold = setInterval(() => nudge(s * .004), 60); });
+    ["pointerup", "pointerleave", "pointercancel"].forEach(ev => el.addEventListener(ev, () => clearInterval(hold))); });
+  $("shoot").onclick = () => shoot(+$("power").value);
+  $("bView").onclick = () => { view = (view + 1) % 2; };
+  $("bNew").onclick = () => { if (mode === "online" && OS && OS.p.some(p => p.id === device)) { if (OS.st === "play" && !over && !confirmNew()) return; act(S => { S.st = "wait"; S.at = Date.now(); return S; }); } $("start").hidden = false; };
+  let confirmAsk = 0; const confirmNew = () => { if (Date.now() - confirmAsk < 4000) return true; confirmAsk = Date.now(); ui("Nochmal auf „Neu“ tippen, um das Online-Spiel abzubrechen."); return false; };
+  $("lvl").querySelectorAll("button").forEach(b => b.onclick = () => { lvl = +b.dataset.l; $("lvl").querySelectorAll("button").forEach(x => x.setAttribute("aria-pressed", x === b)); });
+  function newGame(m) { mode = m; turn = 0; score = [0, 0]; onBall = "red"; over = false; moving = false; shot = null; rack(); aim = -Math.PI / 2; $("start").hidden = true; ui(); }
+  $("vsBot").onclick = () => { $("onInfo").hidden = true; newGame("bot"); }; $("vs2").onclick = () => { $("onInfo").hidden = true; newGame("two"); };
+
+  // ---------- Online zu zweit: wer stößt, rechnet; der andere sieht den Stoß nachgespielt ----------
+  const WALL = (q.get("wand") || new URLSearchParams(location.search).get("wand") || "").toLowerCase().replace(/[^a-z0-9-]/g, "").slice(0, 60);
+  let KEY = null; try { const k = new URLSearchParams(location.search).get("k"); KEY = /^[A-Za-z0-9]{24,40}$/.test(k || "") ? k : localStorage.getItem("klowand-fam-" + WALL); if (!/^[A-Za-z0-9]{24,40}$/.test(KEY || "")) KEY = null; } catch (e) {}
+  const DEMOW = WALL === "demo" || WALL === "familie-demo", FIXED = typeof WAENDE !== "undefined" && !!WAENDE[WALL];
+  const CAN_ON = typeof firebase !== "undefined" && typeof firebaseConfig !== "undefined" && (DEMOW || (!!WALL && !FIXED && !!KEY));
+  let device = null; try { device = localStorage.getItem("klowand-device"); if (!device) { device = crypto.randomUUID().replace(/-/g, ""); localStorage.setItem("klowand-device", device); } } catch (e) { device = "d" + Math.random().toString(36).slice(2, 14); }
+  let myName = ""; try { myName = localStorage.getItem("klowand-chillname") || ""; } catch (e) {}
+  const safeN = n => typeof n === "string" && /^[A-Za-zÄÖÜäöüß0-9 ._-]{2,12}$/.test(n) ? n : "Gast";
+  let OS = null, oref = null, seenShot = -1, fsdb = null;
+  const ONC = ["red", "color", ...ORDER];
+  const pack = () => balls.map(b => [Math.round(b.x * 1e4), Math.round(b.z * 1e4), b.on ? 1 : 0]);
+  function unpack(arr) { arr.forEach((v, i) => { const b = balls[i]; if (!b) return; b.x = v[0] / 1e4; b.z = v[1] / 1e4; b.on = !!v[2]; b.vx = b.vz = 0; b.m.visible = b.on; b.m.position.set(b.x, Y0, b.z); }); }
+  const validS = S => { try { return S && S.v === 1 && Array.isArray(S.p) && S.p.length <= 2 && S.p.every(p => p && typeof p.id === "string" && p.id.length <= 40) && ["wait", "play", "end"].includes(S.st)
+    && (S.turn === 0 || S.turn === 1) && Array.isArray(S.sc) && S.sc.length === 2 && S.sc.every(Number.isInteger) && Number.isInteger(S.on) && S.on >= 0 && S.on < ONC.length
+    && Array.isArray(S.b) && (S.b.length === 0 || S.b.length === 22) && S.b.every(v => Array.isArray(v) && v.length === 3 && v.every(Number.isInteger))
+    && S.sh && Number.isInteger(S.sh.n) && Array.isArray(S.sh.f) && (S.sh.f.length === 0 || S.sh.f.length === 22); } catch (e) { return false; } };
+  const freshS = () => ({ v: 1, st: "wait", p: [], turn: 0, sc: [0, 0], on: 0, b: [], sh: { n: 0, a: 0, pw: 0, f: [] }, over: 0, at: Date.now() });
+  async function act(fn) {
+    if (!oref) return;
+    try { await fsdb.runTransaction(async tx => { const sn = await tx.get(oref); let cur = null; if (sn.exists) try { cur = JSON.parse(sn.data().s); } catch (e) {}
+      if (!validS(cur)) cur = freshS(); const n = fn(cur); if (!n) return; tx.set(oref, { s: JSON.stringify(n), ts: firebase.firestore.FieldValue.serverTimestamp() }); }); }
+    catch (e) { ui(e && e.code === "permission-denied" ? "Online klappt nicht – sind die neuen Firebase-Regeln drin?" : "Verbindung hakt – nochmal versuchen."); }
+  }
+  function pushShot(from, a, pw) {
+    const st = { b: pack(), sc: score.slice(), turn, on: Math.max(0, ONC.indexOf(onBall)), over: over ? 1 : 0, msg: $("msg").textContent };
+    act(S => { if (S.st !== "play" || !S.p[S.turn] || S.p[S.turn].id !== device) return null;
+      S.b = st.b; S.sc = st.sc; S.turn = st.turn; S.on = st.on; S.sh = { n: S.sh.n + 1, a: Math.round(a * 1e5) / 1e5, pw: Math.round(pw), f: from }; S.over = st.over; if (st.over) S.st = "end"; S.at = Date.now(); return S; });
+  }
+  function applyRemote(S) {
+    if (!S) return; if (S.b.length === 22) unpack(S.b); score = S.sc.slice(); turn = S.turn; onBall = ONC[S.on]; over = S.st === "end" || !!S.over;
+    if (over) { const n = names(), w = score[0] === score[1] ? -1 : score[0] > score[1] ? 0 : 1; ui(w < 0 ? `Unentschieden ${score[0]}:${score[1]}!` : `🏆 ${n[w]} ${n[w] === "Du" ? "gewinnst" : "gewinnt"} ${Math.max(...score)}:${Math.min(...score)}!`); }
+    else ui();
+  }
+  function lobby() {
+    const S = OS; if (!S) return; const mi = S.p.some(p => p.id === device), box = $("onInfo");
+    box.hidden = mode !== "online"; if (mode !== "online") return;
+    if (S.st === "play" || S.st === "end") { if (mi || S.st === "end") $("start").hidden = mi; }
+    const who = S.p.map(p => p.id === device ? "Du" : safeN(p.n)).join(" & ") || "noch keiner";
+    box.innerHTML = S.st === "play" && !mi ? `Gerade spielen ${who}. Schau zu oder warte, bis sie fertig sind.` : `Am Tisch: <b>${who}</b>. ${S.p.length < 2 ? "Warte auf einen zweiten Spieler …" : mi ? "Tipp auf „Los geht's“." : ""}`;
+    $("vsOn").textContent = S.st === "play" && !mi ? "👀 Zuschauen" : !mi ? (S.p.length < 2 ? "✋ Online mitspielen" : "Tisch ist voll") : S.p.length === 2 ? "▶ Los geht's" : "⏳ Warten …";
+    $("vsOn").disabled = mi && S.p.length < 2 || !mi && S.p.length >= 2 && S.st !== "play";
+  }
+  function onSnap(S) {
+    const prev = OS; OS = S;
+    if (mode === "online") {
+      const mi = S.p.some(p => p.id === device);
+      if (S.st === "play" || S.st === "end") {
+        if (!prev || prev.st === "wait" || S.sh.n < seenShot) { seenShot = S.sh.n; applyRemote(S); }
+        else if (S.sh.n > seenShot) { seenShot = S.sh.n; const mineNow = prev.p[prev.turn] && prev.p[prev.turn].id === device;
+          if (mineNow && !replay) { applyRemote(S); } else if (S.sh.f.length === 22) { unpack(S.sh.f); aim = S.sh.a; replay = true; moving = false; shoot(S.sh.pw, true); } else applyRemote(S); }
+        else if (!moving) applyRemote(S);
+        if (mi) $("start").hidden = true;
+      } else { if (prev && prev.st !== "wait") { $("start").hidden = false; } }
+    }
+    lobby();
+  }
+  if (CAN_ON) {
+    $("vsOn").hidden = false;
+    try { firebase.initializeApp(firebaseConfig); fsdb = firebase.firestore();
+      const grp = DEMOW ? fsdb.collection("walls").doc(WALL) : fsdb.collection("walls").doc(WALL).collection("familie").doc(KEY);
+      oref = grp.collection("chillspiel").doc("snooker");
+      oref.onSnapshot(sn => { let n = null; if (sn.exists) try { n = JSON.parse(sn.data().s); } catch (e) {} onSnap(validS(n) ? n : freshS()); }, () => {});
+    } catch (e) { $("vsOn").hidden = true; }
+  }
+  $("vsOn").onclick = () => {
+    if (mode !== "online") { mode = "online"; lobby(); }
+    const S = OS || freshS(), mi = S.p.some(p => p.id === device);
+    if (S.st === "play" && !mi) { $("start").hidden = true; seenShot = S.sh.n; applyRemote(S); return; }
+    if (!mi) { const nm2 = safeN(myName) === "Gast" ? "Gast" : myName;
+      act(T => { if (T.p.some(p => p.id === device)) return null; if (T.st !== "wait") { if (T.st === "end" || Date.now() - T.at > 180e3) { T.st = "wait"; T.p = []; } else return null; } if (T.p.length >= 2) return null; T.p.push({ id: device, n: nm2 }); T.at = Date.now(); return T; }); return; }
+    if (S.p.length === 2 && S.st !== "play") { rack(); const b = pack();
+      act(T => { if (T.p.length !== 2 || !T.p.some(p => p.id === device)) return null; T.st = "play"; T.turn = Math.random() < .5 ? 0 : 1; T.sc = [0, 0]; T.on = 0; T.b = b; T.sh = { n: (T.sh.n || 0) + 1, a: 0, pw: 0, f: [] }; T.over = 0; T.at = Date.now(); return T; }); }
+  };
+  const _newGame = newGame;
+
+  // ---------- Kamera und Zeichnen ----------
+  function resize() { const w = innerWidth, h = innerHeight; renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix(); }
+  addEventListener("resize", resize); resize();
+  const camPos = new THREE.Vector3(), camLook = new THREE.Vector3(), curLook = new THREE.Vector3(0, 0, 0);
+  function aimPreview() {
+    const dx = Math.cos(aim), dz = Math.sin(aim); let tMin = 4, hitB = null;
+    for (const b of balls) { if (!b.on || b === cue) continue; const ox = b.x - cue.x, oz = b.z - cue.z, t = ox * dx + oz * dz; if (t <= 0) continue; const pd2 = ox * ox + oz * oz - t * t, r2 = 4 * R * R; if (pd2 > r2) continue; const tt = t - Math.sqrt(r2 - pd2); if (tt < tMin) { tMin = tt; hitB = b; } }
+    const tx = dx > 0 ? (W / 2 - R - cue.x) / dx : dx < 0 ? (-W / 2 + R - cue.x) / dx : 9, tz = dz > 0 ? (L / 2 - R - cue.z) / dz : dz < 0 ? (-L / 2 + R - cue.z) / dz : 9; tMin = Math.min(tMin, tx, tz);
+    const gx = cue.x + dx * tMin, gz = cue.z + dz * tMin;
+    aimGeo.setFromPoints([new THREE.Vector3(cue.x, Y0, cue.z), new THREE.Vector3(gx, Y0, gz)]); ghost.position.set(gx, Y0 * .3, gz);
+    if (hitB) { const nx = hitB.x - gx, nz = hitB.z - gz, nl = Math.hypot(nx, nz) || 1; tgtLine.geometry.setFromPoints([new THREE.Vector3(hitB.x, Y0, hitB.z), new THREE.Vector3(hitB.x + nx / nl * .45, Y0, hitB.z + nz / nl * .45)]); tgtLine.visible = true; } else tgtLine.visible = false;
+  }
+  let last = performance.now(), lastClack = 0;
+  function loop(now) {
+    const dt = Math.min(.05, (now - last) / 1000); last = now;
+    if (moving && shot) { const n = Math.round(dt / DT) * (window.__fast || 1); for (let i = 0; i < n; i++) step(); if (shot.clack && now - lastClack > 40) { click(shot.clack); shot.clack = 0; lastClack = now; }
+      if (allStill()) { balls.forEach(b => { b.vx = b.vz = 0; }); moving = false;
+        if (replay) { replay = false; shot = null; applyRemote(OS); }
+        else { const wasMine = mode === "online"; const from = shotFrom, a = shotAim, pw = shotPow; judge(); if (wasMine) pushShot(from, a, pw); }
+        if (mode === "bot" && turn === 1 && !over) setTimeout(botTurn, 700); } }
+    balls.forEach(b => { b.m.position.set(b.x, Y0, b.z); const sp = Math.hypot(b.vx, b.vz); if (sp > 0) { b.m.rotation.x += b.vz * dt / R; b.m.rotation.z -= b.vx * dt / R; } });
+    const idle = !moving && !over;
+    aimLine.visible = ghost.visible = idle && cue.on; if (!idle) tgtLine.visible = false; if (idle && cue.on) aimPreview();
+    // Queue
+    const pull = idle ? .04 + (+$("power").value) / 100 * .22 : Math.max(0, .04 + (+$("power").value) / 100 * .22 - (now - strikeAt) / 140 * .3);
+    stickPiv.visible = cue.on && (idle || now - strikeAt < 260) && !(mode === "bot" && turn === 1 && false);
+    const dx = Math.cos(aim), dz = Math.sin(aim), dist = R + pull + .725;
+    stickPiv.position.set(cue.x - dx * dist, Y0 + .03, cue.z - dz * dist); stickPiv.rotation.set(0, 0, 0);
+    stickPiv.lookAt(cue.x, Y0 + .03, cue.z); cueStick.rotation.set(-Math.PI / 2, 0, 0);
+    // Kamera
+    const portrait = innerHeight > innerWidth;
+    if (view === 0) { const tn = Math.tan(camera.fov * Math.PI / 360), need = portrait ? Math.max((L / 2 + .62) / tn, (W / 2 + .3) / (tn * camera.aspect)) : Math.max((W / 2 + .35) / tn, (L / 2 + .3) / (tn * camera.aspect));
+      camPos.set(0, need * .97, portrait ? need * .16 : 0); camLook.set(0, 0, portrait ? .2 : 0); camera.up.set(portrait ? 0 : 1, portrait ? 1 : 0, portrait ? 0 : 0); if (!portrait) camera.up.set(1, 0, 0); }
+    else { camPos.set(cue.x - dx * .9, .42, cue.z - dz * .9); camLook.set(cue.x + dx * .9, 0, cue.z + dz * .9); camera.up.set(0, 1, 0); }
+    if (view === 0 && portrait) camera.up.set(0, 1, 0);
+    camera.position.lerp(camPos, .1); curLook.lerp(camLook, .15); camera.lookAt(curLook);
+    renderer.render(scene, camera); requestAnimationFrame(loop);
+  }
+  rack(); ui(); requestAnimationFrame(loop);
+  if (location.hash === "#test") window.__sn = { get os() { return OS; }, get rp() { return [replay, seenShot, mode, !!shot, moving, over]; }, balls, get s() { return { turn, score, onBall, moving, over }; }, shoot, setAim: a => aim = a, newGame, botPlan, cue: () => cue, judgeNow: () => {} };
+})();
+</script>
+</body>
+</html>
