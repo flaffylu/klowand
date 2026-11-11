@@ -80,6 +80,27 @@
   .oview .prof .lv{flex:none;width:46px;height:46px;border-radius:50%;background:var(--o-line);display:grid;place-items:center;font:700 1rem var(--f-ui);color:var(--o-hi)}
   .oview .leoclip,.oview nav.legal{display:block!important;margin:0}
   .oview .leoclip{display:flex!important}
+
+  /* Startbild oben auf der Wand */
+  html.ord .wrap > .plate,html.ord .wrap > .demobar{display:none!important}
+  .ohero{position:relative;height:clamp(200px,52vw,300px);border-radius:22px;overflow:hidden;margin:2px 0 12px;background:#2a2016;box-shadow:0 10px 30px rgba(0,0,0,.35)}
+  .ohero img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:50% 40%}
+  .ohero::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(18,12,26,0) 35%,rgba(18,12,26,.88) 100%)}
+  .ohero .txt{position:absolute;left:16px;right:16px;bottom:14px;z-index:1;display:flex;flex-direction:column;gap:4px;color:#fff7ea}
+  .ohero h1{margin:0;font:400 clamp(1.8rem,8vw,2.6rem)/1 var(--f-marker);color:#ffd166;text-shadow:0 2px 10px rgba(0,0,0,.5)}
+  .ohero small{font:600 1rem/1.2 var(--f-ui);color:#f1e7da}
+  .ohero .pill{align-self:flex-start;margin-top:6px;font:700 .95rem/1.2 var(--f-ui);color:#1b0a14;background:#ffd166;border-radius:999px;padding:6px 12px;cursor:pointer}
+  .ohero .pill.off{background:#fff7ea}
+  .ohero .ki{position:absolute;right:12px;top:10px;z-index:1;font:600 .7rem var(--f-ui);letter-spacing:.08em;text-transform:uppercase;color:#fff;background:rgba(0,0,0,.4);border-radius:999px;padding:3px 8px}
+  .ohero .live{position:absolute;left:12px;top:10px;z-index:1;display:flex;align-items:center;gap:6px;font:700 .8rem var(--f-ui);color:#fff;background:rgba(0,0,0,.45);border-radius:999px;padding:4px 10px}
+  .ohero .live i{width:8px;height:8px;border-radius:50%;background:#3ddc84}
+  html.ord .tabs button[aria-pressed=true]{background:var(--o-acc)!important;color:#fff!important;border-color:var(--o-acc)!important;opacity:1!important}
+  html.ord .tabs button{opacity:1!important}
+  html.ord .tabs .hint{display:none}
+  html.ord .kfrage,html.ord .chcard{background:var(--o-card)!important;color:var(--o-tx)!important;border:1px solid var(--o-line)!important}
+  html.ord .chcard .q{color:var(--o-tx)!important}html.ord .chcard .k{color:var(--o-hi)!important}html.ord .chcard .m{color:var(--o-mu)!important}
+  html.ord .chcard button{background:var(--o-acc)!important;color:#fff!important;border:none!important}
+  html.ord .kfrage .o button.me{background:var(--o-acc)!important;color:#fff!important}
   @media (min-width:700px){.oview .tiles{grid-template-columns:repeat(4,minmax(0,1fr))}.oview .tiles.t3{grid-template-columns:repeat(6,minmax(0,1fr))}}`;
   document.head.appendChild(css);
 
@@ -191,5 +212,25 @@
   }
   let tries = 0; (function wait() { sos(); if (!document.querySelector(".osos") && ++tries < 15) setTimeout(wait, 200); })();
   addEventListener("pageshow", e => { if (e.persisted && history.state && history.state.ord) go(history.state.ord, true); });
+
+  // ---------- Startbild mit Name der Wand ----------
+  (function hero() {
+    const plate = document.querySelector(".wrap > .plate"); if (!plate) return;
+    const h = document.createElement("header"); h.className = "ohero";
+    h.innerHTML = `<img src="assets/hero-geist.jpg" alt="${T("Ein Gespenst und ein junger Mann sitzen auf dem Klo und schauen aufs Handy", "A ghost and a young man on the loo looking at their phones")}"><span class="live"><i></i>Live</span><span class="ki">${T("Bild KI-generiert", "AI-generated image")}</span>
+      <div class="txt"><h1></h1><small></small><button type="button" class="pill" hidden></button></div>`;
+    plate.before(h);
+    const sync = () => {
+      h.querySelector("h1").textContent = ($("venue") || {}).textContent || "Klo-Wand";
+      h.querySelector("small").textContent = ((($("venueSub") || {}).textContent) || "").split(" · ")[0];
+      const f = $("demoFree"), p = h.querySelector(".pill");
+      if (f && f.textContent.trim()) { const short = f.textContent.trim().split(":")[0]; p.hidden = false; p.textContent = short; p.classList.toggle("off", !/gratis|free/i.test(short));
+        p.onclick = () => { const m = $("demoMore"); m && m.click(); }; }
+      else p.hidden = true;
+    };
+    sync(); new MutationObserver(sync).observe(plate, { subtree: true, childList: true, characterData: true });
+    window.addEventListener("klo-demo", () => setTimeout(sync, 50));
+    let n = 0; (function w() { sync(); if (++n < 10) setTimeout(w, 300); })();
+  })();
   window.kloOrdnung = { go, write };
 })();
