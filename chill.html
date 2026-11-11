@@ -212,29 +212,39 @@ form button:disabled{opacity:.5}
   const canvas = $("stage");
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
   renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
-  const scene = new THREE.Scene(); scene.background = new THREE.Color("#120a1f"); scene.fog = new THREE.Fog("#120a1f", 7, 14);
+  const scene = new THREE.Scene(); scene.background = new THREE.Color("#1c120c"); scene.fog = new THREE.Fog("#1c120c", 8, 15);
   const camera = new THREE.PerspectiveCamera(62, 1, .05, 40);
   const W = 6, D = 5, H = 2.8;
   const plane = (w, h, m) => new THREE.Mesh(new THREE.PlaneGeometry(w, h), m);
   const tex = (w, h, draw) => { const c = document.createElement("canvas"); c.width = w; c.height = h; draw(c.getContext("2d"), w, h); const t = new THREE.CanvasTexture(c); t.anisotropy = 4; return t; };
 
   // Boden (Holz) und Teppich
-  const wood = tex(512, 512, (x, w, h) => { x.fillStyle = "#3a2618"; x.fillRect(0, 0, w, h); for (let i = 0; i < 8; i++) { x.fillStyle = i % 2 ? "#40291a" : "#36231a"; x.fillRect(0, i * 64, w, 62); x.fillStyle = "rgba(0,0,0,.35)"; x.fillRect(0, i * 64 + 62, w, 2); } });
+  const wood = tex(512, 512, (x, w, h) => { x.fillStyle = "#6e4022"; x.fillRect(0, 0, w, h); for (let i = 0; i < 8; i++) { x.fillStyle = ["#74452a", "#683c20", "#7b4b2b", "#6a3f24"][i % 4]; x.fillRect(0, i * 64, w, 62);
+    for (let k = 0; k < 40; k++) { x.fillStyle = "rgba(40,20,8,.12)"; x.fillRect(Math.random() * w, i * 64 + Math.random() * 60, 30 + Math.random() * 80, 1); } x.fillStyle = "rgba(0,0,0,.35)"; x.fillRect(0, i * 64 + 62, w, 2); x.fillRect((i * 173) % w, i * 64, 2, 62); } });
   wood.wrapS = wood.wrapT = THREE.RepeatWrapping; wood.repeat.set(3, 3);
   const floor = plane(W, D, new THREE.MeshStandardMaterial({ map: wood, roughness: .8 })); floor.rotation.x = -Math.PI / 2; scene.add(floor);
-  const rug = new THREE.Mesh(new THREE.CircleGeometry(1.3, 48), new THREE.MeshStandardMaterial({ map: tex(256, 256, (x, w) => { for (let r = 128; r > 0; r -= 16) { x.fillStyle = (r / 16) % 2 ? "#5b2a7a" : "#7a3a96"; x.beginPath(); x.arc(128, 128, r, 0, 7); x.fill(); } }), roughness: 1 }));
+  // Runder grüner Teppich mit Pikumio-Gesicht
+  const rug = new THREE.Mesh(new THREE.CircleGeometry(1.35, 48), new THREE.MeshStandardMaterial({ map: tex(512, 512, (x, w) => {
+    x.fillStyle = "#3f6b2a"; x.beginPath(); x.arc(256, 256, 256, 0, 7); x.fill(); for (let i = 0; i < 5000; i++) { const a = Math.random() * 7, r = Math.random() * 252; x.fillStyle = Math.random() < .5 ? "rgba(120,170,70,.35)" : "rgba(20,50,10,.3)"; x.fillRect(256 + Math.cos(a) * r, 256 + Math.sin(a) * r, 3, 3); }
+    x.fillStyle = "#e9dcc0"; x.beginPath(); x.ellipse(256, 270, 150, 120, 0, 0, 7); x.fill(); x.fillStyle = "#7a4a22"; for (let k = 0; k < 9; k++) { x.beginPath(); x.moveTo(110 + k * 36, 190); x.lineTo(128 + k * 36, 120 - (k % 2) * 25); x.lineTo(146 + k * 36, 190); x.fill(); }
+    x.fillStyle = "#1a1410"; [[205, 255], [307, 255]].forEach(([ex, ey]) => { x.beginPath(); x.ellipse(ex, ey, 18, 24, 0, 0, 7); x.fill(); }); x.fillStyle = "#fff"; [[211, 246], [313, 246]].forEach(([ex, ey]) => { x.beginPath(); x.arc(ex, ey, 6, 0, 7); x.fill(); });
+    x.fillStyle = "#3b2416"; x.beginPath(); x.ellipse(256, 300, 22, 15, 0, 0, 7); x.fill(); x.strokeStyle = "#3b2416"; x.lineWidth = 6; x.beginPath(); x.arc(256, 312, 30, .3, Math.PI - .3); x.stroke(); }), roughness: 1 }));
   rug.rotation.x = -Math.PI / 2; rug.position.set(0, .005, -.4); scene.add(rug);
   // Wände und Decke
-  const wallMat = new THREE.MeshStandardMaterial({ color: "#2a1840", roughness: .95 });
+  const wallMat = new THREE.MeshStandardMaterial({ color: "#d8b487", roughness: .95 });
+  const slat = tex(512, 256, (x, w, h) => { x.fillStyle = "#7a4a26"; x.fillRect(0, 0, w, h); for (let i = 0; i < 16; i++) { x.fillStyle = i % 2 ? "#8a5730" : "#6d4020"; x.fillRect(i * 32 + 2, 0, 26, h); } });
+  slat.wrapS = THREE.RepeatWrapping; slat.repeat.set(4, 1);
   const back = plane(W, H, wallMat); back.position.set(0, H / 2, -D / 2); scene.add(back);
   const left = plane(D, H, wallMat); left.rotation.y = Math.PI / 2; left.position.set(-W / 2, H / 2, 0); scene.add(left);
-  const right = plane(D, H, wallMat); right.rotation.y = -Math.PI / 2; right.position.set(W / 2, H / 2, 0); scene.add(right);
+  const right = plane(D, H, new THREE.MeshStandardMaterial({ map: slat, roughness: .8 })); right.rotation.y = -Math.PI / 2; right.position.set(W / 2, H / 2, 0); scene.add(right);
   const front = plane(W, H, wallMat); front.rotation.y = Math.PI; front.position.set(0, H / 2, D / 2); scene.add(front);
-  const ceil = plane(W, D, new THREE.MeshStandardMaterial({ color: "#1a0f29" })); ceil.rotation.x = Math.PI / 2; ceil.position.y = H; scene.add(ceil);
+  const ceil = plane(W, D, new THREE.MeshStandardMaterial({ color: "#4a2e1a" })); ceil.rotation.x = Math.PI / 2; ceil.position.y = H; scene.add(ceil);
   // Neon-Leiste und Schriftzug
   const neon = (color, w, x, y, z, ry) => { const m = new THREE.Mesh(new THREE.BoxGeometry(w, .03, .03), new THREE.MeshBasicMaterial({ color })); m.position.set(x, y, z); m.rotation.y = ry || 0; scene.add(m); };
-  neon("#ff6fb5", W - .1, 0, H - .08, -D / 2 + .03); neon("#5fe6ff", D - .1, -W / 2 + .03, H - .08, 0, Math.PI / 2); neon("#5fe6ff", D - .1, W / 2 - .03, H - .08, 0, Math.PI / 2);
-  const sign = plane(2.2, .55, new THREE.MeshBasicMaterial({ transparent: true, map: tex(1024, 256, (x, w, h) => { x.textAlign = "center"; x.textBaseline = "middle"; x.font = '400 150px "Permanent Marker"'; x.shadowColor = "#ff6fb5"; x.shadowBlur = 30; x.fillStyle = "#ffd1ec"; x.fillText("chill mal", w / 2, h / 2); }) }));
+  neon("#ffb24a", W - .1, 0, H - .08, -D / 2 + .03); neon("#ffb24a", D - .1, -W / 2 + .03, H - .08, 0, Math.PI / 2); neon("#6f9dff", D - .1, W / 2 - .03, H - .08, 0, Math.PI / 2);
+  // Pikumio-Wandbild über dem Fernseher (aus deinem Bild)
+  const imgTex = src => { const t = new THREE.TextureLoader().load(src); t.anisotropy = 4; return t; };
+  const sign = plane(1.75, .75, new THREE.MeshStandardMaterial({ map: imgTex("assets/chill/banner.jpg"), roughness: .9, emissive: "#ffffff", emissiveIntensity: .12, emissiveMap: imgTex("assets/chill/banner.jpg") }));
   sign.position.set(-1.2, 2.15, -D / 2 + .02); scene.add(sign);
   // Fenster mit Stadt bei Nacht
   const city = tex(512, 320, (x, w, h) => {
@@ -245,34 +255,63 @@ form button:disabled{opacity:.5}
       for (let yy = h - bh + 8; yy < h - 6; yy += 14) for (let xx = bx + 5; xx < bx + bw - 6; xx += 10) if (Math.random() < .35) { x.fillStyle = Math.random() < .5 ? "#ffd27a" : "#9fe8ff"; x.fillRect(xx, yy, 5, 7); } }
   });
   const win = plane(1.8, 1.1, new THREE.MeshBasicMaterial({ map: city })); win.position.set(1.4, 1.65, -D / 2 + .015); scene.add(win);
-  const frameM = new THREE.MeshStandardMaterial({ color: "#14091f" });
+  const frameM = new THREE.MeshStandardMaterial({ color: "#3a2212", roughness: .7 });
   [[1.9, .06, 1.4, 2.22], [1.9, .06, 1.4, 1.08], [.06, 1.2, .47, 1.65], [.06, 1.2, 2.33, 1.65], [.04, 1.1, 1.4, 1.65]].forEach(([w, h, x, y]) => { const f = new THREE.Mesh(new THREE.BoxGeometry(w, h, .05), frameM); f.position.set(x, y, -D / 2 + .03); scene.add(f); });
   // Sofa
-  const sofaM = new THREE.MeshStandardMaterial({ color: "#4b2c7f", roughness: .9 });
+  const sofaM = new THREE.MeshStandardMaterial({ color: "#7d7b86", roughness: .95 });
   const box = (w, h, d, m, x, y, z) => { const b = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), m); b.position.set(x, y, z); scene.add(b); return b; };
   box(2.6, .42, .9, sofaM, 0, .21, -1.75); box(2.6, .6, .22, sofaM, 0, .62, -2.15); box(.25, .62, .9, sofaM, -1.37, .31, -1.75); box(.25, .62, .9, sofaM, 1.37, .31, -1.75);
-  const cushion = new THREE.MeshStandardMaterial({ color: "#5d3a99", roughness: 1 });
+  const cushion = new THREE.MeshStandardMaterial({ color: "#8e8c98", roughness: 1 });
   [-.82, 0, .82].forEach(x => box(.78, .12, .7, cushion, x, .48, -1.7));
-  [["#ff6fb5", -1.0], ["#5fe6ff", 1.0]].forEach(([c, x]) => { const p = box(.38, .38, .12, new THREE.MeshStandardMaterial({ color: c, roughness: 1 }), x, .72, -1.98); p.rotation.z = x * .15; });
+  const pilTex = imgTex("assets/chill/pillow1.jpg");
+  [[-1.05, "#e9dcc0"], [1.05, "#4f6b3a"], [-.55, "#4f6b3a"]].forEach(([x, c], i) => { const mats = Array(6).fill(new THREE.MeshStandardMaterial({ color: c, roughness: 1 })); if (i !== 2) mats[4] = new THREE.MeshStandardMaterial({ map: pilTex, roughness: 1 });
+    const p = new THREE.Mesh(new THREE.BoxGeometry(.42, .42, .12), mats); p.position.set(x, .74, -1.98); p.rotation.z = x * .12; scene.add(p); });
+  // Kuscheldecke
+  box(.7, .03, .5, new THREE.MeshStandardMaterial({ color: "#d9cdb8", roughness: 1 }), -.9, .55, -1.55);
   // Sitzsäcke
   const bean = (c, x, z) => { const m = new THREE.Mesh(new THREE.SphereGeometry(.42, 24, 16), new THREE.MeshStandardMaterial({ color: c, roughness: 1 })); m.scale.set(1, .62, 1); m.position.set(x, .26, z); scene.add(m); };
-  bean("#2f6b6b", -1.85, -.2); bean("#7a3a2a", 1.85, -.2);
+  bean("#4f6b3a", -1.85, -.2); bean("#8a5a32", 1.85, -.2);
   // Tisch, Lavalampe, Plattenspieler, Pflanzen
-  box(1.1, .06, .6, new THREE.MeshStandardMaterial({ color: "#6b4a2e", roughness: .6 }), 0, .4, -.55);
+  box(1.1, .07, .6, new THREE.MeshStandardMaterial({ map: wood, roughness: .6 }), 0, .4, -.55);
   [[-.48, -.8], [.48, -.8], [-.48, -.3], [.48, -.3]].forEach(([x, z]) => box(.05, .38, .05, frameM, x, .19, z));
   const mug = new THREE.Mesh(new THREE.CylinderGeometry(.05, .045, .1, 16), new THREE.MeshStandardMaterial({ color: "#ffc867" })); mug.position.set(.3, .48, -.5); scene.add(mug);
   const lava = new THREE.Group(); lava.position.set(-2.4, 0, -2.0); scene.add(lava);
   box(.4, .6, .4, frameM, -2.4, .3, -2.0);
-  const glass = new THREE.Mesh(new THREE.CylinderGeometry(.08, .12, .45, 20), new THREE.MeshBasicMaterial({ color: "#ff4fa0", transparent: true, opacity: .35 })); glass.position.set(0, .83, 0); lava.add(glass);
+  const glass = new THREE.Mesh(new THREE.CylinderGeometry(.08, .12, .45, 20), new THREE.MeshBasicMaterial({ color: "#ffb347", transparent: true, opacity: .45 })); glass.position.set(0, .83, 0); lava.add(glass);
   const blobs = [0, 1, 2].map(i => { const b = new THREE.Mesh(new THREE.SphereGeometry(.045 + i * .01, 12, 10), new THREE.MeshBasicMaterial({ color: "#ffb36b" })); lava.add(b); return b; });
-  const lavaLight = new THREE.PointLight("#ff6fb5", 1.2, 4, 2); lavaLight.position.set(-2.4, 1, -1.9); scene.add(lavaLight);
+  const lavaLight = new THREE.PointLight("#ffb050", 1.1, 4, 2); lavaLight.position.set(-2.4, 1, -1.9); scene.add(lavaLight);
   box(.5, .5, .4, frameM, 2.4, .25, -2.0);
   const disc = new THREE.Mesh(new THREE.CylinderGeometry(.16, .16, .01, 32), new THREE.MeshStandardMaterial({ map: tex(128, 128, (x) => { x.fillStyle = "#0d0d0d"; x.beginPath(); x.arc(64, 64, 64, 0, 7); x.fill(); x.strokeStyle = "#222"; for (let r = 60; r > 20; r -= 5) { x.beginPath(); x.arc(64, 64, r, 0, 7); x.stroke(); } x.fillStyle = "#ff6fb5"; x.beginPath(); x.arc(64, 64, 18, 0, 7); x.fill(); x.fillStyle = "#fff"; x.fillRect(58, 60, 12, 3); }) }));
   disc.position.set(2.4, .51, -2.0); scene.add(disc);
   const plant = (x, z) => { box(.26, .3, .26, new THREE.MeshStandardMaterial({ color: "#c46b3a" }), x, .15, z); for (let i = 0; i < 5; i++) { const l = new THREE.Mesh(new THREE.ConeGeometry(.08, .55, 8), new THREE.MeshStandardMaterial({ color: "#3f8f4f" })); l.position.set(x + Math.sin(i * 1.3) * .07, .55, z + Math.cos(i * 1.3) * .07); l.rotation.z = Math.sin(i * 1.3) * .35; l.rotation.x = Math.cos(i * 1.3) * .35; scene.add(l); } };
-  plant(-2.6, 1.6); plant(2.6, 1.6);
+  plant(-2.6, 1.6); plant(2.6, 1.6); plant(-1.75, -2.3); plant(2.65, .2);
+  // Poster, Regal mit Kerzen, Efeu, Hängelampe – gemütlich wie bei Pikumio zu Hause
+  const poster = (src, w, h, x, y, z, ry) => { const g = new THREE.Group(); const f = new THREE.Mesh(new THREE.BoxGeometry(w + .06, h + .06, .03), frameM); g.add(f);
+    const pic = plane(w, h, new THREE.MeshStandardMaterial({ map: imgTex(src), roughness: .8, emissive: "#ffffff", emissiveIntensity: .1, emissiveMap: imgTex(src) })); pic.position.z = .017; g.add(pic); g.position.set(x, y, z); g.rotation.y = ry || 0; scene.add(g); };
+  poster("assets/chill/poster1.jpg", .5, .72, -2.45, 1.6, -D / 2 + .03); poster("assets/chill/poster2.jpg", .34, .72, -.02, 1.62, -D / 2 + .03);
+  poster("assets/chill/frame.jpg", .32, .28, 2.4, .72, -2.12, -.25);
+  const ivy = new THREE.MeshStandardMaterial({ color: "#3f7a34", roughness: 1 }), ivy2 = new THREE.MeshStandardMaterial({ color: "#5c9a3e", roughness: 1 });
+  const leafG = new THREE.SphereGeometry(.05, 6, 5);
+  const vine = (x0, z0, x1, z1, n) => { for (let i = 0; i < n; i++) { const t = i / (n - 1), x = x0 + (x1 - x0) * t, z = z0 + (z1 - z0) * t, hang = (i % 5 === 2) ? .25 + (i * 37 % 30) / 60 : .05;
+    for (let k = 0; k < 4; k++) { const l = new THREE.Mesh(leafG, k % 2 ? ivy : ivy2); l.position.set(x + (Math.random() - .5) * .08, H - .12 - (k / 3) * hang, z + (Math.random() - .5) * .08); l.scale.set(1, .6, 1.3); scene.add(l); } } };
+  vine(-W / 2 + .08, -D / 2 + .08, W / 2 - .08, -D / 2 + .08, 34); vine(-W / 2 + .08, -D / 2 + .1, -W / 2 + .08, D / 2 - .1, 28);
+  // Regal über der Leinwand mit Kerzen und Pflanzen
+  box(.22, .04, 2.9, frameM, -W / 2 + .11, 2.48, -.3);
+  const flames = [];
+  for (let i = 0; i < 6; i++) { const z = -1.6 + i * .52; if (i % 2) { const pt = new THREE.Mesh(new THREE.CylinderGeometry(.06, .05, .1, 10), new THREE.MeshStandardMaterial({ color: "#c46b3a" })); pt.position.set(-W / 2 + .12, 2.55, z); scene.add(pt); const pl = new THREE.Mesh(new THREE.SphereGeometry(.08, 8, 6), ivy2); pl.position.set(-W / 2 + .12, 2.66, z); scene.add(pl); }
+    else { const c = new THREE.Mesh(new THREE.CylinderGeometry(.03, .03, .08, 10), new THREE.MeshStandardMaterial({ color: "#f2e6cf" })); c.position.set(-W / 2 + .12, 2.54, z); scene.add(c); const fl = new THREE.Mesh(new THREE.SphereGeometry(.018, 8, 6), new THREE.MeshBasicMaterial({ color: "#ffcf6b" })); fl.position.set(-W / 2 + .12, 2.6, z); scene.add(fl); flames.push(fl); } }
+  // Kerzen und Laterne auf dem Tisch
+  [[-.35, -.5], [-.2, -.65], [.05, -.45]].forEach(([x, z]) => { const c = new THREE.Mesh(new THREE.CylinderGeometry(.03, .03, .09, 10), new THREE.MeshStandardMaterial({ color: "#f2e6cf" })); c.position.set(x, .48, z); scene.add(c);
+    const fl = new THREE.Mesh(new THREE.SphereGeometry(.016, 8, 6), new THREE.MeshBasicMaterial({ color: "#ffcf6b" })); fl.position.set(x, .545, z); scene.add(fl); flames.push(fl); });
+  const candleL = new THREE.PointLight("#ffb050", .9, 2.6, 2); candleL.position.set(-.2, .7, -.55); scene.add(candleL);
+  const shelfL = new THREE.PointLight("#ffb050", .6, 3, 2); shelfL.position.set(-W / 2 + .5, 2.4, -.3); scene.add(shelfL);
+  // Hängelampe
+  const cord = new THREE.Mesh(new THREE.CylinderGeometry(.006, .006, .7, 6), frameM); cord.position.set(0, H - .35, -.55); scene.add(cord);
+  const shade = new THREE.Mesh(new THREE.SphereGeometry(.2, 20, 14, 0, Math.PI * 2, 0, Math.PI / 2), new THREE.MeshStandardMaterial({ color: "#d9a35a", emissive: "#ff9a3c", emissiveIntensity: .45, side: THREE.DoubleSide, roughness: .8 }));
+  shade.position.set(0, H - .72, -.55); scene.add(shade);
+  const pend = new THREE.PointLight("#ffc070", .8, 5, 2); pend.position.set(0, H - .85, -.55); scene.add(pend);
   // Fernseher an der Wand: chilliges Bild in Schleife oder das Spielbrett
-  sign.position.y = 2.24;
+  sign.position.set(-1.2, 2.33, -D / 2 + .02);
   const TVX = -1.2, TVY = 1.42, TVZ = -D / 2 + .05;
   const tvC = document.createElement("canvas"); tvC.width = 512; tvC.height = 288; const tvX = tvC.getContext("2d");
   const tvT = new THREE.CanvasTexture(tvC);
@@ -282,7 +321,7 @@ form button:disabled{opacity:.5}
   // Tür rechts: geht auf, wenn jemand reinkommt
   const outside = plane(.9, 2, new THREE.MeshBasicMaterial({ color: "#ffe2a6" })); outside.rotation.y = -Math.PI / 2; outside.position.set(W / 2 - .006, 1, -.9); scene.add(outside);
   const doorPivot = new THREE.Group(); doorPivot.position.set(W / 2 - .04, 1, -.45); scene.add(doorPivot);
-  const leaf = new THREE.Mesh(new THREE.BoxGeometry(.04, 2, .9), new THREE.MeshStandardMaterial({ color: "#6b3f8f", roughness: .7 })); leaf.position.set(0, 0, -.45); doorPivot.add(leaf);
+  const leaf = new THREE.Mesh(new THREE.BoxGeometry(.04, 2, .9), new THREE.MeshStandardMaterial({ color: "#5a3518", roughness: .7 })); leaf.position.set(0, 0, -.45); doorPivot.add(leaf);
   const knob = new THREE.Mesh(new THREE.SphereGeometry(.035, 12, 10), new THREE.MeshStandardMaterial({ color: "#ffc867", metalness: .6, roughness: .3 })); knob.position.set(-.04, -.05, -.8); doorPivot.add(knob);
   box(.06, 2.08, .06, frameM, W / 2 - .03, 1.04, -.42); box(.06, 2.08, .06, frameM, W / 2 - .03, 1.04, -1.38); box(.06, .07, 1.02, frameM, W / 2 - .03, 2.04, -.9);
   const doorLight = new THREE.PointLight("#ffd28a", 0, 3, 2); doorLight.position.set(W / 2 - .5, 1.4, -.9); scene.add(doorLight);
@@ -310,10 +349,10 @@ form button:disabled{opacity:.5}
   }
   // Lichterkette
   const bulbs = [];
-  for (let i = 0; i < 22; i++) { const x = -W / 2 + .2 + i * ((W - .4) / 21); const b = new THREE.Mesh(new THREE.SphereGeometry(.03, 8, 6), new THREE.MeshBasicMaterial({ color: COLORS[i % 5] })); b.position.set(x, H - .25 - Math.sin(i / 21 * Math.PI * 3) * .06 - .05, -D / 2 + .08); scene.add(b); bulbs.push(b); }
-  scene.add(new THREE.AmbientLight("#8f7ab8", .55));
-  const warm = new THREE.PointLight("#ffd29a", .9, 9, 2); warm.position.set(0, 2.5, 0); scene.add(warm);
-  const cyanL = new THREE.PointLight("#5fe6ff", .5, 7, 2); cyanL.position.set(2.4, 1.6, -1.5); scene.add(cyanL);
+  for (let i = 0; i < 22; i++) { const x = -W / 2 + .2 + i * ((W - .4) / 21); const b = new THREE.Mesh(new THREE.SphereGeometry(.03, 8, 6), new THREE.MeshBasicMaterial({ color: "#ffd27a" })); b.position.set(x, H - .25 - Math.sin(i / 21 * Math.PI * 3) * .06 - .05, -D / 2 + .08); scene.add(b); bulbs.push(b); }
+  scene.add(new THREE.AmbientLight("#ffd9b0", .28)); scene.add(new THREE.HemisphereLight("#ffd29a", "#3a2412", .22));
+  const warm = new THREE.PointLight("#ffc98a", .6, 9, 2); warm.position.set(0, 2.5, 0.6); scene.add(warm);
+  const cyanL = new THREE.PointLight("#6f9dff", .3, 6, 2); cyanL.position.set(1.4, 1.6, -1.9); scene.add(cyanL);
 
   // ---------- Leute im Raum ----------
   const SEATS = [[-.82, .78, -1.68], [0, .78, -1.68], [.82, .78, -1.68], [-1.85, .62, -.2], [1.85, .62, -.2], [-.9, .4, .3], [.9, .4, .3], [0, .4, .6]];
@@ -326,7 +365,7 @@ form button:disabled{opacity:.5}
   const people = new Map();
   buildTables();
   // Pikumio-Bär als Figur auf der Couch: Kappe und Kette in der Farbe des Namens
-  const FUR = new THREE.MeshStandardMaterial({ color: "#b06d3c", roughness: .95, emissive: "#5a2e12", emissiveIntensity: .35 }), FUR2 = new THREE.MeshStandardMaterial({ color: "#d79a62", roughness: .95, emissive: "#6b3a18", emissiveIntensity: .3 });
+  const FUR = new THREE.MeshStandardMaterial({ color: "#b06d3c", roughness: .95, emissive: "#5a2e12", emissiveIntensity: .1 }), FUR2 = new THREE.MeshStandardMaterial({ color: "#d79a62", roughness: .95, emissive: "#6b3a18", emissiveIntensity: .08 });
   const NOSE = new THREE.MeshStandardMaterial({ color: "#86b9ec", roughness: .9 }), GOLD = new THREE.MeshStandardMaterial({ color: "#f2c14e", metalness: .85, roughness: .25, emissive: "#6b4a00", emissiveIntensity: .25 });
   const GLASS = new THREE.MeshStandardMaterial({ color: "#16131f", metalness: .6, roughness: .15, emissive: "#ff6a3d", emissiveIntensity: .08 });
   const sph = (r, m, x, y, z, sx, sy, sz, par) => { const o = new THREE.Mesh(new THREE.SphereGeometry(r, 20, 16), m); o.position.set(x, y, z); o.scale.set(sx || 1, sy || 1, sz || 1); par.add(o); return o; };
@@ -427,7 +466,10 @@ form button:disabled{opacity:.5}
 
   // ---------- Fernseher: Lo-Fi-Abend in Schleife ----------
   const STARS = Array.from({ length: 46 }, (_, i) => [(i * 97 + 13) % 512, (i * 53 + 7) % 110, i]);
+  const tvPic = new Image(); tvPic.src = "assets/chill/tvpic.jpg";
   function tvChill(x, w, h, t) {
+    const ph = t % 32; if (ph > 23 && tvPic.complete && tvPic.naturalWidth) { const k = (ph - 23) / 9, z = 1.05 + k * .12, iw = w * z, ih = iw * tvPic.naturalHeight / tvPic.naturalWidth;
+      x.fillStyle = "#000"; x.fillRect(0, 0, w, h); x.globalAlpha = Math.min(1, (ph - 23) * 2, (32 - ph) * 2); x.drawImage(tvPic, (w - iw) / 2, (h - ih) / 2, iw, Math.max(ih, h * z)); x.globalAlpha = 1; return; }
     const hz = h * .6;
     const g = x.createLinearGradient(0, 0, 0, hz); g.addColorStop(0, "#160a33"); g.addColorStop(.55, "#7c2f74"); g.addColorStop(1, "#ff9259"); x.fillStyle = g; x.fillRect(0, 0, w, hz);
     STARS.forEach(([sx, sy, i]) => { x.fillStyle = `rgba(255,255,255,${.2 + .7 * Math.abs(Math.sin(t * .9 + i))})`; x.fillRect(sx, sy, 2, 2); });
@@ -1289,7 +1331,8 @@ form button:disabled{opacity:.5}
     blobs.forEach((b, i) => b.position.set(Math.sin(now / 1700 + i) * .03, .7 + (Math.sin(now / (1400 + i * 300) + i * 2) * .5 + .5) * .24, Math.cos(now / 1900 + i) * .03));
     lavaLight.intensity = 1 + Math.sin(now / 900) * .25;
     disc.rotation.y = KloMusik.isOn() || !song.paused ? now / 600 : disc.rotation.y;
-    bulbs.forEach((b, i) => b.material.color.setHSL(((now / 4000) + i / 22) % 1, .9, .62));
+    bulbs.forEach((b, i) => b.material.color.setHSL(.1, .95, .62 + Math.sin(now / 700 + i * 1.7) * .08));
+    flames.forEach((f, i) => f.scale.setScalar(1 + Math.sin(now / 90 + i * 2.3) * .18 + Math.sin(now / 37 + i) * .08)); candleL.intensity = .85 + Math.sin(now / 80) * .08 + Math.sin(now / 53) * .06;
     for (const g of people.values()) {
       const s = g.userData.seat; if (!s) continue;
       const u = g.userData, ph = u.phase; let groove = KloMusik.isOn(); try { groove = groove || !song.paused || kOn; } catch (e) {}
