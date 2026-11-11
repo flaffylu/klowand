@@ -22,8 +22,8 @@ html,body{height:100%;margin:0;background:var(--night);color:var(--ink);font-fam
 .top button[aria-pressed=true]{border-color:#ff4f4f;color:#ff8080;box-shadow:0 0 14px rgba(255,79,79,.5)}
 .panel{position:fixed;left:0;right:0;bottom:0;z-index:4;padding:8px 12px calc(12px + env(safe-area-inset-bottom,0px));
   background:linear-gradient(0deg,rgba(6,3,13,.97) 78%,rgba(6,3,13,0));display:flex;flex-direction:column;gap:8px}
-.tabs{display:flex;gap:6px}
-.tabs button{flex:1;min-height:44px;padding:0 4px;border-radius:12px;border:1.5px solid var(--line);background:rgba(255,255,255,.05);color:var(--ink);font:700 .9rem var(--f-ui);cursor:pointer;white-space:nowrap}
+.tabs{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none}.tabs::-webkit-scrollbar{display:none}
+.tabs button{flex:1 0 auto;min-height:44px;padding:0 10px;border-radius:12px;border:1.5px solid var(--line);background:rgba(255,255,255,.05);color:var(--ink);font:700 .9rem var(--f-ui);cursor:pointer;white-space:nowrap}
 .tabs button[aria-selected=true]{background:var(--pink);border-color:var(--pink);color:#140612}
 .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 .btn{min-height:44px;padding:0 16px;border-radius:12px;border:1.5px solid var(--line);background:rgba(255,255,255,.07);color:var(--ink);font:700 1rem var(--f-ui);cursor:pointer}
@@ -60,6 +60,10 @@ label.bpm input{flex:1;accent-color:var(--pink)}
 .rec{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font:600 .95rem var(--f-ui);color:var(--muted)}
 .rec a{color:var(--cyan);font-weight:700}
 .hint{font:600 .85rem var(--f-ui);color:var(--muted)}
+#danceCv{width:100%;height:min(44vh,330px);display:block;border-radius:14px;background:rgba(10,5,22,.85);touch-action:none}
+.kar textarea{width:100%;min-height:70px;border-radius:12px;border:1.5px solid var(--line);background:rgba(255,255,255,.06);color:var(--ink);font:600 1rem var(--f-ui);padding:8px 10px;box-sizing:border-box}
+.prompter{height:96px;overflow:hidden;border-radius:12px;background:rgba(255,255,255,.05);padding:6px 12px;font:700 1.35rem/1.35 var(--f-ui);color:#fff;text-align:center;white-space:pre-wrap}
+.meter{flex:1;height:10px;border-radius:5px;background:rgba(255,255,255,.1);overflow:hidden;min-width:80px}.meter i{display:block;height:100%;width:0;background:linear-gradient(90deg,#6bffc8,#ffc43d,#ff3ea5)}
 .load{position:fixed;inset:0;display:grid;place-items:center;font:400 1.6rem var(--f-sign);color:var(--pink);z-index:9;background:var(--night)}
 </style>
 </head>
@@ -78,6 +82,8 @@ label.bpm input{flex:1;accent-color:var(--pink)}
     <button type="button" role="tab" aria-selected="false" data-t="pads">🎹 Live spielen</button>
     <button type="button" role="tab" aria-selected="false" data-t="smp">🎛️ Samples</button>
     <button type="button" role="tab" aria-selected="false" data-t="own">🎧 Lied</button>
+    <button type="button" role="tab" aria-selected="false" data-t="tanz">🕺 Tanzen</button>
+    <button type="button" role="tab" aria-selected="false" data-t="kar">🎤 Karaoke</button>
   </div>
 
   <section id="t-beat">
@@ -110,6 +116,18 @@ label.bpm input{flex:1;accent-color:var(--pink)}
     <div class="row" style="margin-top:6px"><label class="add" style="flex:1">＋ Lied vom Handy wählen<input type="file" id="ownFile" accept="audio/*"></label><button type="button" class="btn go" id="ownPlay" hidden>⏸ Pause</button></div>
   </section>
 
+  <section id="t-tanz" hidden>
+    <canvas id="danceCv" aria-label="Tanz-Spiel: Tippe die Spalte, wenn der Pfeil die Linie erreicht"></canvas>
+    <div class="row" style="margin-top:6px"><button type="button" class="btn go" id="danceGo">▶ Tanz-Runde starten</button><span class="hint" id="danceInfo">Tippe im Takt, wenn die Pfeile die Linie treffen. Rekord: <b id="danceBest">0</b></span></div>
+  </section>
+
+  <section id="t-kar" class="kar" hidden>
+    <p class="hint">🎧 Am besten mit Kopfhörern singen, sonst pfeift es. Wähl unter „🎧 Lied“ deinen Song, schalte hier das Mikro an und drück oben „⏺ Aufnehmen“ – dann hast du deinen Auftritt als Datei.</p>
+    <div class="row"><button type="button" class="btn go" id="micBtn" aria-pressed="false">🎤 Mikro an</button><label class="bpm">Hall <input type="range" id="echo" min="0" max="100" value="45"></label><div class="meter"><i id="micLv"></i></div></div>
+    <div class="prompter" id="prompter">Hier läuft dein Liedtext mit.</div>
+    <textarea id="lyrics" placeholder="Liedtext hier reinschreiben oder einfügen (bleibt nur auf diesem Handy)"></textarea>
+  </section>
+
   <div class="rec" id="recOut" hidden></div>
 </div>
 
@@ -117,6 +135,7 @@ label.bpm input{flex:1;accent-color:var(--pink)}
 <script src="lang.js"></script>
 <script src="config.js"></script>
 <script src="demo-trial.js"></script>
+<script src="xp.js"></script>
 <script>
 (async function () {
   const $ = id => document.getElementById(id);
@@ -273,9 +292,82 @@ label.bpm input{flex:1;accent-color:var(--pink)}
   // ---------- Tabs ----------
   document.querySelectorAll(".tabs button").forEach(b => b.onclick = () => {
     document.querySelectorAll(".tabs button").forEach(x => x.setAttribute("aria-selected", x === b));
-    ["beat", "pads", "smp", "own"].forEach(t => $("t-" + t).hidden = t !== b.dataset.t);
+    ["beat", "pads", "smp", "own", "tanz", "kar"].forEach(t => $("t-" + t).hidden = t !== b.dataset.t);
+    if (b.dataset.t === "tanz") danceDraw();
     if (b.dataset.t === "smp" || b.dataset.t === "beat") { audio(); smp.forEach((s, i) => s && decode(i)); }
   });
+
+  // ---------- 🕺 Tanz-Spiel: Pfeile fallen im Takt, im richtigen Moment die Spalte tippen ----------
+  const dcv = $("danceCv"), dx = dcv.getContext("2d"), LANES = ["←", "↓", "↑", "→"], LC = ["#ff3ea5", "#22e4ff", "#6bffc8", "#ffc43d"];
+  let dance = null, dBest = +(localStorage.getItem("klowand-tanz-best") || 0); $("danceBest").textContent = dBest;
+  const FALL = 1.6, DUR = 40;
+  function danceSize() { const r = dcv.getBoundingClientRect(), d = Math.min(devicePixelRatio || 1, 2); if (dcv.width !== Math.round(r.width * d)) { dcv.width = Math.round(r.width * d); dcv.height = Math.round(r.height * d); } return d; }
+  function danceDraw() {
+    const d = danceSize(), W = dcv.width, H = dcv.height, lw = W / 4, hitY = H - 60 * d; dx.clearRect(0, 0, W, H);
+    for (let i = 0; i < 4; i++) { dx.fillStyle = i % 2 ? "rgba(255,255,255,.03)" : "rgba(255,255,255,.06)"; dx.fillRect(i * lw, 0, lw, H);
+      const fl = dance && dance.fl[i] > 0 ? dance.fl[i] : 0; dx.globalAlpha = .35 + fl * .65; dx.strokeStyle = LC[i]; dx.lineWidth = 4 * d; dx.beginPath(); dx.arc(i * lw + lw / 2, hitY, 24 * d, 0, 7); dx.stroke();
+      dx.fillStyle = LC[i]; dx.font = `800 ${26 * d}px sans-serif`; dx.textAlign = "center"; dx.textBaseline = "middle"; dx.fillText(LANES[i], i * lw + lw / 2, hitY); dx.globalAlpha = 1; }
+    if (!dance) { dx.fillStyle = "#fff"; dx.font = `700 ${18 * d}px sans-serif`; dx.textAlign = "center"; dx.fillText("Drück „Tanz-Runde starten“", W / 2, H / 2 - 20 * d); return; }
+    const now = ctx.currentTime;
+    dance.notes.forEach(n => { if (n.hit || n.miss) return; const y = hitY - (n.t - now) / FALL * (hitY + 30 * d); if (y < -30 * d) return;
+      dx.fillStyle = LC[n.l]; dx.shadowColor = LC[n.l]; dx.shadowBlur = 16 * d; dx.beginPath(); dx.arc(n.l * lw + lw / 2, y, 21 * d, 0, 7); dx.fill(); dx.shadowBlur = 0;
+      dx.fillStyle = "#0b0716"; dx.font = `900 ${24 * d}px sans-serif`; dx.fillText(LANES[n.l], n.l * lw + lw / 2, y + 1); });
+    dx.textAlign = "left"; dx.fillStyle = "#fff"; dx.font = `800 ${20 * d}px sans-serif`; dx.fillText(`Punkte ${dance.score}`, 12 * d, 24 * d);
+    dx.textAlign = "right"; dx.fillText(`Combo x${dance.combo}  ·  ${Math.max(0, Math.ceil(dance.end - now))}s`, W - 12 * d, 24 * d);
+    if (dance.msg && now - dance.msgT < .5) { dx.textAlign = "center"; dx.font = `900 ${30 * d}px sans-serif`; dx.fillStyle = dance.msgC; dx.fillText(dance.msg, W / 2, H / 2); }
+  }
+  function danceStart() {
+    audio(); if (!playing) { if (!Object.values(pat).some(r => r.some(Boolean))) setPre("disco"), drawGrid(); $("play").click(); }
+    const beat = 60 / bpm, t0 = nextT + beat * 2, notes = []; let seed = 7;
+    const rnd = () => (seed = (seed * 9301 + 49297) % 233280) / 233280;
+    for (let t = t0; t < t0 + DUR; t += beat / 2) { if (rnd() < (t - t0 < 10 ? .45 : .62)) notes.push({ t, l: Math.floor(rnd() * 4) }); }
+    dance = { notes, score: 0, combo: 0, best: 0, end: t0 + DUR, fl: [0, 0, 0, 0], msg: "", msgT: 0, msgC: "#fff", hits: 0 };
+    $("danceGo").disabled = true; $("danceInfo").textContent = "Los geht's! Im Takt tippen …";
+    (function loop() { if (!dance) return; const now = ctx.currentTime;
+      dance.notes.forEach(n => { if (!n.hit && !n.miss && now - n.t > .22) { n.miss = true; dance.combo = 0; dance.msg = "Daneben"; dance.msgT = now; dance.msgC = "#ff6f6f"; } });
+      dance.fl = dance.fl.map(v => Math.max(0, v - .06)); danceDraw();
+      if (now > dance.end + .4) return danceEnd(); requestAnimationFrame(loop); })();
+  }
+  function danceHit(l) {
+    if (!dance) return; const now = ctx.currentTime; dance.fl[l] = 1;
+    let best = null; dance.notes.forEach(n => { if (n.l === l && !n.hit && !n.miss && Math.abs(n.t - now) < .22 && (!best || Math.abs(n.t - now) < Math.abs(best.t - now))) best = n; });
+    if (!best) { dance.combo = 0; return; }
+    const off = Math.abs(best.t - now); best.hit = true; dance.combo++; dance.hits++; dance.best = Math.max(dance.best, dance.combo);
+    const p = off < .08 ? 100 : 50; dance.score += p * (1 + Math.floor(dance.combo / 10)); dance.msg = p === 100 ? "PERFEKT!" : "Gut!"; dance.msgT = now; dance.msgC = p === 100 ? "#6bffc8" : "#ffc43d";
+    flash = Math.max(flash, .8); laserBurst = p === 100 ? 1 : laserBurst; padHit = LC[l];
+  }
+  function danceEnd() {
+    const sc = dance.score, mc = dance.best, rate = Math.round(dance.hits / dance.notes.length * 100); dance = null;
+    if (sc > dBest) { dBest = sc; try { localStorage.setItem("klowand-tanz-best", sc); } catch (e) {} $("danceBest").textContent = sc; }
+    $("danceGo").disabled = false; $("danceInfo").innerHTML = `🎉 ${sc} Punkte · ${rate}% getroffen · beste Combo ${mc} · Rekord: <b id="danceBest">${dBest}</b>`;
+    window.kloXP && kloXP.add("dance"); danceDraw();
+  }
+  $("danceGo").onclick = danceStart;
+  dcv.addEventListener("pointerdown", e => { const r = dcv.getBoundingClientRect(); danceHit(Math.min(3, Math.max(0, Math.floor((e.clientX - r.left) / r.width * 4)))); });
+  addEventListener("keydown", e => { const k = { ArrowLeft: 0, ArrowDown: 1, ArrowUp: 2, ArrowRight: 3 }[e.key]; if (k != null && dance) { e.preventDefault(); danceHit(k); } });
+
+  // ---------- 🎤 Karaoke: Mikro mit Hall in die Disco, Liedtext läuft mit ----------
+  let mic = null, micGain, wetGain, micAn, micData;
+  const lyr = $("lyrics"); try { lyr.value = localStorage.getItem("klowand-lyrics") || ""; } catch (e) {}
+  lyr.oninput = () => { try { localStorage.setItem("klowand-lyrics", lyr.value); } catch (e) {} };
+  function impulse() { const len = ctx.sampleRate * 2.2, b = ctx.createBuffer(2, len, ctx.sampleRate); for (let c = 0; c < 2; c++) { const d = b.getChannelData(c); for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 2.6); } return b; }
+  $("echo").oninput = e => { if (wetGain) wetGain.gain.value = +e.target.value / 100 * .9; };
+  $("micBtn").onclick = async () => {
+    audio();
+    if (mic) { mic.getTracks().forEach(t => t.stop()); mic = null; $("micBtn").setAttribute("aria-pressed", false); $("micBtn").textContent = "🎤 Mikro an"; return; }
+    try { mic = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } }); }
+    catch (e) { $("prompter").textContent = "Ohne Erlaubnis fürs Mikrofon geht Karaoke nicht. Du kannst es in den Browser-Einstellungen erlauben."; return; }
+    const src = ctx.createMediaStreamSource(mic); micGain = ctx.createGain(); micGain.gain.value = 1; wetGain = ctx.createGain(); wetGain.gain.value = +$("echo").value / 100 * .9;
+    const conv = ctx.createConvolver(); conv.buffer = impulse(); micAn = ctx.createAnalyser(); micAn.fftSize = 256; micData = new Uint8Array(micAn.fftSize);
+    src.connect(micAn); src.connect(micGain).connect(master); src.connect(conv).connect(wetGain).connect(master);
+    $("micBtn").setAttribute("aria-pressed", true); $("micBtn").textContent = "⏹ Mikro aus"; window.kloXP && kloXP.add("karaoke");
+    (function lv() { if (!mic) { $("micLv").style.width = "0"; return; } micAn.getByteTimeDomainData(micData); let m = 0; for (const v of micData) m = Math.max(m, Math.abs(v - 128)); $("micLv").style.width = Math.min(100, m / 90 * 100) + "%"; if (m > 40) flash = Math.max(flash, m / 128); requestAnimationFrame(lv); })();
+  };
+  // Liedtext läuft mit dem eigenen Lied mit (oder langsam von allein)
+  let pT0 = performance.now();
+  setInterval(() => { if ($("t-kar").hidden) return; const lines = lyr.value.split("\n").filter(l => l.trim()); if (!lines.length) { $("prompter").textContent = "Hier läuft dein Liedtext mit. Füg ihn unten ein."; return; }
+    let f; if (ownAudio && ownAudio.duration && !ownAudio.paused) f = ownAudio.currentTime / ownAudio.duration; else f = ((performance.now() - pT0) / 1000 / (lines.length * 4)) % 1;
+    const i = Math.min(lines.length - 1, Math.floor(f * lines.length)); $("prompter").innerHTML = [lines[i - 1] || "", `<span style="color:#ffc43d;font-size:1.15em">${lines[i].replace(/[&<>]/g, "")}</span>`, lines[i + 1] || ""].map(l => l.replace ? l : "").join("\n"); }, 400);
 
   // ---------- Aufnehmen: Beat oder Live-Spiel als Datei zum Teilen ----------
   let rec = null, chunks = [];

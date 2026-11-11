@@ -51,6 +51,15 @@ form button:disabled{opacity:.5}
 .name p{margin:0;font:600 1rem var(--f-ui);color:var(--muted)}
 .load{position:fixed;inset:0;display:grid;place-items:center;font:400 1.6rem var(--f-sign);color:var(--pink);z-index:9;background:var(--night)}
 .acts{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none}
+.avov{position:fixed;inset:0;z-index:30;background:rgba(6,3,13,.8);display:grid;place-items:center;padding:12px}
+.avbox{width:min(460px,100%);max-height:92vh;overflow:auto;background:#1a1030;border:1.5px solid var(--line);border-radius:18px;padding:14px;color:var(--ink)}
+.avbox h2{margin:0 0 8px;font:400 1.5rem "Permanent Marker",cursive;color:#ffd23f}
+.avr{margin:8px 0}.avr b{display:block;font:700 .85rem var(--f-ui);color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px}
+.avr div{display:flex;gap:6px;flex-wrap:wrap}
+.avr button,.avb button{min-height:40px;padding:0 12px;border-radius:999px;border:1.5px solid var(--line);background:rgba(255,255,255,.08);color:var(--ink);font:700 .95rem var(--f-ui);cursor:pointer}
+.avr button[aria-pressed=true]{outline:3px solid #ffd23f;outline-offset:1px}
+.avb{display:flex;gap:8px;justify-content:flex-end;margin-top:10px}.avb .go{background:#c6ff6a;color:#111;border-color:#c6ff6a}
+.avbox.dart canvas{width:100%;aspect-ratio:1;display:block;touch-action:none;border-radius:12px;background:#0b0716}
 .acts button,.tvbar button{flex:0 0 auto;min-height:40px;padding:0 13px;border-radius:999px;border:1.5px solid var(--line);background:rgba(255,255,255,.08);color:var(--ink);font:700 .95rem var(--f-ui);cursor:pointer}
 .acts button[aria-pressed=true]{border-color:var(--cyan);color:var(--cyan)}
 .log .gift{color:var(--gold)}
@@ -121,6 +130,8 @@ form button:disabled{opacity:.5}
     <button type="button" id="aGift">🎁 Geschenk</button>
     <button type="button" id="aGame">🎲 Spiele</button>
 <button type="button" id="aSnooker">🎱 Snooker</button>
+    <button type="button" id="aDart">🎯 Dart</button>
+    <button type="button" id="aAv">🐻 Mein Avatar</button>
         <button type="button" id="aKino" aria-pressed="false">🎬 Leinwand</button>
     <button type="button" id="aTv" aria-pressed="false">📺 TV</button>
     <button type="button" id="aSong" aria-pressed="false">🎧 <span id="aSongTxt">Eigene Musik</span></button>
@@ -186,6 +197,7 @@ form button:disabled{opacity:.5}
 <script src="filter.js"></script>
 <script src="music.js"></script>
 <script src="spotify.js"></script>
+<script src="xp.js"></script>
 <script>
 (async function () {
   const $ = id => document.getElementById(id);
@@ -247,14 +259,21 @@ form button:disabled{opacity:.5}
   const sign = plane(1.75, .75, new THREE.MeshStandardMaterial({ map: imgTex("assets/chill/banner.jpg"), roughness: .9, emissive: "#ffffff", emissiveIntensity: .12, emissiveMap: imgTex("assets/chill/banner.jpg") }));
   sign.position.set(-1.2, 2.15, -D / 2 + .02); scene.add(sign);
   // Fenster mit Stadt bei Nacht
-  const city = tex(512, 320, (x, w, h) => {
-    const g = x.createLinearGradient(0, 0, 0, h); g.addColorStop(0, "#0b1440"); g.addColorStop(1, "#3b1f5e"); x.fillStyle = g; x.fillRect(0, 0, w, h);
-    for (let i = 0; i < 60; i++) { x.fillStyle = "rgba(255,255,255," + Math.random() + ")"; x.fillRect(Math.random() * w, Math.random() * h * .5, 2, 2); }
-    x.fillStyle = "#fff6d0"; x.beginPath(); x.arc(420, 60, 26, 0, 7); x.fill();
-    for (let i = 0; i < 14; i++) { const bw = 30 + Math.random() * 30, bh = 80 + Math.random() * 160, bx = i * 38 - 10; x.fillStyle = "#140c26"; x.fillRect(bx, h - bh, bw, bh);
-      for (let yy = h - bh + 8; yy < h - 6; yy += 14) for (let xx = bx + 5; xx < bx + bw - 6; xx += 10) if (Math.random() < .35) { x.fillStyle = Math.random() < .5 ? "#ffd27a" : "#9fe8ff"; x.fillRect(xx, yy, 5, 7); } }
+  // Fenster: draußen wechseln Tag, Abendrot und Nacht nach der echten Uhrzeit
+  const BLD = Array.from({ length: 14 }, (_, i) => ({ bw: 30 + ((i * 37) % 30), bh: 80 + ((i * 71) % 160), bx: i * 38 - 10, lit: Array.from({ length: 80 }, (_, k) => ((i * 13 + k * 7) % 10) / 10) }));
+  const skyPhase = () => { const h = new Date().getHours() + new Date().getMinutes() / 60; return h >= 8 && h < 17 ? "tag" : (h >= 6 && h < 8) || (h >= 17 && h < 20) ? "abend" : "nacht"; };
+  const drawSky = () => tex(512, 320, (x, w, h) => {
+    const ph = skyPhase(), g = x.createLinearGradient(0, 0, 0, h);
+    if (ph === "tag") { g.addColorStop(0, "#4fa8ff"); g.addColorStop(1, "#bfe6ff"); } else if (ph === "abend") { g.addColorStop(0, "#3b2a7a"); g.addColorStop(.55, "#ff7b5c"); g.addColorStop(1, "#ffc46b"); } else { g.addColorStop(0, "#0b1440"); g.addColorStop(1, "#3b1f5e"); }
+    x.fillStyle = g; x.fillRect(0, 0, w, h);
+    if (ph === "nacht") { for (let i = 0; i < 60; i++) { x.fillStyle = "rgba(255,255,255," + ((i * 37 % 10) / 10) + ")"; x.fillRect((i * 97) % w, (i * 53) % (h * .5), 2, 2); } x.fillStyle = "#fff6d0"; x.beginPath(); x.arc(420, 60, 26, 0, 7); x.fill(); }
+    else { x.fillStyle = ph === "tag" ? "#fff3a0" : "#ffdf8a"; x.beginPath(); x.arc(ph === "tag" ? 400 : 330, ph === "tag" ? 70 : 190, ph === "tag" ? 30 : 38, 0, 7); x.fill();
+      x.fillStyle = ph === "tag" ? "rgba(255,255,255,.9)" : "rgba(255,200,190,.6)"; [[90, 70], [250, 50], [160, 120]].forEach(([cx, cy]) => { [0, 22, 44].forEach((d, k) => { x.beginPath(); x.arc(cx + d, cy - (k === 1 ? 10 : 0), 20, 0, 7); x.fill(); }); }); }
+    BLD.forEach(b => { x.fillStyle = ph === "tag" ? "#6d7a93" : ph === "abend" ? "#3a2440" : "#140c26"; x.fillRect(b.bx, h - b.bh, b.bw, b.bh); let k = 0;
+      for (let yy = h - b.bh + 8; yy < h - 6; yy += 14) for (let xx = b.bx + 5; xx < b.bx + b.bw - 6; xx += 10) { const r = b.lit[k++ % 80]; if (ph === "tag" ? r < .5 : r < (ph === "abend" ? .25 : .35)) { x.fillStyle = ph === "tag" ? "#a9c8e8" : r < .15 ? "#9fe8ff" : "#ffd27a"; x.fillRect(xx, yy, 5, 7); } } });
   });
-  const win = plane(1.8, 1.1, new THREE.MeshBasicMaterial({ map: city })); win.position.set(1.4, 1.65, -D / 2 + .015); scene.add(win);
+  const win = plane(1.8, 1.1, new THREE.MeshBasicMaterial({ map: drawSky() })); win.position.set(1.4, 1.65, -D / 2 + .015); scene.add(win);
+  let lastSky = skyPhase(); setInterval(() => { const p = skyPhase(); if (p !== lastSky) { lastSky = p; const old = win.material.map; win.material.map = drawSky(); win.material.needsUpdate = true; old.dispose(); } }, 60000);
   const frameM = new THREE.MeshStandardMaterial({ color: "#3a2212", roughness: .7 });
   [[1.9, .06, 1.4, 2.22], [1.9, .06, 1.4, 1.08], [.06, 1.2, .47, 1.65], [.06, 1.2, 2.33, 1.65], [.04, 1.1, 1.4, 1.65]].forEach(([w, h, x, y]) => { const f = new THREE.Mesh(new THREE.BoxGeometry(w, h, .05), frameM); f.position.set(x, y, -D / 2 + .03); scene.add(f); });
   // Sofa
@@ -365,12 +384,17 @@ form button:disabled{opacity:.5}
   const people = new Map();
   buildTables();
   // Pikumio-Bär als Figur auf der Couch: Kappe und Kette in der Farbe des Namens
-  const FUR = new THREE.MeshStandardMaterial({ color: "#b06d3c", roughness: .95, emissive: "#5a2e12", emissiveIntensity: .1 }), FUR2 = new THREE.MeshStandardMaterial({ color: "#d79a62", roughness: .95, emissive: "#6b3a18", emissiveIntensity: .08 });
+  const FUR0 = new THREE.MeshStandardMaterial({ color: "#b06d3c", roughness: .95, emissive: "#5a2e12", emissiveIntensity: .1 }), FUR20 = new THREE.MeshStandardMaterial({ color: "#d79a62", roughness: .95, emissive: "#6b3a18", emissiveIntensity: .08 });
   const NOSE = new THREE.MeshStandardMaterial({ color: "#86b9ec", roughness: .9 }), GOLD = new THREE.MeshStandardMaterial({ color: "#f2c14e", metalness: .85, roughness: .25, emissive: "#6b4a00", emissiveIntensity: .25 });
   const GLASS = new THREE.MeshStandardMaterial({ color: "#16131f", metalness: .6, roughness: .15, emissive: "#ff6a3d", emissiveIntensity: .08 });
   const sph = (r, m, x, y, z, sx, sy, sz, par) => { const o = new THREE.Mesh(new THREE.SphereGeometry(r, 20, 16), m); o.position.set(x, y, z); o.scale.set(sx || 1, sy || 1, sz || 1); par.add(o); return o; };
-  function avatar(name) {
-    const g = new THREE.Group(), c = colorOf(name), CAP = new THREE.MeshStandardMaterial({ color: c, roughness: .6, emissive: c, emissiveIntensity: .12 });
+  // Eigener Avatar: 4 Ziffern = Fell, Farbe, Hut, Brille
+  const AVF = [["#b06d3c", "#d79a62"], ["#e8e2d6", "#fff8ee"], ["#8a8a92", "#c4c4cc"], ["#3a2e28", "#6a5446"]], AVC = ["", "#ff4d6d", "#ffd23f", "#3ddc84", "#4cc9ff", "#c084fc", "#ff9f43"];
+  const avParse = av => { const d = /^[0-9]{4}$/.test(av || "") ? av.split("").map(Number) : [0, 0, 0, 0]; return { f: d[0] % 4, c: d[1] % 7, h: d[2] % 4, g: d[3] % 2 }; };
+  let myAv = ""; try { myAv = localStorage.getItem("klowand-av") || ""; } catch (e) {}
+  function avatar(name, av) {
+    const A = avParse(av), FUR = A.f ? new THREE.MeshStandardMaterial({ color: AVF[A.f][0], roughness: .95, emissive: AVF[A.f][0], emissiveIntensity: .08 }) : FUR0, FUR2 = A.f ? new THREE.MeshStandardMaterial({ color: AVF[A.f][1], roughness: .95, emissive: AVF[A.f][1], emissiveIntensity: .06 }) : FUR20;
+    const g = new THREE.Group(), c = A.c ? AVC[A.c] : colorOf(name), CAP = new THREE.MeshStandardMaterial({ color: c, roughness: .6, emissive: c, emissiveIntensity: .12 });
     const bear = new THREE.Group(); bear.position.y = .0; bear.scale.setScalar(1.22); g.add(bear);
     const body = sph(.19, FUR, 0, -.07, 0, 1, 1.05, .92, bear);
     sph(.12, FUR2, 0, -.09, .138, 1, 1.1, .45, bear);
@@ -387,22 +411,33 @@ form button:disabled{opacity:.5}
     const ears = [-1, 1].map(sd => { const e = sph(.05, FUR, sd * .105, .11, -.01, 1, 1, .7, head); sph(.028, FUR2, sd * .105, .11, .02, 1, 1, .4, head); return e; });
     sph(.06, FUR2, 0, -.07, .12, 1.3, .85, .8, head);
     sph(.058, NOSE, 0, -.055, .17, 1.35, .9, .9, head);
-    // Sonnenbrille
-    [-1, 1].forEach(sd => { const l = new THREE.Mesh(new THREE.CylinderGeometry(.045, .045, .012, 20), GLASS); l.rotation.x = Math.PI / 2; l.position.set(sd * .058, .012, .138); head.add(l);
+    if (!A.g) {    [-1, 1].forEach(sd => { const l = new THREE.Mesh(new THREE.CylinderGeometry(.045, .045, .012, 20), GLASS); l.rotation.x = Math.PI / 2; l.position.set(sd * .058, .012, .138); head.add(l);
       const rim = new THREE.Mesh(new THREE.TorusGeometry(.045, .006, 6, 20), GOLD); rim.position.set(sd * .058, .012, .145); head.add(rim); });
     const br = new THREE.Mesh(new THREE.BoxGeometry(.03, .008, .008), GOLD); br.position.set(0, .022, .148); head.add(br);
+    }
+    if (A.h === 0) {
     // Kappe, Schirm nach hinten, kleine Krone vorn
     const cap = new THREE.Mesh(new THREE.SphereGeometry(.152, 20, 12, 0, Math.PI * 2, 0, Math.PI / 2), CAP); cap.position.set(0, .06, 0); cap.scale.set(1.06, .72, 1.02); head.add(cap);
     const brim = new THREE.Mesh(new THREE.CylinderGeometry(.09, .09, .012, 20, 1, false, 0, Math.PI), CAP); brim.position.set(0, .062, -.11); brim.rotation.y = Math.PI / 2; brim.scale.set(1, 1, 1.25); head.add(brim);
     [-.025, 0, .025].forEach((x, i) => { const k = new THREE.Mesh(new THREE.ConeGeometry(.011, i === 1 ? .04 : .03, 6), GOLD); k.position.set(x, .13, .095); k.rotation.x = .6; head.add(k); });
+    } else if (A.h === 1) {   // große Krone
+      const cr = new THREE.Group(); cr.position.set(0, .14, 0); head.add(cr);
+      const ring = new THREE.Mesh(new THREE.CylinderGeometry(.1, .1, .05, 20, 1, true), GOLD); cr.add(ring);
+      for (let k = 0; k < 6; k++) { const a = k / 6 * Math.PI * 2, sp = new THREE.Mesh(new THREE.ConeGeometry(.022, .07, 6), GOLD); sp.position.set(Math.cos(a) * .1, .055, Math.sin(a) * .1); cr.add(sp); }
+      const gem = new THREE.Mesh(new THREE.SphereGeometry(.015, 8, 6), new THREE.MeshStandardMaterial({ color: c, emissive: c, emissiveIntensity: .6 })); gem.position.set(0, 0, .1); cr.add(gem);
+    } else if (A.h === 2) {   // Wollmütze mit Bommel
+      const bn = new THREE.Mesh(new THREE.SphereGeometry(.155, 20, 12, 0, Math.PI * 2, 0, Math.PI / 2), CAP); bn.position.set(0, .04, 0); bn.scale.set(1.05, .9, 1.03); head.add(bn);
+      const rim2 = new THREE.Mesh(new THREE.TorusGeometry(.15, .025, 8, 24), CAP); rim2.rotation.x = Math.PI / 2; rim2.position.y = .045; head.add(rim2);
+      sph(.04, new THREE.MeshStandardMaterial({ color: "#fff", roughness: 1 }), 0, .19, 0, 1, 1, 1, head);
+    }
     const lb = label(name, c); lb.position.set(0, .62, 0); g.add(lb);
-    g.userData = { name, phase: Math.random() * 6, bubble: null, bubbleUntil: 0, bear, body, head, arms, ears, waveUntil: 0 };
+    g.userData = { av: av || "", name, phase: Math.random() * 6, bubble: null, bubbleUntil: 0, bear, body, head, arms, ears, waveUntil: 0 };
     scene.add(g); return g;
   }
   function placePeople(list) {
     const keep = new Set(list.map(p => p.id));
     for (const [id, g] of people) if (!keep.has(id)) { scene.remove(g); people.delete(id); }
-    list.forEach((p, i) => { let g = people.get(p.id); if (!g || g.userData.name !== p.n) { if (g) scene.remove(g); g = avatar(p.n); people.set(p.id, g); } const s = SEATS[i % SEATS.length]; g.userData.seat = s; g.lookAt(0, .8, 2); g.rotation.x = 0; g.rotation.z = 0; });
+    list.forEach((p, i) => { let g = people.get(p.id); const pav = p.id === device ? myAv : (p.av || ""); if (!g || g.userData.name !== p.n || g.userData.av !== pav) { if (g) scene.remove(g); g = avatar(p.n, pav); people.set(p.id, g); } const s = SEATS[i % SEATS.length]; g.userData.seat = s; g.lookAt(0, .8, 2); g.rotation.x = 0; g.rotation.z = 0; });
     curList = list; for (const g of people.values()) g.visible = !(tvView || kinoView);
     $("who").innerHTML = list.map(p => `<span><i style="background:${colorOf(p.n)}"></i>${esc(p.n)}${p.id === device ? " (du)" : ""}</span>`).join("");
   }
@@ -1281,6 +1316,55 @@ form button:disabled{opacity:.5}
   }
   $("aKino").onclick = () => setKino(!kinoView);
   $("aSnooker").onclick = () => { location.href = "snooker.html" + location.search; };
+  // 🐻 Avatar-Baukasten
+  $("aAv").onclick = () => {
+    const A = avParse(myAv), el = document.createElement("div"); el.className = "avov";
+    const row = (k, label, opts) => `<div class="avr"><b>${label}</b><div>${opts.map((o, i) => `<button type="button" data-k="${k}" data-v="${i}" aria-pressed="${A[k] === i}" style="${o[1] ? `background:${o[1]};color:#111` : ""}">${o[0]}</button>`).join("")}</div></div>`;
+    el.innerHTML = `<div class="avbox"><h2>🐻 Mein Avatar</h2>${row("f", "Fell", [["Braun", "#b06d3c"], ["Eisbär", "#e8e2d6"], ["Grau", "#8a8a92"], ["Dunkel", "#3a2e28"]])}
+      ${row("c", "Farbe", AVC.map((c, i) => [i ? "●" : "Name", c]))}${row("h", "Auf dem Kopf", [["🧢 Kappe"], ["👑 Krone"], ["🧶 Mütze"], ["Nichts"]])}${row("g", "Brille", [["😎 Sonnenbrille"], ["Ohne"]])}
+      <p class="hint">Die anderen im Chill-Raum sehen deinen Avatar auf der Couch.</p><div class="avb"><button type="button" class="go" data-save>Speichern</button><button type="button" data-x>Abbrechen</button></div></div>`;
+    document.body.appendChild(el);
+    el.addEventListener("click", e => { const b = e.target.closest("[data-k]");
+      if (b) { A[b.dataset.k] = +b.dataset.v; el.querySelectorAll(`[data-k="${b.dataset.k}"]`).forEach(x => x.setAttribute("aria-pressed", x === b)); myAv = `${A.f}${A.c}${A.h}${A.g}`; placePeople(curList); }
+      if (e.target.closest("[data-save]")) { try { localStorage.setItem("klowand-av", myAv); } catch (er) {} window.__avBeat && __avBeat(); el.remove(); toast("🐻 Avatar gespeichert!"); }
+      if (e.target.closest("[data-x]") || e.target === el) { try { myAv = localStorage.getItem("klowand-av") || ""; } catch (er) {} placePeople(curList); el.remove(); } });
+  };
+  // 🎯 Dart: 5 Runden × 3 Pfeile gegen den Bär-Bot. Das Fadenkreuz wackelt – im richtigen Moment tippen!
+  $("aDart").onclick = () => {
+    const ORD = [20, 1, 18, 4, 13, 6, 10, 15, 2, 17, 3, 19, 7, 16, 8, 11, 14, 9, 12, 5];
+    const el = document.createElement("div"); el.className = "avov";
+    el.innerHTML = `<div class="avbox dart"><h2>🎯 Dart gegen Bär-Bot</h2><canvas id="dCv" width="640" height="640"></canvas><p class="hint" id="dInfo">Tippe, wenn das Fadenkreuz gut steht. 5 Runden, je 3 Pfeile.</p><div class="avb"><button type="button" data-x>Schließen</button></div></div>`;
+    document.body.appendChild(el);
+    const cv = el.querySelector("#dCv"), c = cv.getContext("2d"), R = 280, C = 320;
+    const score = (x, y) => { const r = Math.hypot(x, y) / R; if (r > 1) return [0, "Daneben"]; if (r < .037) return [50, "BULLSEYE!"]; if (r < .094) return [25, "Bull 25"];
+      let a = Math.atan2(x, -y) * 180 / Math.PI; a = (a + 360 + 9) % 360; const n = ORD[Math.floor(a / 18)];
+      if (r > .582 && r < .629) return [n * 3, "Triple " + n]; if (r > .953) return [n * 2, "Doppel " + n]; return [n, String(n)]; };
+    function board() { c.clearRect(0, 0, 640, 640); c.fillStyle = "#111"; c.beginPath(); c.arc(C, C, R * 1.12, 0, 7); c.fill();
+      for (let i = 0; i < 20; i++) { const a0 = (i * 18 - 9 - 90) * Math.PI / 180, a1 = a0 + Math.PI / 10;
+        [[1, .953, i % 2 ? "#2f8f4f" : "#c0392b"], [.953, .629, i % 2 ? "#f3e7c9" : "#1b1b1b"], [.629, .582, i % 2 ? "#2f8f4f" : "#c0392b"], [.582, .094, i % 2 ? "#f3e7c9" : "#1b1b1b"]].forEach(([o, n, col]) => {
+          c.fillStyle = col; c.beginPath(); c.arc(C, C, R * o, a0, a1); c.arc(C, C, R * n, a1, a0, true); c.fill(); });
+        c.fillStyle = "#fff"; c.font = "700 26px sans-serif"; c.textAlign = "center"; c.textBaseline = "middle"; const am = (a0 + a1) / 2; c.fillText(ORD[i], C + Math.cos(am) * R * 1.06, C + Math.sin(am) * R * 1.06); }
+      c.fillStyle = "#2f8f4f"; c.beginPath(); c.arc(C, C, R * .094, 0, 7); c.fill(); c.fillStyle = "#c0392b"; c.beginPath(); c.arc(C, C, R * .037, 0, 7); c.fill(); }
+    let st = { round: 1, turn: 0, darts: [], pts: [0, 0], hits: [], busy: false, done: false }, t0 = performance.now(), aim = [0, 0], raf = 0;
+    const names = [pname() || "Du", "Bär-Bot"];
+    function draw() { board(); st.hits.forEach(h => { c.fillStyle = h.p ? "#4cc9ff" : "#ffd23f"; c.beginPath(); c.arc(C + h.x, C + h.y, 9, 0, 7); c.fill(); c.strokeStyle = "#000"; c.lineWidth = 2; c.stroke(); });
+      c.fillStyle = "rgba(0,0,0,.6)"; c.fillRect(0, 0, 640, 44); c.fillStyle = "#fff"; c.font = "700 24px sans-serif"; c.textAlign = "left"; c.fillText(`${names[0]}: ${st.pts[0]}`, 12, 24); c.textAlign = "right"; c.fillText(`${names[1]}: ${st.pts[1]}`, 628, 24);
+      c.textAlign = "center"; c.fillText(`Runde ${Math.min(5, st.round)}/5`, 320, 24);
+      if (!st.turn && !st.busy && !st.done) { const t = (performance.now() - t0) / 1000, sp = 1 + st.round * .12; aim = [Math.sin(t * 1.7 * sp) * R * .55 + Math.sin(t * 4.3) * 18, Math.sin(t * 2.3 * sp + 1) * R * .55 + Math.cos(t * 3.1) * 18];
+        c.strokeStyle = "#ff3ea5"; c.lineWidth = 4; c.beginPath(); c.arc(C + aim[0], C + aim[1], 22, 0, 7); c.moveTo(C + aim[0] - 34, C + aim[1]); c.lineTo(C + aim[0] + 34, C + aim[1]); c.moveTo(C + aim[0], C + aim[1] - 34); c.lineTo(C + aim[0], C + aim[1] + 34); c.stroke(); }
+      raf = requestAnimationFrame(draw); }
+    function throwAt(x, y, who) { const [p, l] = score(x, y); st.pts[who] += p; st.darts.push(p); st.hits.push({ x, y, p: who }); el.querySelector("#dInfo").textContent = `${names[who]}: ${l}${p ? ` (+${p})` : ""}`; }
+    function nextTurn() { st.darts = []; st.hits = [];
+      if (st.turn === 0) { st.turn = 1; st.busy = true; let k = 0; const bt = () => { const g = () => (Math.random() + Math.random() + Math.random() - 1.5) * R * .42, tg = Math.random() < .5 ? [0, -R * .6] : [0, 0];
+          throwAt(tg[0] + g(), tg[1] + g(), 1); if (++k < 3) setTimeout(bt, 750); else setTimeout(() => { st.turn = 0; st.busy = false; st.round++; st.darts = []; st.hits = []; if (st.round > 5) finish(); }, 1100); }; setTimeout(bt, 700); } }
+    function finish() { st.done = true; const [a, b] = st.pts; el.querySelector("#dInfo").textContent = a > b ? `🏆 Gewonnen! ${a} zu ${b}` : a < b ? `Der Bär-Bot gewinnt ${b} zu ${a}. Nochmal?` : `Unentschieden! ${a} zu ${b}`;
+      if (a > b) say(pname() || "Du", `🎯 Dart gewonnen: ${a} zu ${b}!`); window.kloXP && kloXP.add("dart");
+      const again = document.createElement("button"); again.type = "button"; again.className = "go"; again.textContent = "Nochmal"; again.onclick = () => { again.remove(); st = { round: 1, turn: 0, darts: [], pts: [0, 0], hits: [], busy: false, done: false }; }; el.querySelector(".avb").prepend(again); }
+    cv.addEventListener("pointerdown", () => { if (st.turn || st.busy || st.done) return; const sc = 7 + st.round * 2; throwAt(aim[0] + (Math.random() - .5) * sc, aim[1] + (Math.random() - .5) * sc, 0);
+      if (st.darts.length >= 3) { st.busy = true; setTimeout(() => { st.busy = false; nextTurn(); }, 900); } });
+    el.addEventListener("click", e => { if (e.target.closest("[data-x]") || e.target === el) { cancelAnimationFrame(raf); el.remove(); } });
+    draw();
+  };
   $("kExit").onclick = () => setKino(false);
   $("kPrev").onclick = () => { ytStop(); kSet(kCh - 1); }; $("kNext").onclick = () => { ytStop(); kSet(kCh + 1); };
   $("kSnd").onclick = () => { ytStop(); kSound(!kOn); };
@@ -1408,11 +1492,11 @@ form button:disabled{opacity:.5}
   if (!LIVE) {
     $("sub").textContent = "Vorschau";
     const ex = [["d1", "Mia"], ["d2", "Ben"], ["d3", "Papa"], ["d4", "Oma Gerda"]];
-    placePeople(ex.map(([id, n]) => ({ id, n })));
+    placePeople([{ id: device, n: me || "Du" }, ...ex.map(([id, n]) => ({ id, n }))]);
     const lines = [["Mia", "Wer guckt heute Abend mit Film? 🍿"], ["Papa", "Ich mach Popcorn!"], ["Oma Gerda", "Ich bring Kuchen mit 🎂"], ["Ben", "Chillig hier 😎"]];
     $("log").innerHTML = lines.map(([n, t]) => `<p class="ex"><b style="color:${colorOf(n)}">${esc(n)}</b>${esc(t)}<time>Beispiel</time></p>`).join("");
     let k = 0; setInterval(() => { const [n, t] = lines[k++ % lines.length]; say(n, t); }, 3200); say(lines[0][0], lines[0][1]);
-    setTimeout(() => { placePeople([...ex.map(([id, n]) => ({ id, n })), { id: "d5", n: "Pia" }]); ring("Pia"); }, 7000);
+    setTimeout(() => { placePeople([{ id: device, n: me || "Du" }, ...ex.map(([id, n]) => ({ id, n })), { id: "d5", n: "Pia" }]); ring("Pia"); }, 7000);
     setTimeout(() => giftFly("Ben", "Mia", "🥤"), 4200);
     $("msg").disabled = true; $("send").disabled = true; $("msg").placeholder = "Nur in eurer privaten Gruppe";
     $("lockText").textContent = IN_APP
@@ -1445,12 +1529,13 @@ form button:disabled{opacity:.5}
     if (why) return "Das geht hier so nicht. Bleib nett 🙂";
     return null;
   }
-  const beat = () => grp.collection("da").doc(device).set({ n: me, ts: now() }).catch(() => {});
+  const beat = () => grp.collection("da").doc(device).set(/^[0-9]{4}$/.test(myAv) ? { n: me, av: myAv, ts: now() } : { n: me, ts: now() }).catch(() => {});
+  window.__avBeat = beat;
   async function enter() {
     beat(); setInterval(beat, 25000);
     let present = [];
     grp.collection("da").where("ts", ">", firebase.firestore.Timestamp.fromMillis(Date.now() - 3 * 3600e3)).onSnapshot(sn => {
-      present = sn.docs.map(d => ({ id: d.id, n: d.data().n, ts: d.data().ts && d.data().ts.toMillis ? d.data().ts.toMillis() : Date.now() }));
+      present = sn.docs.map(d => ({ id: d.id, n: d.data().n, av: d.data().av, ts: d.data().ts && d.data().ts.toMillis ? d.data().ts.toMillis() : Date.now() }));
       drawPeople(); primed = true;
     }, () => mod("Der Chill-Raum ist gerade nicht erreichbar. Lade die Seite neu."));
     const drawPeople = () => { const cut = Date.now() - 90e3; const list = present.filter(p => p.ts > cut || p.id === device); if (!list.some(p => p.id === device)) list.unshift({ id: device, n: me }); list.sort((a, b) => (a.id === device ? -1 : b.id === device ? 1 : a.n.localeCompare(b.n))); placePeople(list);

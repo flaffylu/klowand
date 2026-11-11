@@ -135,6 +135,16 @@ service cloud.firestore {
       );
     }
 
+    /* ---------- Einladungslink: wer über einen Link kommt, schenkt dem Einlader einen Demo-Tag ---------- */
+    match /einladung/{id} {
+      allow get, list: if true;
+      allow create: if id.matches('[a-zA-Z0-9]{8,12}_[a-zA-Z0-9]{8,40}')
+        && request.resource.data.keys().hasOnly(['r', 'ts'])
+        && request.resource.data.r is string && request.resource.data.r.matches('[a-zA-Z0-9]{8,12}')
+        && id.matches(request.resource.data.r + '_[a-zA-Z0-9]{8,40}')
+        && request.resource.data.ts == request.time;
+    }
+
     /* ---------- Besucherzähler der Infoseiten: nur eine Zahl pro Seite und Tag ---------- */
     match /stats/{id} {
       allow read: if isAdmin();
@@ -211,7 +221,7 @@ service cloud.firestore {
     match /walls/{wall}/familie/{key}/da/{dev} {
       allow read: if famOk(wall, key);
       allow create, update: if famOk(wall, key) && dev.matches('[a-zA-Z0-9]{8,40}')
-        && request.resource.data.keys().hasOnly(['n', 'ts'])
+        && request.resource.data.keys().hasOnly(['n', 'ts', 'av']) && okAv(request.resource.data)
         && okName(request.resource.data.n)
         && request.resource.data.ts == request.time;
     }
@@ -224,6 +234,34 @@ service cloud.firestore {
       allow read: if famOk(wall, key);
       allow create: if famOk(wall, key) && okScore(game, request.resource.data);
       allow delete: if isOwner(wall) && famOk(wall, key);
+    }
+    // Aufgaben mit Sternen (Kinder sammeln Sterne für eine Belohnung) und das Ziel mit der Belohnung (id 'ziel')
+    match /walls/{wall}/familie/{key}/aufgaben/{id} {
+      allow read, delete: if famOk(wall, key);
+      allow create, update: if famOk(wall, key)
+        && id.matches('[a-z0-9]{4,30}')
+        && request.resource.data.keys().hasOnly(['t', 'wer', 'st', 'ok', 'ts'])
+        && request.resource.data.t is string && request.resource.data.t.size() >= 2 && request.resource.data.t.size() <= 60
+        && !dirty(request.resource.data.t)
+        && request.resource.data.wer is string && request.resource.data.wer.size() <= 20
+        && request.resource.data.st is int && request.resource.data.st >= 1 && request.resource.data.st <= 100
+        && request.resource.data.ok is bool
+        && request.resource.data.ts == request.time;
+    }
+    // Geburtstage der Familie: Name und Tag (MM-TT), ohne Jahr
+    match /walls/{wall}/familie/{key}/geburtstage/{id} {
+      allow read, delete: if famOk(wall, key);
+      allow create, update: if famOk(wall, key)
+        && id.matches('[a-z0-9]{4,30}')
+        && request.resource.data.keys().hasOnly(['n', 'd', 'ts'])
+        && request.resource.data.n is string && request.resource.data.n.size() >= 1 && request.resource.data.n.size() <= 20
+        && !dirty(request.resource.data.n)
+        && request.resource.data.d is string && request.resource.data.d.matches('(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])')
+        && request.resource.data.ts == request.time;
+    }
+    match /walls/{wall}/familie/{key}/umfrage/{id} {
+      allow read: if famOk(wall, key);
+      allow create: if famOk(wall, key) && okVote(request.resource.data, id);
     }
     match /walls/{wall}/familie/{key}/fotos/{id} {
       allow read: if famOk(wall, key);
@@ -266,6 +304,46 @@ service cloud.firestore {
       allow delete: if canModerate(wall);
     }
 
+    // Tägliche Klo-Frage: eine Stimme (0 oder 1) pro Handy und Tag
+    function okVote(d, id) {
+      return d.keys().hasOnly(['d', 'a', 'ts'])
+        && d.d is string && d.d.matches('[0-9]{4}-[0-9]{2}-[0-9]{2}')
+        && id.matches(d.d + '_[a-zA-Z0-9]{8,40}')
+        && d.a in [0, 1]
+        && d.ts == request.time;
+    }
+    match /walls/{wall}/umfrage/{id} {
+      allow read: if !famOn(wall) || canModerate(wall);
+      allow create: if openWall(wall) && !famOn(wall) && okVote(request.resource.data, id);
+      allow delete: if canModerate(wall);
+    }
+    // Musikwünsche: Liedwunsch mit Filter, Stimmen wie Striche
+    match /walls/{wall}/wunsch/{id} {
+      allow read: if !famOn(wall) || canModerate(wall);
+      allow create: if openWall(wall) && !famOn(wall)
+        && request.resource.data.keys().hasOnly(['t', 'ts'])
+        && okText(request.resource.data.t, 60) && !unsafe(request.resource.data.t)
+        && request.resource.data.ts == request.time;
+      allow delete: if canModerate(wall);
+    }
+    match /walls/{wall}/wunschja/{id} {
+      allow read: if !famOn(wall) || canModerate(wall);
+      allow create: if openWall(wall) && !famOn(wall) && okMark(request.resource.data, id);
+      allow delete: if canModerate(wall);
+    }
+    // Quiz-Abend: Punkte pro Spitzname und Tag
+    match /walls/{wall}/quiz/{id} {
+      allow read: if !famOn(wall) || canModerate(wall);
+      allow create, update: if openWall(wall) && !famOn(wall)
+        && request.resource.data.keys().hasOnly(['n', 'p', 'd', 'ts'])
+        && request.resource.data.d is string && request.resource.data.d.matches('[0-9]{4}-[0-9]{2}-[0-9]{2}')
+        && id.matches(request.resource.data.d + '_[a-zA-Z0-9]{8,40}')
+        && okName(request.resource.data.n) && !unsafe(request.resource.data.n)
+        && request.resource.data.p is int && request.resource.data.p >= 0 && request.resource.data.p <= 5000
+        && request.resource.data.ts == request.time;
+      allow delete: if canModerate(wall);
+    }
+
     match /walls/{wall}/reports/{id} {
       allow read: if !famOn(wall) || canModerate(wall);
       allow create: if openWall(wall) && !famOn(wall) && okMark(request.resource.data, id);
@@ -285,9 +363,13 @@ service cloud.firestore {
     match /walls/{wall}/da/{dev} {
       allow read: if wall in ['demo', 'familie-demo'];
       allow create, update: if wall in ['demo', 'familie-demo'] && dev.matches('[a-zA-Z0-9]{8,40}')
-        && request.resource.data.keys().hasOnly(['n', 'ts'])
+        && request.resource.data.keys().hasOnly(['n', 'ts', 'av']) && okAv(request.resource.data)
         && okName(request.resource.data.n) && !unsafe(request.resource.data.n)
         && request.resource.data.ts == request.time;
+    }
+    // Eigener Avatar im Chill-Raum: 4 Ziffern (Fell, Farbe, Hut, Brille)
+    function okAv(d) {
+      return !('av' in d) || (d.av is string && d.av.matches('[0-9]{4}'));
     }
 
     match /walls/{wall}/chillspiel/{id} {

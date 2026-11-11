@@ -6,13 +6,13 @@ button{font:700 18px system-ui;background:#b3261e;color:#fff;border:none;border-
 .ph{position:sticky;top:0;background:#e3ebe7;padding:10px 16px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;border-top:3px solid #1d2321}.st{font-weight:700}
 .ok{background:#1f7a4d}pre{margin:0;padding:16px;font:12px/1.4 ui-monospace,monospace;white-space:pre-wrap;overflow-wrap:anywhere}
 ol{margin:8px 0 0;padding-left:20px;font-size:15px;color:#e8efec}</style></head><body>
-<div class="top"><b>Firebase-Regeln · 336 Zeilen in 4 Teilen</b>
+<div class="top"><b>Firebase-Regeln · 418 Zeilen in 5 Teilen</b>
 <ol><li>In Firebase: lange drücken → <b>Alles auswählen</b> → <b>Ausschneiden</b>. Das Feld muss <b>leer</b> sein.</li>
 <li>Hier <b>Teil 1</b> kopieren → in Firebase lange drücken → <b>Einfügen</b>.</li>
-<li>Ganz nach unten ins Feld tippen (hinter die letzte Zeile) → <b>Teil 2</b> einfügen. Dann Teil 3 und Teil 4 genauso.</li>
+<li>Ganz nach unten ins Feld tippen (hinter die letzte Zeile) → <b>Teil 2</b> einfügen. Dann Teil 3, 4 und 5 genauso.</li>
 <li>Prüfen: Zeile 1 = <code>rules_version = '2';</code>, letzte Zeile = <code>}</code>, insgesamt 336 Zeilen. Dann <b>Veröffentlichen</b>.</li></ol>
 <p>Tipp: Nicht über die Zwischenablage der Tastatur einfügen, sondern über „Einfügen“ beim langen Drücken.</p></div>
-<section><div class="ph"><button data-i="0">📋 Teil 1 von 4 kopieren</button><span class="st" id="st0">Zeile 1–81</span></div><pre id="p0">rules_version = &#x27;2&#x27;;
+<section><div class="ph"><button data-i="0">📋 Teil 1 von 5 kopieren</button><span class="st" id="st0">Zeile 1–81</span></div><pre id="p0">rules_version = &#x27;2&#x27;;
 service cloud.firestore {
   match /databases/{database}/documents {
 
@@ -93,7 +93,7 @@ service cloud.firestore {
         &amp;&amp; d.img.matches(&#x27;data:image/png;base64,[A-Za-z0-9+/=]+&#x27;);
     }
 
-</pre></section><section><div class="ph"><button data-i="1">📋 Teil 2 von 4 kopieren</button><span class="st" id="st1">Zeile 82–155</span></div><pre id="p1">    /* ---------- Gekaufte Wände ---------- */
+</pre></section><section><div class="ph"><button data-i="1">📋 Teil 2 von 5 kopieren</button><span class="st" id="st1">Zeile 82–157</span></div><pre id="p1">    /* ---------- Gekaufte Wände ---------- */
     match /walls/{wall} {
       // Einzelne Wand lesen darf jeder (Name fürs Türschild). Auflisten nur der Besitzer seine eigenen.
       allow get: if true;
@@ -149,6 +149,16 @@ service cloud.firestore {
       );
     }
 
+    /* ---------- Einladungslink: wer über einen Link kommt, schenkt dem Einlader einen Demo-Tag ---------- */
+    match /einladung/{id} {
+      allow get, list: if true;
+      allow create: if id.matches(&#x27;[a-zA-Z0-9]{8,12}_[a-zA-Z0-9]{8,40}&#x27;)
+        &amp;&amp; request.resource.data.keys().hasOnly([&#x27;r&#x27;, &#x27;ts&#x27;])
+        &amp;&amp; request.resource.data.r is string &amp;&amp; request.resource.data.r.matches(&#x27;[a-zA-Z0-9]{8,12}&#x27;)
+        &amp;&amp; id.matches(request.resource.data.r + &#x27;_[a-zA-Z0-9]{8,40}&#x27;)
+        &amp;&amp; request.resource.data.ts == request.time;
+    }
+
     /* ---------- Besucherzähler der Infoseiten: nur eine Zahl pro Seite und Tag ---------- */
     match /stats/{id} {
       allow read: if isAdmin();
@@ -159,7 +169,7 @@ service cloud.firestore {
         &amp;&amp; request.resource.data.n == resource.data.n + 1;
     }
 
-    /* ---------- Familien-Bereich: Stundenplan und Fotos, nur mit dem geheimen Familien-Code ---------- */
+</pre></section><section><div class="ph"><button data-i="2">📋 Teil 3 von 5 kopieren</button><span class="st" id="st2">Zeile 158–251</span></div><pre id="p2">    /* ---------- Familien-Bereich: Stundenplan und Fotos, nur mit dem geheimen Familien-Code ---------- */
     function famKeyDoc(wall) {
       return /databases/$(database)/documents/walls/$(wall)/private/key;
     }
@@ -167,7 +177,7 @@ service cloud.firestore {
     function famOn(wall) {
       return exists(famKeyDoc(wall));
     }
-</pre></section><section><div class="ph"><button data-i="2">📋 Teil 3 von 4 kopieren</button><span class="st" id="st2">Zeile 156–245</span></div><pre id="p2">    function famOk(wall, key) {
+    function famOk(wall, key) {
       return exists(famKeyDoc(wall)) &amp;&amp; get(famKeyDoc(wall)).data.k == key;
     }
     // Den Familien-Code sieht und ändert nur der Besitzer der Wand
@@ -225,7 +235,7 @@ service cloud.firestore {
     match /walls/{wall}/familie/{key}/da/{dev} {
       allow read: if famOk(wall, key);
       allow create, update: if famOk(wall, key) &amp;&amp; dev.matches(&#x27;[a-zA-Z0-9]{8,40}&#x27;)
-        &amp;&amp; request.resource.data.keys().hasOnly([&#x27;n&#x27;, &#x27;ts&#x27;])
+        &amp;&amp; request.resource.data.keys().hasOnly([&#x27;n&#x27;, &#x27;ts&#x27;, &#x27;av&#x27;]) &amp;&amp; okAv(request.resource.data)
         &amp;&amp; okName(request.resource.data.n)
         &amp;&amp; request.resource.data.ts == request.time;
     }
@@ -238,6 +248,34 @@ service cloud.firestore {
       allow read: if famOk(wall, key);
       allow create: if famOk(wall, key) &amp;&amp; okScore(game, request.resource.data);
       allow delete: if isOwner(wall) &amp;&amp; famOk(wall, key);
+    }
+    // Aufgaben mit Sternen (Kinder sammeln Sterne für eine Belohnung) und das Ziel mit der Belohnung (id &#x27;ziel&#x27;)
+    match /walls/{wall}/familie/{key}/aufgaben/{id} {
+      allow read, delete: if famOk(wall, key);
+      allow create, update: if famOk(wall, key)
+        &amp;&amp; id.matches(&#x27;[a-z0-9]{4,30}&#x27;)
+        &amp;&amp; request.resource.data.keys().hasOnly([&#x27;t&#x27;, &#x27;wer&#x27;, &#x27;st&#x27;, &#x27;ok&#x27;, &#x27;ts&#x27;])
+        &amp;&amp; request.resource.data.t is string &amp;&amp; request.resource.data.t.size() &gt;= 2 &amp;&amp; request.resource.data.t.size() &lt;= 60
+        &amp;&amp; !dirty(request.resource.data.t)
+        &amp;&amp; request.resource.data.wer is string &amp;&amp; request.resource.data.wer.size() &lt;= 20
+        &amp;&amp; request.resource.data.st is int &amp;&amp; request.resource.data.st &gt;= 1 &amp;&amp; request.resource.data.st &lt;= 100
+        &amp;&amp; request.resource.data.ok is bool
+        &amp;&amp; request.resource.data.ts == request.time;
+    }
+    // Geburtstage der Familie: Name und Tag (MM-TT), ohne Jahr
+</pre></section><section><div class="ph"><button data-i="3">📋 Teil 4 von 5 kopieren</button><span class="st" id="st3">Zeile 252–346</span></div><pre id="p3">    match /walls/{wall}/familie/{key}/geburtstage/{id} {
+      allow read, delete: if famOk(wall, key);
+      allow create, update: if famOk(wall, key)
+        &amp;&amp; id.matches(&#x27;[a-z0-9]{4,30}&#x27;)
+        &amp;&amp; request.resource.data.keys().hasOnly([&#x27;n&#x27;, &#x27;d&#x27;, &#x27;ts&#x27;])
+        &amp;&amp; request.resource.data.n is string &amp;&amp; request.resource.data.n.size() &gt;= 1 &amp;&amp; request.resource.data.n.size() &lt;= 20
+        &amp;&amp; !dirty(request.resource.data.n)
+        &amp;&amp; request.resource.data.d is string &amp;&amp; request.resource.data.d.matches(&#x27;(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])&#x27;)
+        &amp;&amp; request.resource.data.ts == request.time;
+    }
+    match /walls/{wall}/familie/{key}/umfrage/{id} {
+      allow read: if famOk(wall, key);
+      allow create: if famOk(wall, key) &amp;&amp; okVote(request.resource.data, id);
     }
     match /walls/{wall}/familie/{key}/fotos/{id} {
       allow read: if famOk(wall, key);
@@ -257,7 +295,7 @@ service cloud.firestore {
       allow create: if openWall(wall) &amp;&amp; !famOn(wall)
         &amp;&amp; (textPost(request.resource.data) || drawPost(request.resource.data))
         &amp;&amp; (!(&#x27;t&#x27; in request.resource.data) || !unsafe(request.resource.data.t))
-</pre></section><section><div class="ph"><button data-i="3">📋 Teil 4 von 4 kopieren</button><span class="st" id="st3">Zeile 246–336</span></div><pre id="p3">        &amp;&amp; okWeek(request.resource.data)
+        &amp;&amp; okWeek(request.resource.data)
         &amp;&amp; request.resource.data.rot is number
         &amp;&amp; request.resource.data.ts == request.time;
       allow delete: if canModerate(wall);
@@ -280,7 +318,47 @@ service cloud.firestore {
       allow delete: if canModerate(wall);
     }
 
-    match /walls/{wall}/reports/{id} {
+    // Tägliche Klo-Frage: eine Stimme (0 oder 1) pro Handy und Tag
+    function okVote(d, id) {
+      return d.keys().hasOnly([&#x27;d&#x27;, &#x27;a&#x27;, &#x27;ts&#x27;])
+        &amp;&amp; d.d is string &amp;&amp; d.d.matches(&#x27;[0-9]{4}-[0-9]{2}-[0-9]{2}&#x27;)
+        &amp;&amp; id.matches(d.d + &#x27;_[a-zA-Z0-9]{8,40}&#x27;)
+        &amp;&amp; d.a in [0, 1]
+        &amp;&amp; d.ts == request.time;
+    }
+    match /walls/{wall}/umfrage/{id} {
+      allow read: if !famOn(wall) || canModerate(wall);
+      allow create: if openWall(wall) &amp;&amp; !famOn(wall) &amp;&amp; okVote(request.resource.data, id);
+      allow delete: if canModerate(wall);
+    }
+    // Musikwünsche: Liedwunsch mit Filter, Stimmen wie Striche
+    match /walls/{wall}/wunsch/{id} {
+      allow read: if !famOn(wall) || canModerate(wall);
+      allow create: if openWall(wall) &amp;&amp; !famOn(wall)
+        &amp;&amp; request.resource.data.keys().hasOnly([&#x27;t&#x27;, &#x27;ts&#x27;])
+        &amp;&amp; okText(request.resource.data.t, 60) &amp;&amp; !unsafe(request.resource.data.t)
+        &amp;&amp; request.resource.data.ts == request.time;
+      allow delete: if canModerate(wall);
+    }
+    match /walls/{wall}/wunschja/{id} {
+      allow read: if !famOn(wall) || canModerate(wall);
+      allow create: if openWall(wall) &amp;&amp; !famOn(wall) &amp;&amp; okMark(request.resource.data, id);
+      allow delete: if canModerate(wall);
+    }
+    // Quiz-Abend: Punkte pro Spitzname und Tag
+    match /walls/{wall}/quiz/{id} {
+      allow read: if !famOn(wall) || canModerate(wall);
+      allow create, update: if openWall(wall) &amp;&amp; !famOn(wall)
+        &amp;&amp; request.resource.data.keys().hasOnly([&#x27;n&#x27;, &#x27;p&#x27;, &#x27;d&#x27;, &#x27;ts&#x27;])
+        &amp;&amp; request.resource.data.d is string &amp;&amp; request.resource.data.d.matches(&#x27;[0-9]{4}-[0-9]{2}-[0-9]{2}&#x27;)
+        &amp;&amp; id.matches(request.resource.data.d + &#x27;_[a-zA-Z0-9]{8,40}&#x27;)
+        &amp;&amp; okName(request.resource.data.n) &amp;&amp; !unsafe(request.resource.data.n)
+        &amp;&amp; request.resource.data.p is int &amp;&amp; request.resource.data.p &gt;= 0 &amp;&amp; request.resource.data.p &lt;= 5000
+        &amp;&amp; request.resource.data.ts == request.time;
+      allow delete: if canModerate(wall);
+    }
+
+</pre></section><section><div class="ph"><button data-i="4">📋 Teil 5 von 5 kopieren</button><span class="st" id="st4">Zeile 347–418</span></div><pre id="p4">    match /walls/{wall}/reports/{id} {
       allow read: if !famOn(wall) || canModerate(wall);
       allow create: if openWall(wall) &amp;&amp; !famOn(wall) &amp;&amp; okMark(request.resource.data, id);
       allow delete: if canModerate(wall);
@@ -299,9 +377,13 @@ service cloud.firestore {
     match /walls/{wall}/da/{dev} {
       allow read: if wall in [&#x27;demo&#x27;, &#x27;familie-demo&#x27;];
       allow create, update: if wall in [&#x27;demo&#x27;, &#x27;familie-demo&#x27;] &amp;&amp; dev.matches(&#x27;[a-zA-Z0-9]{8,40}&#x27;)
-        &amp;&amp; request.resource.data.keys().hasOnly([&#x27;n&#x27;, &#x27;ts&#x27;])
+        &amp;&amp; request.resource.data.keys().hasOnly([&#x27;n&#x27;, &#x27;ts&#x27;, &#x27;av&#x27;]) &amp;&amp; okAv(request.resource.data)
         &amp;&amp; okName(request.resource.data.n) &amp;&amp; !unsafe(request.resource.data.n)
         &amp;&amp; request.resource.data.ts == request.time;
+    }
+    // Eigener Avatar im Chill-Raum: 4 Ziffern (Fell, Farbe, Hut, Brille)
+    function okAv(d) {
+      return !(&#x27;av&#x27; in d) || (d.av is string &amp;&amp; d.av.matches(&#x27;[0-9]{4}&#x27;));
     }
 
     match /walls/{wall}/chillspiel/{id} {

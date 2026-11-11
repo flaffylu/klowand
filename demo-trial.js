@@ -7,10 +7,14 @@ window.KloTrial = (function () {
   const s = (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} };
   let mem = 0;
   function start() { let t = parseInt(g(KS) || "0", 10) || mem; if (!t) { t = Date.now(); s(KS, String(t)); } mem = t; return t; }
+  // Bonus-Tage für eingeladene Freunde (höchstens 7)
+  const bonus = () => Math.min(7, Math.max(0, parseInt(g("klowand-trial-bonus") || "0", 10) || 0));
+  const all = () => DAYS + bonus();
   const T = {
-    DAYS, MSG, start,
-    over() { return Date.now() - start() >= DAYS * DAY; },
-    daysLeft() { return Math.max(0, Math.ceil((start() + DAYS * DAY - Date.now()) / DAY)); },
+    DAYS, MSG, start, bonus,
+    setBonus(n) { s("klowand-trial-bonus", String(Math.min(7, Math.max(bonus(), n | 0)))); window.dispatchEvent(new Event("klo-demo")); },
+    over() { return Date.now() - start() >= all() * DAY; },
+    daysLeft() { return Math.max(0, Math.ceil((start() + all() * DAY - Date.now()) / DAY)); },
     used() { return Math.max(0, parseInt(g(KN) || "0", 10) || 0); },
     left() { return Math.max(0, MSG - T.used()); },
     canWrite() { return !T.over() || T.left() > 0; },
