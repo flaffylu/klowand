@@ -86,7 +86,11 @@
   // ---------- Bausteine ----------
   const has = id => { const b = $(id); return b && !b.hidden && b.style.display !== "none"; };
   const locked = id => { const b = $(id); return b && b.classList.contains("locked"); };
-  const press = sel => { const b = typeof sel === "string" ? ($(sel) || document.querySelector(sel)) : sel; if (!b) return; b.click(); if (cur !== "wand") history.back(); };
+  // Knöpfe, die auf eine andere Seite führen (Disco, Chill-Raum, 3D, TV …): nicht zurückblättern, sonst wird der Seitenwechsel abgebrochen
+  const NAV = ["famDisco", "kgDisco", "famChill", "o3d", "mTv", "oGetown"];
+  const press = sel => { const b = typeof sel === "string" ? ($(sel) || document.querySelector(sel)) : sel; if (!b) return;
+    if (NAV.includes(b.id)) { b.click(); return; }
+    b.click(); if (cur !== "wand") history.back(); };
   const lockI = id => locked(id) ? `<span class="lock" aria-label="${T("gesperrt", "locked")}">🔒</span>` : "";
 
   const nav = document.createElement("nav"); nav.className = "onav"; nav.setAttribute("aria-label", T("Hauptmenü", "Main menu"));
@@ -186,5 +190,6 @@
     const at = document.querySelector(".demobar") || document.querySelector(".plate"); at.after(b);
   }
   let tries = 0; (function wait() { sos(); if (!document.querySelector(".osos") && ++tries < 15) setTimeout(wait, 200); })();
+  addEventListener("pageshow", e => { if (e.persisted && history.state && history.state.ord) go(history.state.ord, true); });
   window.kloOrdnung = { go, write };
 })();
