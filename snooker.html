@@ -60,9 +60,15 @@ html,body{height:100%;margin:0;background:var(--night);color:var(--ink);font-fam
   <div class="lvl" id="lvl"><button type="button" data-l="0" aria-pressed="false">Leicht</button><button type="button" data-l="1" aria-pressed="true">Mittel</button><button type="button" data-l="2" aria-pressed="false">Profi</button></div>
   <button type="button" class="btn go" id="vsBot">🤖 Gegen den Bot</button>
   <button type="button" class="btn" id="vs2">👥 Zu zweit an einem Handy</button>
+  <button type="button" class="btn" id="vsOn" hidden>🌐 Online zu zweit</button>
+  <p id="onInfo" hidden></p>
 </div></div>
 
 <script src="three.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="lang.js"></script>
+<script src="config.js"></script>
 <script>
 (function () {
   "use strict";
@@ -130,7 +136,8 @@ html,body{height:100%;margin:0;background:var(--night);color:var(--ink);font-fam
 
   // ---------- Spielstand ----------
   let mode = "bot", lvl = 1, turn = 0, score = [0, 0], onBall = "red", aim = -Math.PI / 2, moving = false, shot = null, view = 0, over = false, strikeAt = 0;
-  const names = () => mode === "bot" ? ["Du", "Bot"] : ["Spieler 1", "Spieler 2"];
+  const names = () => mode === "bot" ? ["Du", "Bot"] : mode === "online" ? [0, 1].map(i => OS && OS.p[i] ? (OS.p[i].id === device ? "Du" : safeN(OS.p[i].n)) : "…") : ["Spieler 1", "Spieler 2"];
+  const myShot = () => mode === "online" ? !!(OS && OS.st === "play" && OS.p[turn] && OS.p[turn].id === device && !replay) : !(mode === "bot" && turn === 1);
   const reds = () => balls.filter(b => b.on && b.kind === "red").length;
   const lowestColor = () => ORDER.find(c => balls.some(b => b.on && b.kind === c));
   const onSet = () => onBall === "red" ? ["red"] : onBall === "color" ? ORDER : [onBall];
@@ -138,7 +145,7 @@ html,body{height:100%;margin:0;background:var(--night);color:var(--ink);font-fam
   function ui(extra) {
     const n = names(); [0, 1].forEach(i => { $("s" + i).innerHTML = `${n[i]}<b>${score[i]}</b>`; $("s" + i).classList.toggle("on", i === turn && !over); });
     $("msg").textContent = extra || (over ? "" : `${n[turn]} ${n[turn] === "Du" ? "bist" : "ist"} dran – ziel auf ${onText()}.`);
-    const mine = !moving && !over && !(mode === "bot" && turn === 1);
+    const mine = !moving && !over && myShot();
     $("shoot").disabled = !mine; $("aL").disabled = $("aR").disabled = !mine;
   }
   function freeSpot(x, z) { return !balls.some(b => b.on && Math.hypot(b.x - x, b.z - z) < 2 * R + .001); }
@@ -177,8 +184,10 @@ html,body{height:100%;margin:0;background:var(--night);color:var(--ink);font-fam
     g.gain.setValueAtTime(Math.min(.35, v * .12), t); g.gain.exponentialRampToValueAtTime(.001, t + .06); o.connect(g); g.connect(AC.destination); o.start(t); o.stop(t + .08); }
 
   // ---------- Stoß und Regeln ----------
-  function shoot(power) {
-    if (moving || over) return; power = Math.max(5, Math.min(100, +power || 40)); const v = .4 + power / 100 * 4.6;
+  let shotFrom = null, shotAim = 0, shotPow = 0, replay = false;
+  function shoot(power, isReplay) {
+    if (moving || over) return; power = Math.max(5, Math.min(100, +power || 40));
+    if (!isReplay) { if (mode === "online" && !myShot()) return; shotFrom = pack(); shotAim = aim; shotPow = power; } const v = .4 + power / 100 * 4.6;
     strikeAt = performance.now(); moving = true; ui("");
     setTimeout(() => { cue.vx = Math.cos(aim) * v; cue.vz = Math.sin(aim) * v; shot = { first: null, pot: [], on: onBall }; click(2); }, 140);
   }
@@ -241,19 +250,95 @@ html,body{height:100%;margin:0;background:var(--night);color:var(--ink);font-fam
   const ray = new THREE.Raycaster(), ndc = new THREE.Vector2(), plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), -Y0), hitP = new THREE.Vector3();
   let downX = 0, downY = 0, dragA = null;
   canvas.addEventListener("pointerdown", e => { downX = e.clientX; downY = e.clientY; dragA = aim; });
-  canvas.addEventListener("pointerup", e => { if (moving || over || (mode === "bot" && turn === 1)) return; if (Math.hypot(e.clientX - downX, e.clientY - downY) > 10) return;
+  canvas.addEventListener("pointerup", e => { if (moving || over || !myShot()) return; if (Math.hypot(e.clientX - downX, e.clientY - downY) > 10) return;
     ndc.set(e.clientX / innerWidth * 2 - 1, -(e.clientY / innerHeight) * 2 + 1); ray.setFromCamera(ndc, camera); if (ray.ray.intersectPlane(plane, hitP)) aim = Math.atan2(hitP.z - cue.z, hitP.x - cue.x); });
-  canvas.addEventListener("pointermove", e => { if (e.buttons !== 1 || dragA === null || moving || over || (mode === "bot" && turn === 1)) return; if (Math.hypot(e.clientX - downX, e.clientY - downY) < 10) return;
+  canvas.addEventListener("pointermove", e => { if (e.buttons !== 1 || dragA === null || moving || over || !myShot()) return; if (Math.hypot(e.clientX - downX, e.clientY - downY) < 10) return;
     aim = dragA + (e.clientX - downX) * .004; });
   let hold = 0; const nudge = d => { aim += d; };
   [["aL", -1], ["aR", 1]].forEach(([id, s]) => { const el = $(id); el.addEventListener("pointerdown", () => { nudge(s * .002); clearInterval(hold); hold = setInterval(() => nudge(s * .004), 60); });
     ["pointerup", "pointerleave", "pointercancel"].forEach(ev => el.addEventListener(ev, () => clearInterval(hold))); });
   $("shoot").onclick = () => shoot(+$("power").value);
   $("bView").onclick = () => { view = (view + 1) % 2; };
-  $("bNew").onclick = () => { $("start").hidden = false; };
+  $("bNew").onclick = () => { if (mode === "online" && OS && OS.p.some(p => p.id === device)) { if (OS.st === "play" && !over && !confirmNew()) return; act(S => { S.st = "wait"; S.at = Date.now(); return S; }); } $("start").hidden = false; };
+  let confirmAsk = 0; const confirmNew = () => { if (Date.now() - confirmAsk < 4000) return true; confirmAsk = Date.now(); ui("Nochmal auf „Neu“ tippen, um das Online-Spiel abzubrechen."); return false; };
   $("lvl").querySelectorAll("button").forEach(b => b.onclick = () => { lvl = +b.dataset.l; $("lvl").querySelectorAll("button").forEach(x => x.setAttribute("aria-pressed", x === b)); });
   function newGame(m) { mode = m; turn = 0; score = [0, 0]; onBall = "red"; over = false; moving = false; shot = null; rack(); aim = -Math.PI / 2; $("start").hidden = true; ui(); }
-  $("vsBot").onclick = () => newGame("bot"); $("vs2").onclick = () => newGame("two");
+  $("vsBot").onclick = () => { $("onInfo").hidden = true; newGame("bot"); }; $("vs2").onclick = () => { $("onInfo").hidden = true; newGame("two"); };
+
+  // ---------- Online zu zweit: wer stößt, rechnet; der andere sieht den Stoß nachgespielt ----------
+  const WALL = (q.get("wand") || new URLSearchParams(location.search).get("wand") || "").toLowerCase().replace(/[^a-z0-9-]/g, "").slice(0, 60);
+  let KEY = null; try { const k = new URLSearchParams(location.search).get("k"); KEY = /^[A-Za-z0-9]{24,40}$/.test(k || "") ? k : localStorage.getItem("klowand-fam-" + WALL); if (!/^[A-Za-z0-9]{24,40}$/.test(KEY || "")) KEY = null; } catch (e) {}
+  const DEMOW = WALL === "demo" || WALL === "familie-demo", FIXED = typeof WAENDE !== "undefined" && !!WAENDE[WALL];
+  const CAN_ON = typeof firebase !== "undefined" && typeof firebaseConfig !== "undefined" && (DEMOW || (!!WALL && !FIXED && !!KEY));
+  let device = null; try { device = localStorage.getItem("klowand-device"); if (!device) { device = crypto.randomUUID().replace(/-/g, ""); localStorage.setItem("klowand-device", device); } } catch (e) { device = "d" + Math.random().toString(36).slice(2, 14); }
+  let myName = ""; try { myName = localStorage.getItem("klowand-chillname") || ""; } catch (e) {}
+  const safeN = n => typeof n === "string" && /^[A-Za-zÄÖÜäöüß0-9 ._-]{2,12}$/.test(n) ? n : "Gast";
+  let OS = null, oref = null, seenShot = -1, fsdb = null;
+  const ONC = ["red", "color", ...ORDER];
+  const pack = () => balls.map(b => [Math.round(b.x * 1e4), Math.round(b.z * 1e4), b.on ? 1 : 0]);
+  function unpack(arr) { arr.forEach((v, i) => { const b = balls[i]; if (!b) return; b.x = v[0] / 1e4; b.z = v[1] / 1e4; b.on = !!v[2]; b.vx = b.vz = 0; b.m.visible = b.on; b.m.position.set(b.x, Y0, b.z); }); }
+  const validS = S => { try { return S && S.v === 1 && Array.isArray(S.p) && S.p.length <= 2 && S.p.every(p => p && typeof p.id === "string" && p.id.length <= 40) && ["wait", "play", "end"].includes(S.st)
+    && (S.turn === 0 || S.turn === 1) && Array.isArray(S.sc) && S.sc.length === 2 && S.sc.every(Number.isInteger) && Number.isInteger(S.on) && S.on >= 0 && S.on < ONC.length
+    && Array.isArray(S.b) && (S.b.length === 0 || S.b.length === 22) && S.b.every(v => Array.isArray(v) && v.length === 3 && v.every(Number.isInteger))
+    && S.sh && Number.isInteger(S.sh.n) && Array.isArray(S.sh.f) && (S.sh.f.length === 0 || S.sh.f.length === 22); } catch (e) { return false; } };
+  const freshS = () => ({ v: 1, st: "wait", p: [], turn: 0, sc: [0, 0], on: 0, b: [], sh: { n: 0, a: 0, pw: 0, f: [] }, over: 0, at: Date.now() });
+  async function act(fn) {
+    if (!oref) return;
+    try { await fsdb.runTransaction(async tx => { const sn = await tx.get(oref); let cur = null; if (sn.exists) try { cur = JSON.parse(sn.data().s); } catch (e) {}
+      if (!validS(cur)) cur = freshS(); const n = fn(cur); if (!n) return; tx.set(oref, { s: JSON.stringify(n), ts: firebase.firestore.FieldValue.serverTimestamp() }); }); }
+    catch (e) { ui(e && e.code === "permission-denied" ? "Online klappt nicht – sind die neuen Firebase-Regeln drin?" : "Verbindung hakt – nochmal versuchen."); }
+  }
+  function pushShot(from, a, pw) {
+    const st = { b: pack(), sc: score.slice(), turn, on: Math.max(0, ONC.indexOf(onBall)), over: over ? 1 : 0, msg: $("msg").textContent };
+    act(S => { if (S.st !== "play" || !S.p[S.turn] || S.p[S.turn].id !== device) return null;
+      S.b = st.b; S.sc = st.sc; S.turn = st.turn; S.on = st.on; S.sh = { n: S.sh.n + 1, a: Math.round(a * 1e5) / 1e5, pw: Math.round(pw), f: from }; S.over = st.over; if (st.over) S.st = "end"; S.at = Date.now(); return S; });
+  }
+  function applyRemote(S) {
+    if (!S) return; if (S.b.length === 22) unpack(S.b); score = S.sc.slice(); turn = S.turn; onBall = ONC[S.on]; over = S.st === "end" || !!S.over;
+    if (over) { const n = names(), w = score[0] === score[1] ? -1 : score[0] > score[1] ? 0 : 1; ui(w < 0 ? `Unentschieden ${score[0]}:${score[1]}!` : `🏆 ${n[w]} ${n[w] === "Du" ? "gewinnst" : "gewinnt"} ${Math.max(...score)}:${Math.min(...score)}!`); }
+    else ui();
+  }
+  function lobby() {
+    const S = OS; if (!S) return; const mi = S.p.some(p => p.id === device), box = $("onInfo");
+    box.hidden = mode !== "online"; if (mode !== "online") return;
+    if (S.st === "play" || S.st === "end") { if (mi || S.st === "end") $("start").hidden = mi; }
+    const who = S.p.map(p => p.id === device ? "Du" : safeN(p.n)).join(" & ") || "noch keiner";
+    box.innerHTML = S.st === "play" && !mi ? `Gerade spielen ${who}. Schau zu oder warte, bis sie fertig sind.` : `Am Tisch: <b>${who}</b>. ${S.p.length < 2 ? "Warte auf einen zweiten Spieler …" : mi ? "Tipp auf „Los geht's“." : ""}`;
+    $("vsOn").textContent = S.st === "play" && !mi ? "👀 Zuschauen" : !mi ? (S.p.length < 2 ? "✋ Online mitspielen" : "Tisch ist voll") : S.p.length === 2 ? "▶ Los geht's" : "⏳ Warten …";
+    $("vsOn").disabled = mi && S.p.length < 2 || !mi && S.p.length >= 2 && S.st !== "play";
+  }
+  function onSnap(S) {
+    const prev = OS; OS = S;
+    if (mode === "online") {
+      const mi = S.p.some(p => p.id === device);
+      if (S.st === "play" || S.st === "end") {
+        if (!prev || prev.st === "wait" || S.sh.n < seenShot) { seenShot = S.sh.n; applyRemote(S); }
+        else if (S.sh.n > seenShot) { seenShot = S.sh.n; const mineNow = prev.p[prev.turn] && prev.p[prev.turn].id === device;
+          if (mineNow && !replay) { applyRemote(S); } else if (S.sh.f.length === 22) { unpack(S.sh.f); aim = S.sh.a; replay = true; moving = false; shoot(S.sh.pw, true); } else applyRemote(S); }
+        else if (!moving) applyRemote(S);
+        if (mi) $("start").hidden = true;
+      } else { if (prev && prev.st !== "wait") { $("start").hidden = false; } }
+    }
+    lobby();
+  }
+  if (CAN_ON) {
+    $("vsOn").hidden = false;
+    try { firebase.initializeApp(firebaseConfig); fsdb = firebase.firestore();
+      const grp = DEMOW ? fsdb.collection("walls").doc(WALL) : fsdb.collection("walls").doc(WALL).collection("familie").doc(KEY);
+      oref = grp.collection("chillspiel").doc("snooker");
+      oref.onSnapshot(sn => { let n = null; if (sn.exists) try { n = JSON.parse(sn.data().s); } catch (e) {} onSnap(validS(n) ? n : freshS()); }, () => {});
+    } catch (e) { $("vsOn").hidden = true; }
+  }
+  $("vsOn").onclick = () => {
+    if (mode !== "online") { mode = "online"; lobby(); }
+    const S = OS || freshS(), mi = S.p.some(p => p.id === device);
+    if (S.st === "play" && !mi) { $("start").hidden = true; seenShot = S.sh.n; applyRemote(S); return; }
+    if (!mi) { const nm2 = safeN(myName) === "Gast" ? "Gast" : myName;
+      act(T => { if (T.p.some(p => p.id === device)) return null; if (T.st !== "wait") { if (T.st === "end" || Date.now() - T.at > 180e3) { T.st = "wait"; T.p = []; } else return null; } if (T.p.length >= 2) return null; T.p.push({ id: device, n: nm2 }); T.at = Date.now(); return T; }); return; }
+    if (S.p.length === 2 && S.st !== "play") { rack(); const b = pack();
+      act(T => { if (T.p.length !== 2 || !T.p.some(p => p.id === device)) return null; T.st = "play"; T.turn = Math.random() < .5 ? 0 : 1; T.sc = [0, 0]; T.on = 0; T.b = b; T.sh = { n: (T.sh.n || 0) + 1, a: 0, pw: 0, f: [] }; T.over = 0; T.at = Date.now(); return T; }); }
+  };
+  const _newGame = newGame;
 
   // ---------- Kamera und Zeichnen ----------
   function resize() { const w = innerWidth, h = innerHeight; renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix(); }
@@ -271,7 +356,10 @@ html,body{height:100%;margin:0;background:var(--night);color:var(--ink);font-fam
   function loop(now) {
     const dt = Math.min(.05, (now - last) / 1000); last = now;
     if (moving && shot) { const n = Math.round(dt / DT) * (window.__fast || 1); for (let i = 0; i < n; i++) step(); if (shot.clack && now - lastClack > 40) { click(shot.clack); shot.clack = 0; lastClack = now; }
-      if (allStill()) { balls.forEach(b => { b.vx = b.vz = 0; }); moving = false; judge(); if (mode === "bot" && turn === 1 && !over) setTimeout(botTurn, 700); } }
+      if (allStill()) { balls.forEach(b => { b.vx = b.vz = 0; }); moving = false;
+        if (replay) { replay = false; shot = null; applyRemote(OS); }
+        else { const wasMine = mode === "online"; const from = shotFrom, a = shotAim, pw = shotPow; judge(); if (wasMine) pushShot(from, a, pw); }
+        if (mode === "bot" && turn === 1 && !over) setTimeout(botTurn, 700); } }
     balls.forEach(b => { b.m.position.set(b.x, Y0, b.z); const sp = Math.hypot(b.vx, b.vz); if (sp > 0) { b.m.rotation.x += b.vz * dt / R; b.m.rotation.z -= b.vx * dt / R; } });
     const idle = !moving && !over;
     aimLine.visible = ghost.visible = idle && cue.on; if (!idle) tgtLine.visible = false; if (idle && cue.on) aimPreview();
@@ -291,7 +379,7 @@ html,body{height:100%;margin:0;background:var(--night);color:var(--ink);font-fam
     renderer.render(scene, camera); requestAnimationFrame(loop);
   }
   rack(); ui(); requestAnimationFrame(loop);
-  if (location.hash === "#test") window.__sn = { balls, get s() { return { turn, score, onBall, moving, over }; }, shoot, setAim: a => aim = a, newGame, botPlan, cue: () => cue, judgeNow: () => {} };
+  if (location.hash === "#test") window.__sn = { get os() { return OS; }, get rp() { return [replay, seenShot, mode, !!shot, moving, over]; }, balls, get s() { return { turn, score, onBall, moving, over }; }, shoot, setAim: a => aim = a, newGame, botPlan, cue: () => cue, judgeNow: () => {} };
 })();
 </script>
 </body>

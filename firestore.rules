@@ -296,7 +296,7 @@ service cloud.firestore {
         && !unsafe(request.resource.data.s);
     }
     function okSpiel(id, d) {
-      return id in ['madn', 'macke', 'vier', 'poker', 'roulette']
+      return id in ['madn', 'macke', 'vier', 'poker', 'roulette', 'snooker']
         && d.keys().hasOnly(['s', 'ts'])
         && d.s is string && d.s.size() <= 4000
         && !dirty(d.s)
