@@ -155,7 +155,7 @@ form button:disabled{opacity:.5}
 
 <div class="sheet" id="gameBox" hidden><div class="sheetIn">
   <div class="shead"><h3 id="gTitle">🎲 Mensch ärgere dich nicht</h3><button type="button" id="gameX" aria-label="Schließen">✕</button></div>
-  <div class="chips gtabs" id="gTabs"><button type="button" data-g="madn" aria-pressed="true">Mensch ärgere dich nicht</button><button type="button" data-g="macke" aria-pressed="false">🎲 Macke</button><button type="button" data-g="vier" aria-pressed="false">🔴 4 in einer Reihe</button></div>
+  <div class="chips gtabs" id="gTabs"><button type="button" data-g="madn" aria-pressed="true">Mensch ärgere dich nicht</button><button type="button" data-g="macke" aria-pressed="false">🎲 Macke</button><button type="button" data-g="vier" aria-pressed="false">🔴 4 in einer Reihe</button><button type="button" data-g="poker" aria-pressed="false" class="adult">🃏 Poker</button><button type="button" data-g="roulette" aria-pressed="false" class="adult">🎡 Roulette</button></div>
   <canvas id="board" width="880" height="880" aria-label="Spielbrett"></canvas>
   <div class="gstat" id="gStat" aria-live="polite"></div>
   <div class="gbtns" id="gBtns"></div>
@@ -286,6 +286,27 @@ form button:disabled{opacity:.5}
   box(.06, 2.08, .06, frameM, W / 2 - .03, 1.04, -.42); box(.06, 2.08, .06, frameM, W / 2 - .03, 1.04, -1.38); box(.06, .07, 1.02, frameM, W / 2 - .03, 2.04, -.9);
   const doorLight = new THREE.PointLight("#ffd28a", 0, 3, 2); doorLight.position.set(W / 2 - .5, 1.4, -.9); scene.add(doorLight);
   let doorOpen = 0, doorUntil = 0;
+  // Spieltische: Poker (rund) und Roulette – nicht auf der Familien-Demo
+  const ADULT = WALL !== "familie-demo", tables = [];
+  let rWheel3d = null;
+  function buildTables() { if (!ADULT) return;
+    const wood = new THREE.MeshStandardMaterial({ color: "#4a2a14", roughness: .7 }), felt = new THREE.MeshStandardMaterial({ color: "#1d7a4a", roughness: .9, emissive: "#0b3a22", emissiveIntensity: .35 });
+    const cyl = (r, h, m, x, y, z, seg) => { const o = new THREE.Mesh(new THREE.CylinderGeometry(r, r, h, seg || 40), m); o.position.set(x, y, z); scene.add(o); return o; };
+    const PX = -1.85, PZ = 1.05, RX = 1.85, RZ = 1.05;
+    cyl(.09, .7, wood, PX, .35, PZ, 16); cyl(.35, .04, wood, PX, .02, PZ, 24);
+    const pt = cyl(.64, .06, wood, PX, .72, PZ); cyl(.57, .065, felt, PX, .73, PZ);
+    [["#ffd166", -.2, .1], ["#ff4d6d", .25, -.15], ["#4cc9ff", .05, .3], ["#fff", -.3, -.25]].forEach(([c, dx, dz]) => { for (let k = 0; k < 4; k++) cyl(.04, .012, new THREE.MeshStandardMaterial({ color: c, roughness: .5 }), PX + dx, .77 + k * .013, PZ + dz, 16); });
+    [-.09, 0, .09].forEach(dx => { const cd = new THREE.Mesh(new THREE.BoxGeometry(.07, .004, .1), new THREE.MeshStandardMaterial({ color: "#fff" })); cd.position.set(PX + dx, .77, PZ); scene.add(cd); });
+    const pl = label("🃏 Poker", "#c6ff6a", .55); pl.position.set(PX, 1.18, PZ); scene.add(pl);
+    box(1.3, .06, .78, wood, RX, .72, RZ); const rf = new THREE.Mesh(new THREE.BoxGeometry(1.2, .065, .68), felt); rf.position.set(RX, .73, RZ); scene.add(rf);
+    [[-.58, -.32], [.58, -.32], [-.58, .32], [.58, .32]].forEach(([dx, dz]) => box(.06, .7, .06, wood, RX + dx, .35, RZ + dz));
+    for (let k = 0; k < 12; k++) { const sq = new THREE.Mesh(new THREE.BoxGeometry(.06, .003, .1), new THREE.MeshStandardMaterial({ color: k % 2 ? "#c81e3a" : "#16121c" })); sq.position.set(RX - .05 + (k % 6) * .085, .767, RZ - .08 + Math.floor(k / 6) * .13); scene.add(sq); }
+    cyl(.2, .05, wood, RX - .42, .78, RZ, 32);
+    rWheel3d = new THREE.Mesh(new THREE.CylinderGeometry(.17, .17, .02, 37), new THREE.MeshStandardMaterial({ color: "#c9a227", metalness: .5, roughness: .4, emissive: "#3a2a00", emissiveIntensity: .4 })); rWheel3d.position.set(RX - .42, .81, RZ); scene.add(rWheel3d);
+    for (let k = 0; k < 18; k++) { const pk = new THREE.Mesh(new THREE.BoxGeometry(.05, .008, .02), new THREE.MeshStandardMaterial({ color: k % 2 ? "#c81e3a" : "#16121c" })); const a = k / 18 * Math.PI * 2; pk.position.set(Math.cos(a) * .13, .012, Math.sin(a) * .13); pk.rotation.y = -a; rWheel3d.add(pk); }
+    const rl = label("🎡 Roulette", "#c6ff6a", .6); rl.position.set(RX, 1.18, RZ); scene.add(rl);
+    tables.push([pt, "poker"], [rf, "roulette"]);
+  }
   // Lichterkette
   const bulbs = [];
   for (let i = 0; i < 22; i++) { const x = -W / 2 + .2 + i * ((W - .4) / 21); const b = new THREE.Mesh(new THREE.SphereGeometry(.03, 8, 6), new THREE.MeshBasicMaterial({ color: COLORS[i % 5] })); b.position.set(x, H - .25 - Math.sin(i / 21 * Math.PI * 3) * .06 - .05, -D / 2 + .08); scene.add(b); bulbs.push(b); }
@@ -302,6 +323,7 @@ form button:disabled{opacity:.5}
       x.fillStyle = "#1a1030"; x.font = '700 46px "Caveat"'; x.textAlign = "center"; x.textBaseline = "middle"; const lh = 46, y0 = (ch - 52) / 2 - (ls.length - 1) * lh / 2 + 6; ls.forEach((l, i) => x.fillText(l, cw / 2, y0 + i * lh)); });
     const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: t, transparent: true, depthTest: false })); s.scale.set(1.1, .55, 1); return s; };
   const people = new Map();
+  buildTables();
   // Pikumio-Bär als Figur auf der Couch: Kappe und Kette in der Farbe des Namens
   const FUR = new THREE.MeshStandardMaterial({ color: "#b06d3c", roughness: .95, emissive: "#5a2e12", emissiveIntensity: .35 }), FUR2 = new THREE.MeshStandardMaterial({ color: "#d79a62", roughness: .95, emissive: "#6b3a18", emissiveIntensity: .3 });
   const NOSE = new THREE.MeshStandardMaterial({ color: "#86b9ec", roughness: .9 }), GOLD = new THREE.MeshStandardMaterial({ color: "#f2c14e", metalness: .85, roughness: .25, emissive: "#6b4a00", emissiveIntensity: .25 });
@@ -438,7 +460,7 @@ form button:disabled{opacity:.5}
   const PATH = [[0,4],[1,4],[2,4],[3,4],[4,4],[4,3],[4,2],[4,1],[4,0],[5,0],[6,0],[6,1],[6,2],[6,3],[6,4],[7,4],[8,4],[9,4],[10,4],[10,5],[10,6],[9,6],[8,6],[7,6],[6,6],[6,7],[6,8],[6,9],[6,10],[5,10],[4,10],[4,9],[4,8],[4,7],[4,6],[3,6],[2,6],[1,6],[0,6],[0,5]];
   const GOAL = [[[1,5],[2,5],[3,5],[4,5]], [[5,1],[5,2],[5,3],[5,4]], [[9,5],[8,5],[7,5],[6,5]], [[5,9],[5,8],[5,7],[5,6]]];
   const YARD = [[[0,0],[1,0],[0,1],[1,1]], [[9,0],[10,0],[9,1],[10,1]], [[9,9],[10,9],[9,10],[10,10]], [[0,9],[1,9],[0,10],[1,10]]];
-  const PC = ["#ff4d6d", "#ffd23f", "#3ddc84", "#4cc9ff"], PT = ["#ffc9d3", "#fff1b8", "#c7f5da", "#c8efff"], PN = ["Rot", "Gelb", "Grün", "Blau"];
+  const PC = ["#ff4d6d", "#ffd23f", "#3ddc84", "#4cc9ff", "#c084fc", "#ff9f43"], PT = ["#ffc9d3", "#fff1b8", "#c7f5da", "#c8efff", "#ead5ff", "#ffe0c2"], PN = ["Rot", "Gelb", "Grün", "Blau", "Lila", "Orange"];
   const cellOf = (c, k, r) => r < 0 ? YARD[c][k] : r < 40 ? PATH[(c * 10 + r) % 40] : GOAL[c][r - 40];
   const fresh = tv => ({ v: 1, st: "wait", p: [], turn: 0, d: 0, ph: "roll", tries: 0, pc: [[-1, -1, -1, -1], [-1, -1, -1, -1], [-1, -1, -1, -1], [-1, -1, -1, -1]], tv: !!tv, at: Date.now(), ev: [] });
   const nm = p => !p ? "?" : p.bot ? "Bot " + PN[p.c] : okN(p.n) ? p.n : "Spieler " + PN[p.c];
@@ -529,7 +551,7 @@ form button:disabled{opacity:.5}
     } catch (e) { toast(e && e.code === "permission-denied" ? "Spiel klappt nicht – sind die neuen Firebase-Regeln drin?" : "Hat nicht geklappt. Nochmal?"); }
     finally { gBusy = false; }
   }
-  const freeColor = S => [0, 2, 1, 3].find(c => !S.p.some(p => p.c === c));
+  const freeColor = S => [0, 2, 1, 3, 4, 5].find(c => !S.p.some(p => p.c === c));
   const A = {
     join: () => act(S => { if (S.st !== "wait" || S.p.length >= 4 || S.p.some(p => p.id === device)) return null; S.p.push({ id: device, n: pname(), c: freeColor(S) }); S.at = Date.now(); return S; }),
     bot: () => act(S => { if (S.st !== "wait" || S.p.length >= 4 || !S.p.some(p => p.id === device)) return null; const c = freeColor(S); S.p.push({ id: "bot" + c, n: "Bot", c, bot: 1 }); S.at = Date.now(); return S; }),
@@ -595,7 +617,7 @@ form button:disabled{opacity:.5}
     x.textAlign = "left"; x.fillStyle = "#ff6fb5"; x.font = '400 24px "Permanent Marker"'; x.fillText(d.name.slice(d.name.indexOf(" ") + 1), 296, 40);
     x.font = '700 22px "Barlow Condensed"';
     if (!S.p.length) { x.fillStyle = "#b9addb"; x.fillText("Wer spielt mit?", 296, 84); }
-    S.p.forEach((p, i) => { const y = 80 + i * 32, on = S.st === "play" && i === S.turn; x.fillStyle = PC[p.c]; x.beginPath(); x.arc(306, y - 7, 8, 0, 7); x.fill(); x.fillStyle = on ? "#fff" : "#b9addb"; x.fillText((on ? "▶ " : "") + nm(p) + (id === "macke" && S.st !== "wait" ? "  " + (S.sc[i] || 0) : ""), 322, y); });
+    S.p.forEach((p, i) => { const y = 80 + i * (S.p.length > 4 ? 22 : 32), on = S.st === "play" && i === S.turn; x.fillStyle = PC[p.c]; x.beginPath(); x.arc(306, y - 7, 8, 0, 7); x.fill(); x.fillStyle = on ? "#fff" : "#b9addb"; x.fillText((on ? "▶ " : "") + nm(p) + (S.st !== "wait" ? (id === "macke" ? "  " + (S.sc[i] || 0) : S.chips && S.chips[i] != null ? "  " + S.chips[i] : "") : ""), 322, y); });
     x.fillStyle = "#ffc867"; x.font = '700 19px "Barlow Condensed"';
     const msg = S.st === "wait" ? "Warten auf Mitspieler …" : d.ev(S); let line = "", yy = 226; msg.split(" ").forEach(wd => { if (x.measureText(line + wd).width > 200) { x.fillText(line, 296, yy); line = ""; yy += 22; } line += wd + " "; }); x.fillText(line, 296, yy); }
   function drawTV(t) { const tv = tvSel(); if (tv && tv !== "madn") { tvMini(tv); tvLight.color.set("#9fd8ff"); } else if (tv === "madn") { tvGame(tvX, 512, 288); tvLight.color.set("#9fd8ff"); } else { tvChill(tvX, 512, 288, t); tvLight.color.set("#ff9a5a"); } tvT.needsUpdate = true; }
@@ -607,7 +629,7 @@ form button:disabled{opacity:.5}
   const myT = S => S.st === "play" && plOf(S) && plOf(S).id === device;
   const intArr = (a, n, lo, hi) => Array.isArray(a) && (n < 0 || a.length === n) && a.every(v => Number.isInteger(v) && v >= lo && v <= hi);
   const baseValid = (S, maxP) => !!S && S.v === 1 && Array.isArray(S.p) && S.p.length <= maxP
-    && S.p.every(p => p && typeof p.id === "string" && p.id.length <= 40 && Number.isInteger(p.c) && p.c >= 0 && p.c < 4)
+    && S.p.every(p => p && typeof p.id === "string" && p.id.length <= 40 && Number.isInteger(p.c) && p.c >= 0 && p.c < 6)
     && new Set(S.p.map(p => p.id)).size === S.p.length && new Set(S.p.map(p => p.c)).size === S.p.length
     && ["wait", "play", "end"].includes(S.st) && Number.isInteger(S.turn) && S.turn >= 0 && S.turn < Math.max(1, S.p.length)
     && intArr(S.ev, -1, -1, 99999) && S.ev.length <= 5;
@@ -626,8 +648,10 @@ form button:disabled{opacity:.5}
     finally { g.busy = false; }
   }
   const CA = {
-    join: id => actM(id, S => { const d = MG[id].def; if (S.st !== "wait" || S.p.length >= d.maxP || S.p.some(p => p.id === device)) return null; S.p.push({ id: device, n: pname(), c: freeColor(S) }); S.at = Date.now(); return S; }),
-    bot: id => actM(id, S => { const d = MG[id].def; if (S.st !== "wait" || S.p.length >= d.maxP || !meInG(S)) return null; const c = freeColor(S); S.p.push({ id: "bot" + c, n: "Bot", c, bot: 1 }); S.at = Date.now(); return S; }),
+    join: id => actM(id, S => { const d = MG[id].def; if (S.p.length >= d.maxP || S.p.some(p => p.id === device)) return null; const pl = { id: device, n: pname(), c: freeColor(S) };
+      if (S.st === "play" && d.joinLate) { d.joinLate(S, pl); return S; } if (S.st !== "wait") return null; S.p.push(pl); S.at = Date.now(); return S; }),
+    bot: id => actM(id, S => { const d = MG[id].def; if (S.p.length >= d.maxP || !meInG(S)) return null; const c = freeColor(S), pl = { id: "bot" + c, n: "Bot", c, bot: 1 };
+      if (S.st === "play" && d.joinLate) { d.joinLate(S, pl); return S; } if (S.st !== "wait") return null; S.p.push(pl); S.at = Date.now(); return S; }),
     start: id => actM(id, S => { const d = MG[id].def; if (S.st !== "wait" || S.p.length < 2 || !meInG(S)) return null; d.start(S); S.st = "play"; S.turn = 0; S.ev = []; S.at = Date.now(); return S; }),
     leave: id => actM(id, S => { const i = S.p.findIndex(p => p.id === device); if (i < 0) return null;
       if (S.st === "wait") { S.p.splice(i, 1); S.at = Date.now(); return S; }
@@ -740,13 +764,229 @@ form button:disabled{opacity:.5}
     status: G => G.st === "play" ? (myT(G) ? "Du bist dran: tipp eine Spalte an." : `${esc(nm(plOf(G)))} ist dran …`) : null,
     chip: () => "", buttons: () => {}, act: () => {}, primary: () => null
   } };
+  // ---------- Poker (Texas Hold'em) und Roulette: nur mit Spielchips, ohne echtes Geld ----------
+  const START = 1000, SB = 10, BB = 20;
+  const RK = ["2", "3", "4", "5", "6", "7", "8", "9", "10", "B", "D", "K", "A"], SU = ["♠", "♥", "♦", "♣"];
+  const HN = ["Höchste Karte", "Ein Paar", "Zwei Paare", "Drilling", "Straße", "Flush", "Full House", "Vierling", "Straight Flush"];
+  function score5(cs) {
+    const r = cs.map(c => c % 13).sort((a, b) => b - a), s = cs.map(c => Math.floor(c / 13)), flush = s.every(x => x === s[0]), cnt = {};
+    r.forEach(x => cnt[x] = (cnt[x] || 0) + 1);
+    const gr = Object.entries(cnt).map(([k, v]) => [v, +k]).sort((a, b) => b[0] - a[0] || b[1] - a[1]), u = [...new Set(r)];
+    let st = -1; if (u.length === 5) { if (u[0] - u[4] === 4) st = u[0]; else if (u.join() === "12,3,2,1,0") st = 3; }
+    let cat, ks;
+    if (st >= 0 && flush) { cat = 8; ks = [st]; } else if (gr[0][0] === 4) { cat = 7; ks = gr.map(g => g[1]); } else if (gr[0][0] === 3 && gr[1][0] === 2) { cat = 6; ks = gr.map(g => g[1]); }
+    else if (flush) { cat = 5; ks = r; } else if (st >= 0) { cat = 4; ks = [st]; } else if (gr[0][0] === 3) { cat = 3; ks = gr.map(g => g[1]); }
+    else if (gr[0][0] === 2 && gr[1][0] === 2) { cat = 2; ks = gr.map(g => g[1]); } else if (gr[0][0] === 2) { cat = 1; ks = gr.map(g => g[1]); } else { cat = 0; ks = r; }
+    let v = cat; for (let i = 0; i < 5; i++) v = v * 13 + (ks[i] || 0); return v;
+  }
+  function best(cs) { let b = -1; const n = cs.length, pick = [];
+    const rec = st => { if (pick.length === 5) { b = Math.max(b, score5(pick.map(i => cs[i]))); return; } for (let i = st; i <= n - (5 - pick.length); i++) { pick.push(i); rec(i + 1); pick.pop(); } };
+    if (n >= 5) rec(0); return b; }
+  const catOf = v => Math.floor(v / Math.pow(13, 5));
+  const shuffle = () => { const d = Array.from({ length: 52 }, (_, i) => i); for (let i = 51; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [d[i], d[j]] = [d[j], d[i]]; } return d; };
+  const nextIdx = (S, i, ok) => { const n = S.p.length; for (let k = 1; k <= n; k++) { const j = (i + k) % n; if (ok(j)) return j; } return -1; };
+  function pkStart(S) {
+    const n = S.p.length; while (S.chips.length < n) S.chips.push(START);
+    const live = S.p.map((_, i) => S.chips[i] > 0);
+    if (live.filter(Boolean).length < 2) { S.st = "end"; const w = S.chips.indexOf(Math.max(...S.chips)); S.ev = [6, w]; return S; }
+    S.dl = nextIdx(S, S.dl, i => live[i]); S.deck = shuffle(); S.board = []; S.bet = S.p.map(() => 0); S.tot = S.p.map(() => 0);
+    S.fold = S.p.map((_, i) => !live[i]); S.acted = S.p.map(() => false); S.hole = S.p.map((_, i) => live[i] ? [S.deck.pop(), S.deck.pop()] : []);
+    S.stage = 0; S.win = []; S.wcat = -1; S.sd = 0; S.hn = (S.hn || 0) + 1;
+    const heads = live.filter(Boolean).length === 2, sb = heads ? S.dl : nextIdx(S, S.dl, i => live[i]), bb = nextIdx(S, sb, i => live[i]);
+    const put = (i, a) => { a = Math.min(a, S.chips[i]); S.chips[i] -= a; S.bet[i] += a; S.tot[i] += a; };
+    put(sb, SB); put(bb, BB); S.cb = Math.max(S.bet[sb], S.bet[bb]); S.mr = BB;
+    S.turn = nextIdx(S, bb, i => !S.fold[i] && S.chips[i] > 0); if (S.turn < 0) S.turn = bb;
+    S.ev = [1, S.dl]; S.at = Date.now(); pkAdvance(S, true); return S;
+  }
+  const canAct = (S, i) => !S.fold[i] && S.chips[i] > 0;
+  function pkAdvance(S, fresh) {
+    const alive = S.p.map((_, i) => !S.fold[i]);
+    if (alive.filter(Boolean).length === 1) { const w = alive.indexOf(true); S.chips[w] += S.tot.reduce((a, b) => a + b, 0); S.win = [w]; S.wcat = -1; S.stage = 5; S.sd = 0; S.ev = [3, w]; S.turn = w; return; }
+    const need = i => canAct(S, i) && (!S.acted[i] || S.bet[i] < S.cb);
+    if (fresh && need(S.turn)) return;
+    if (!fresh) { const nx = nextIdx(S, S.turn, need); if (nx >= 0) { S.turn = nx; return; } }
+    else { const nx = nextIdx(S, S.turn - 1 + S.p.length, need); if (nx >= 0) { S.turn = nx; return; } }
+    // Setzrunde fertig: nächste Karten
+    while (true) {
+      S.bet = S.bet.map(() => 0); S.cb = 0; S.mr = BB; S.acted = S.acted.map(() => false);
+      if (S.stage === 3) { pkShow(S); return; }
+      S.stage++; S.deck.pop(); if (S.stage === 1) S.board.push(S.deck.pop(), S.deck.pop(), S.deck.pop()); else S.board.push(S.deck.pop());
+      if (S.p.filter((_, i) => canAct(S, i)).length >= 2) { S.turn = nextIdx(S, S.dl, i => canAct(S, i)); S.ev = [2, S.stage]; return; }
+    }
+  }
+  function pkShow(S) {
+    const sc = S.p.map((_, i) => S.fold[i] ? -1 : best(S.hole[i].concat(S.board)));
+    const lv = [...new Set(S.tot.filter(t => t > 0))].sort((a, b) => a - b); let prev = 0, wset = new Set();
+    lv.forEach(L => { let pot = 0; S.tot.forEach(t => pot += Math.min(t, L) - Math.min(t, prev));
+      const el = S.p.map((_, i) => i).filter(i => !S.fold[i] && S.tot[i] >= L); if (!el.length) { prev = L; return; }
+      const top = Math.max(...el.map(i => sc[i])), ws = el.filter(i => sc[i] === top), share = Math.floor(pot / ws.length);
+      ws.forEach((i, k) => { S.chips[i] += share + (k === 0 ? pot - share * ws.length : 0); wset.add(i); }); prev = L; });
+    S.win = [...wset]; const w0 = S.win[0]; S.wcat = w0 >= 0 ? catOf(sc[w0]) : -1; S.stage = 5; S.sd = 1; S.ev = [4, w0, S.wcat]; S.turn = w0;
+  }
+  function pkAct(S, pid, kind, to) {
+    if (S.st !== "play" || S.stage > 3 || plOf(S).id !== pid) return null; const i = S.turn, toCall = S.cb - S.bet[i], cb0 = S.cb;
+    const put = a => { a = Math.max(0, Math.min(a, S.chips[i])); S.chips[i] -= a; S.bet[i] += a; S.tot[i] += a; };
+    if (kind === "fold") S.fold[i] = true;
+    else if (kind === "call") put(toCall);
+    else if (kind === "raise") { const max = S.bet[i] + S.chips[i]; let R = Math.min(Math.max(to, S.cb + S.mr), max); if (R <= S.cb) { put(toCall); }
+      else { S.mr = Math.max(S.mr, R - S.cb); S.cb = R; put(R - S.bet[i]); S.acted = S.acted.map((a, j) => j === i ? a : false); } }
+    else return null;
+    const raised = S.cb > cb0;
+    S.acted[i] = true; S.ev = [5, i, kind === "fold" ? 0 : raised ? 3 : (toCall ? 2 : 1), S.bet[i]]; S.at = Date.now(); pkAdvance(S, false); return S;
+  }
+  MG.poker = { G: null, ref: null, busy: false, def: {
+    name: "🃏 Poker", maxP: 6, chipsName: true,
+    fresh: tv => Object.assign(baseFresh(tv), { chips: [], deck: [], board: [], hole: [], bet: [], tot: [], fold: [], acted: [], dl: -1, stage: 5, cb: 0, mr: BB, win: [], wcat: -1, sd: 0, hn: 0 }),
+    valid: S => { try { const n = S.p.length; return baseValid(S, 6) && intArr(S.chips, -1, 0, 1e7) && S.chips.length <= 6 && intArr(S.deck, -1, 0, 51) && intArr(S.board, -1, 0, 51) && S.board.length <= 5
+      && Array.isArray(S.hole) && S.hole.length <= 6 && S.hole.every(h => intArr(h, -1, 0, 51) && h.length <= 2) && intArr(S.bet, -1, 0, 1e7) && intArr(S.tot, -1, 0, 1e7)
+      && Array.isArray(S.fold) && Array.isArray(S.acted) && Number.isInteger(S.dl) && Number.isInteger(S.stage) && S.stage >= 0 && S.stage <= 5 && intArr(S.win, -1, 0, 5) && n <= 6; } catch (e) { return false; } },
+    start: S => { S.chips = S.p.map(() => START); S.dl = -1; S.hn = 0; pkStart(S); },
+    joinLate: (S, pl) => { S.p.push(pl); S.chips.push(START); S.hole.push([]); S.bet.push(0); S.tot.push(0); S.fold.push(true); S.acted.push(true); },
+    next: S => { if (S.stage <= 3) { S.fold[S.turn] = true; S.acted[S.turn] = true; pkAdvance(S, false); } },
+    botNeeded: S => S.stage <= 3 && plOf(S) && plOf(S).bot,
+    botStep: S => { const i = S.turn, h = S.hole[i], toCall = S.cb - S.bet[i], pid = plOf(S).id; let str;
+      if (S.board.length) str = catOf(best(h.concat(S.board))) + (Math.max(h[0] % 13, h[1] % 13) >= 10 ? .5 : 0);
+      else { const a = h[0] % 13, b = h[1] % 13; str = a === b ? 1.5 + a / 12 : (Math.max(a, b) >= 11 ? 1 : 0) + (Math.floor(h[0] / 13) === Math.floor(h[1] / 13) ? .3 : 0) + (Math.abs(a - b) === 1 ? .2 : 0); }
+      const rnd = Math.random();
+      if (str >= 2.2 && rnd < .7) return pkAct(S, pid, "raise", S.cb + Math.max(S.mr, BB * (str >= 3 ? 4 : 2)));
+      if (toCall === 0) return pkAct(S, pid, rnd < .15 && str >= 1 ? "raise" : "call", S.cb + S.mr);
+      if (str >= 1 || toCall <= BB * (rnd < .5 ? 2 : 1) || (toCall <= S.chips[i] * .08)) return pkAct(S, pid, "call");
+      return pkAct(S, pid, "fold"); },
+    tickDue: S => S.st === "play" && S.stage === 5 && Date.now() - S.at > 6000,
+    tick: S => S.st === "play" && S.stage === 5 && Date.now() - S.at > 6000 ? pkStart(S) : null,
+    ev: S => { const e = S.ev || [], a = nm(S.p[e[1]]);
+      switch (e[0]) { case 1: return `Neue Runde – ${a} gibt.`; case 2: return ["", "Der Flop liegt.", "Der Turn kommt.", "Der River kommt."][e[1]] || "";
+        case 3: return `🏆 ${a} gewinnt den Pot – alle anderen haben gepasst.`; case 4: return `🏆 ${S.win.map(i => nm(S.p[i])).join(" & ")} gewinnt mit ${HN[e[2]] || "der besten Hand"}!`;
+        case 5: return `${a} ${["passt", "checkt", "geht mit", "erhöht auf " + e[3]][e[2]]}.`; case 6: return `🏆 ${a} hat alle Chips gewonnen!`; case 9: return `⏭ ${a} wurde übersprungen.`; default: return ""; } },
+    status: S => S.st !== "play" ? null : S.stage === 5 ? "Gleich geht die nächste Runde los …" : myT(S) ? `Du bist dran${S.cb - S.bet[S.turn] > 0 ? ` – ${S.cb - S.bet[S.turn]} zum Mitgehen` : ""}.` : `${esc(nm(plOf(S)))} ist dran …`,
+    chip: (S, i) => S.st !== "wait" && S.chips[i] != null ? ` · ${S.chips[i]} 🪙` : "",
+    buttons: (S, b) => { const me = S.p.findIndex(p => p.id === device && !p.bot); if (me >= 0 && S.chips[me] === 0 && S.stage === 5) b.push(["pk_refill", "🪙 Neue Spielchips"]);
+      if (!myT(S) || S.stage > 3) return; const i = S.turn, toCall = S.cb - S.bet[i], all = S.bet[i] + S.chips[i], pot = S.tot.reduce((a, c) => a + c, 0);
+      b.push(["pk_fold", "Passen"]); b.push(["pk_call", toCall ? `Mitgehen (${Math.min(toCall, S.chips[i])})` : "Checken", "go"]);
+      const r1 = S.cb + Math.max(S.mr, BB); if (S.chips[i] > toCall) { if (r1 < all) b.push(["pk_r1", `Erhöhen auf ${r1}`]); const r2 = S.cb + Math.max(S.mr, pot); if (r2 < all && r2 > r1) b.push(["pk_r2", `Pot: ${r2}`]); b.push(["pk_all", `All-in (${all})`]); } },
+    act: k => { const S = MG.poker.G, i = S.turn, pot = S.tot.reduce((a, c) => a + c, 0);
+      if (k === "pk_refill") return actM("poker", T => { const j = T.p.findIndex(p => p.id === device); if (j < 0 || T.chips[j] > 0 || T.stage !== 5) return null; T.chips[j] = START; return T; });
+      const to = k === "pk_r1" ? S.cb + Math.max(S.mr, BB) : k === "pk_r2" ? S.cb + Math.max(S.mr, pot) : S.bet[i] + S.chips[i];
+      actM("poker", T => pkAct(T, device, k === "pk_fold" ? "fold" : k === "pk_call" ? "call" : "raise", to)); },
+    primary: S => myT(S) && S.stage <= 3 ? [S.cb - S.bet[S.turn] ? "Mitgehen" : "Checken", "pk_call"] : null,
+    tap: () => {},
+    draw: (x, Z, S) => {
+      x.fillStyle = "#1a0f2e"; x.fillRect(0, 0, Z, Z);
+      x.fillStyle = "#5a3418"; x.beginPath(); x.ellipse(Z / 2, Z / 2, Z * .47, Z * .36, 0, 0, 7); x.fill();
+      x.fillStyle = "#1d7a4a"; x.beginPath(); x.ellipse(Z / 2, Z / 2, Z * .43, Z * .32, 0, 0, 7); x.fill();
+      x.strokeStyle = "rgba(255,255,255,.15)"; x.lineWidth = Z * .006; x.beginPath(); x.ellipse(Z / 2, Z / 2, Z * .36, Z * .25, 0, 0, 7); x.stroke();
+      const card = (c, cx, cy, w, up) => { const h = w * 1.4; x.fillStyle = up ? "#fff" : "#7a2340"; x.strokeStyle = "#1a1030"; x.lineWidth = w * .04; x.beginPath(); x.roundRect(cx - w / 2, cy - h / 2, w, h, w * .12); x.fill(); x.stroke();
+        if (!up) { x.strokeStyle = "rgba(255,200,103,.6)"; x.strokeRect(cx - w * .32, cy - h * .36, w * .64, h * .72); return; }
+        const red = Math.floor(c / 13) === 1 || Math.floor(c / 13) === 2; x.fillStyle = red ? "#d01c3a" : "#14111c"; x.textAlign = "center";
+        x.font = `800 ${w * .42}px "Barlow Condensed"`; x.fillText(RK[c % 13], cx, cy - h * .06); x.font = `${w * .42}px sans-serif`; x.fillText(SU[Math.floor(c / 13)], cx, cy + h * .3); };
+      const pot = S.tot.reduce((a, c) => a + c, 0);
+      for (let k = 0; k < 5; k++) { const cx = Z / 2 + (k - 2) * Z * .1; if (S.board[k] != null) card(S.board[k], cx, Z * .46, Z * .085, true); else { x.strokeStyle = "rgba(255,255,255,.18)"; x.lineWidth = Z * .004; x.beginPath(); x.roundRect(cx - Z * .0425, Z * .46 - Z * .06, Z * .085, Z * .12, Z * .01); x.stroke(); } }
+      x.fillStyle = "#ffc867"; x.textAlign = "center"; x.font = `700 ${Z * .04}px "Barlow Condensed"`; if (S.st === "play" && S.stage < 5) x.fillText(`Pot: ${pot} 🪙`, Z / 2, Z * .6);
+      const n = S.p.length, mine = S.p.findIndex(p => p.id === device && !p.bot), base = mine >= 0 ? mine : 0;
+      S.p.forEach((p, i) => { const k = (i - base + n) % n, a = Math.PI / 2 + k * Math.PI * 2 / Math.max(n, 2), sx = Z / 2 + Math.cos(a) * Z * .4, sy = Z / 2 + Math.sin(a) * Z * .33;
+        const on = S.st === "play" && S.stage <= 3 && i === S.turn, won = S.stage === 5 && S.win.includes(i);
+        x.fillStyle = won ? "#c6ff6a" : on ? "#fff" : "rgba(10,6,18,.85)"; x.beginPath(); x.roundRect(sx - Z * .1, sy + Z * .045, Z * .2, Z * .075, Z * .02); x.fill();
+        x.fillStyle = won || on ? "#14111c" : "#fff"; x.font = `700 ${Z * .03}px "Barlow Condensed"`; x.fillText(nm(p).slice(0, 12), sx, sy + Z * .078);
+        x.fillStyle = won || on ? "#3b2a00" : "#ffc867"; x.font = `700 ${Z * .026}px "Barlow Condensed"`; x.fillText(`${S.chips[i] != null ? S.chips[i] : START} 🪙`, sx, sy + Z * .108);
+        x.fillStyle = PC[p.c]; x.beginPath(); x.arc(sx - Z * .085, sy + Z * .082, Z * .012, 0, 7); x.fill();
+        const h = S.hole[i] || [], show = i === mine || (S.sd && !S.fold[i]);
+        if (h.length && S.st !== "wait") { x.globalAlpha = S.fold[i] ? .35 : 1; card(h[0], sx - Z * .032, sy, Z * .06, show); card(h[1], sx + Z * .032, sy, Z * .06, show); x.globalAlpha = 1; }
+        if (S.bet[i]) { const bx = sx + (Z / 2 - sx) * .35, by = sy + (Z * .46 - sy) * .35; x.fillStyle = "#ffc867"; x.beginPath(); x.arc(bx, by, Z * .016, 0, 7); x.fill(); x.fillStyle = "#fff"; x.font = `700 ${Z * .025}px "Barlow Condensed"`; x.fillText(S.bet[i], bx, by - Z * .022); }
+        if (i === S.dl && S.st === "play") { x.fillStyle = "#fff"; x.beginPath(); x.arc(sx + Z * .09, sy - Z * .03, Z * .018, 0, 7); x.fill(); x.fillStyle = "#14111c"; x.font = `800 ${Z * .022}px "Barlow Condensed"`; x.fillText("D", sx + Z * .09, sy - Z * .022); } });
+      if (S.st === "wait") { x.fillStyle = "#fff"; x.font = `400 ${Z * .05}px "Permanent Marker"`; x.fillText("Poker – nur Spielchips", Z / 2, Z * .36); }
+    }
+  } };
+
+  // Roulette
+  const REDS = new Set([1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36]);
+  const WHEEL = [0, 32, 15, 19, 4, 21, 2, 25, 17, 34, 6, 27, 13, 36, 11, 30, 8, 23, 10, 5, 24, 16, 33, 1, 20, 14, 31, 9, 22, 18, 29, 7, 28, 12, 35, 3, 26];
+  const BT = ["Zahl", "Rot", "Schwarz", "Gerade", "Ungerade", "1–18", "19–36", "Dutzend"];
+  const rWin = (t, v, n) => t === 0 ? n === v : n === 0 ? false : t === 1 ? REDS.has(n) : t === 2 ? !REDS.has(n) : t === 3 ? n % 2 === 0 : t === 4 ? n % 2 === 1 : t === 5 ? n <= 18 : t === 6 ? n >= 19 : t === 7 ? Math.floor((n - 1) / 12) === v : false;
+  const rMul = t => t === 0 ? 35 : t === 7 ? 2 : 1;
+  let rChip = 50, rAnim = { rn: -1, t0: 0, from: 0, to: 0 }, rAng = 0;
+  function rPlace(S, pid, t, v) { const i = S.p.findIndex(p => p.id === pid); if (S.st !== "play" || S.ph !== "bet" || i < 0) return null;
+    const a = Math.min(rChip, S.chips[i]); if (a <= 0) return null; const b = S.bets[i], f = b.find(x => x[0] === t && x[1] === v);
+    if (f) f[2] += a; else { if (b.length >= 12) return null; b.push([t, v, a]); } S.chips[i] -= a; S.ready[i] = false; S.at = Date.now(); return S; }
+  function rSpin(S) { if (S.st !== "play" || S.ph !== "bet" || !S.bets.some(b => b.length)) return null;
+    const n = Math.floor(Math.random() * 37); S.res = n; S.won = S.p.map(() => 0);
+    S.bets.forEach((b, i) => b.forEach(([t, v, a]) => { if (rWin(t, v, n)) { S.chips[i] += a * (rMul(t) + 1); S.won[i] += a * rMul(t); } else S.won[i] -= a; }));
+    S.ph = "res"; S.rn++; S.at = Date.now(); const best2 = S.won.indexOf(Math.max(...S.won)); S.ev = [2, best2, n]; return S; }
+  const rAllReady = S => S.p.every((p, i) => p.bot || S.ready[i] || !S.bets[i].length && S.chips[i] === 0);
+  MG.roulette = { G: null, ref: null, busy: false, def: {
+    name: "🎡 Roulette", maxP: 6,
+    fresh: tv => Object.assign(baseFresh(tv), { chips: [], bets: [], ready: [], won: [], ph: "bet", res: -1, rn: 0, bt: Date.now() }),
+    valid: S => { try { return baseValid(S, 6) && intArr(S.chips, -1, 0, 1e7) && Array.isArray(S.bets) && S.bets.length <= 6 && S.bets.every(b => Array.isArray(b) && b.length <= 12 && b.every(x => intArr(x, 3, 0, 1e7) && x[0] <= 7 && x[1] <= 36))
+      && Array.isArray(S.ready) && ["bet", "res"].includes(S.ph) && Number.isInteger(S.res) && S.res >= -1 && S.res <= 36 && Number.isInteger(S.rn); } catch (e) { return false; } },
+    start: S => { S.chips = S.p.map(() => START); S.bets = S.p.map(() => []); S.ready = S.p.map(() => false); S.won = S.p.map(() => 0); S.ph = "bet"; S.res = -1; S.bt = Date.now(); },
+    joinLate: (S, pl) => { S.p.push(pl); S.chips.push(START); S.bets.push([]); S.ready.push(false); S.won.push(0); },
+    next: S => { S.ready = S.ready.map(() => true); },
+    botNeeded: S => S.ph === "bet" && S.p.some((p, i) => p.bot && !S.bets[i].length && S.chips[i] > 0) || (S.ph === "bet" && S.bets.some(b => b.length) && rAllReady(S) && S.p.some(p => p.bot)),
+    botStep: S => { let ch = false;
+      S.p.forEach((p, i) => { if (!p.bot || S.bets[i].length || S.chips[i] <= 0) return; const opts = [[1, 0], [2, 0], [3, 0], [4, 0], [5, 0], [6, 0], [7, Math.floor(Math.random() * 3)], [0, Math.floor(Math.random() * 37)]];
+        const k = 1 + Math.floor(Math.random() * 2); for (let j = 0; j < k; j++) { const [t, v] = opts[Math.floor(Math.random() * opts.length)], a = Math.min(S.chips[i], [20, 50, 100][Math.floor(Math.random() * 3)]); if (a > 0) { S.bets[i].push([t, v, a]); S.chips[i] -= a; } }
+        S.ready[i] = true; ch = true; });
+      if (!ch && rAllReady(S)) return rSpin(S); if (ch) S.at = Date.now(); return ch ? S : null; },
+    tickDue: S => S.st === "play" && S.ph === "res" && Date.now() - S.at > 9000,
+    tick: S => { if (!(S.st === "play" && S.ph === "res" && Date.now() - S.at > 9000)) return null; S.ph = "bet"; S.bets = S.p.map(() => []); S.ready = S.p.map(() => false); S.bt = Date.now(); S.at = Date.now(); S.ev = [1]; return S; },
+    ev: S => { const e = S.ev || []; if (S.ph === "res" && performance.now() < rAnim.t0 + 4200) return "Die Kugel rollt …";
+      switch (e[0]) { case 1: return "Neue Runde – macht eure Einsätze!"; case 2: return `${S.res === 0 ? "🟢" : REDS.has(S.res) ? "🔴" : "⚫"} Die ${S.res}! ${S.won[e[1]] > 0 ? `🏆 ${nm(S.p[e[1]])} gewinnt ${S.won[e[1]]} 🪙.` : "Diesmal gewinnt die Bank."}`; case 9: return "⏭ Weiter geht's."; default: return ""; } },
+    status: S => { if (S.st !== "play") return null; const i = S.p.findIndex(p => p.id === device && !p.bot);
+      if (S.ph === "res") return i >= 0 && performance.now() > rAnim.t0 + 4200 ? (S.won[i] > 0 ? `Du gewinnst ${S.won[i]} 🪙!` : S.won[i] < 0 ? `Du verlierst ${-S.won[i]} 🪙.` : "Du hast nicht gesetzt.") : "Die Kugel rollt …";
+      if (i < 0) return "Gleich wird gedreht …";
+      return `Chip: ${rChip} 🪙 – tipp auf eine Zahl oder nimm einen Knopf. ${S.bets[i].length ? "Dein Einsatz: " + S.bets[i].map(([t, v, a]) => `${t === 0 ? v : t === 7 ? (v + 1) + ". Dutzend" : BT[t]} ${a}`).join(", ") : ""}`; },
+    chip: (S, i) => S.st !== "wait" && S.chips[i] != null ? ` · ${S.chips[i]} 🪙${S.ph === "bet" && S.ready[i] ? " ✓" : ""}` : "",
+    buttons: (S, b) => { const i = S.p.findIndex(p => p.id === device && !p.bot); if (S.st !== "play" || S.ph !== "bet" || i < 0) return;
+      b.push(["r_chip", `Chip: ${rChip}`]); [[1, "🔴 Rot"], [2, "⚫ Schwarz"], [3, "Gerade"], [4, "Ungerade"], [5, "1–18"], [6, "19–36"]].forEach(([t, l]) => b.push(["r_" + t, l]));
+      [0, 1, 2].forEach(v => b.push(["r_d" + v, `${v + 1}. Dutzend`]));
+      if (S.bets[i].length) b.push(["r_clear", "Einsatz zurück"]);
+      if (S.chips[i] === 0 && !S.bets[i].length) b.push(["r_refill", "🪙 Neue Spielchips"]);
+      if (S.bets.some(x => x.length)) b.push(["r_spin", S.ready[i] ? (Date.now() - S.bt > 45000 ? "🎡 Jetzt drehen" : "✓ Bereit – warten …") : "🎡 Fertig & drehen", "go"]); },
+    act: k => { const S = MG.roulette.G;
+      if (k === "r_chip") { rChip = rChip === 10 ? 50 : rChip === 50 ? 100 : rChip === 100 ? 250 : 10; gameUI(); return; }
+      if (k === "r_clear") return actM("roulette", T => { const i = T.p.findIndex(p => p.id === device); if (i < 0 || T.ph !== "bet") return null; T.bets[i].forEach(x => T.chips[i] += x[2]); T.bets[i] = []; T.ready[i] = false; return T; });
+      if (k === "r_refill") return actM("roulette", T => { const i = T.p.findIndex(p => p.id === device); if (i < 0 || T.chips[i] > 0 || T.bets[i].length) return null; T.chips[i] = START; return T; });
+      if (k === "r_spin") return actM("roulette", T => { const i = T.p.findIndex(p => p.id === device); if (i < 0 || T.ph !== "bet") return null; T.ready[i] = true; return rAllReady(T) && T.bets.some(x => x.length) ? rSpin(T) : (Date.now() - T.bt > 45000 && T.bets.some(x => x.length) ? rSpin(T) : T); });
+      const m = /^r_(d?)(\d)$/.exec(k); if (m) actM("roulette", T => m[1] ? rPlace(T, device, 7, +m[2]) : rPlace(T, device, +m[2], 0)); },
+    primary: S => S.st === "play" && S.ph === "bet" && S.p.some(p => p.id === device) ? ["🎡 Drehen", "r_spin"] : null,
+    tap: (nx, ny) => { const S = MG.roulette.G; if (S.st !== "play" || S.ph !== "bet") return; if (ny < .66 || ny > .95) return;
+      const gx = (nx - .04) / .92, gy = (ny - .66) / .29; if (gx < 0 || gx > 1) return; const col = Math.floor(gx * 13), row = Math.floor(gy * 3); if (row < 0 || row > 2) return;
+      const n = col === 0 ? 0 : (col - 1) * 3 + (3 - row); actM("roulette", T => rPlace(T, device, 0, n)); },
+    draw: (x, Z, S) => {
+      x.fillStyle = "#123d28"; x.fillRect(0, 0, Z, Z);
+      if (S.ph === "res" && rAnim.rn !== S.rn) { const tgt = WHEEL.indexOf(S.res), seg = Math.PI * 2 / 37; const want = -Math.PI / 2 - (tgt + .5) * seg, d = (((want - rAng) % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2); rAnim = { rn: S.rn, t0: performance.now(), from: rAng, to: rAng + Math.PI * 8 + d }; }
+      const k = Math.min(1, (performance.now() - rAnim.t0) / 4000), ease = 1 - Math.pow(1 - k, 3);
+      if (S.ph === "res" && rAnim.rn === S.rn) rAng = rAnim.from + (rAnim.to - rAnim.from) * ease; else rAng += .003;
+      const cx = Z / 2, cy = Z * .33, R = Z * .29, seg = Math.PI * 2 / 37;
+      x.fillStyle = "#4a2a12"; x.beginPath(); x.arc(cx, cy, R * 1.08, 0, 7); x.fill();
+      WHEEL.forEach((n, i) => { const a0 = rAng + i * seg; x.fillStyle = n === 0 ? "#16a34a" : REDS.has(n) ? "#c81e3a" : "#16121c"; x.beginPath(); x.moveTo(cx, cy); x.arc(cx, cy, R, a0, a0 + seg); x.fill();
+        x.save(); x.translate(cx, cy); x.rotate(a0 + seg / 2); x.fillStyle = "#fff"; x.font = `700 ${Z * .022}px "Barlow Condensed"`; x.textAlign = "center"; x.fillText(n, R * .86, Z * .008); x.restore(); });
+      x.fillStyle = "#c9a227"; x.beginPath(); x.arc(cx, cy, R * .55, 0, 7); x.fill(); x.fillStyle = "#6b4a12"; x.beginPath(); x.arc(cx, cy, R * .42, 0, 7); x.fill();
+      for (let s2 = 0; s2 < 4; s2++) { x.save(); x.translate(cx, cy); x.rotate(rAng * 1.0 + s2 * Math.PI / 2); x.fillStyle = "#e9d38a"; x.fillRect(-R * .04, -R * .5, R * .08, R * .5); x.restore(); }
+      const ba = S.ph === "res" && rAnim.rn === S.rn ? -Math.PI / 2 : -rAng * 2.2, br = S.ph === "res" && k >= 1 ? R * .78 : R * (1.0 - .2 * ease);
+      x.fillStyle = "#fff"; x.beginPath(); x.arc(cx + Math.cos(ba) * br, cy + Math.sin(ba) * br, Z * .014, 0, 7); x.fill();
+      x.fillStyle = "#fff"; x.beginPath(); x.moveTo(cx, cy - R * 1.12); x.lineTo(cx - Z * .015, cy - R * 1.2); x.lineTo(cx + Z * .015, cy - R * 1.2); x.fill();
+      if (S.ph === "res" && k >= 1) { x.fillStyle = S.res === 0 ? "#16a34a" : REDS.has(S.res) ? "#c81e3a" : "#16121c"; x.beginPath(); x.arc(cx, cy, R * .3, 0, 7); x.fill(); x.fillStyle = "#fff"; x.textAlign = "center"; x.font = `800 ${Z * .07}px "Barlow Condensed"`; x.fillText(S.res, cx, cy + Z * .025); }
+      // Zahlenfeld zum Antippen
+      const gx0 = Z * .04, gy0 = Z * .66, cw = Z * .92 / 13, rh = Z * .29 / 3, mine = S.p.findIndex(p => p.id === device && !p.bot);
+      for (let col = 0; col < 13; col++) for (let row = 0; row < 3; row++) { if (col === 0 && row > 0) continue; const n = col === 0 ? 0 : (col - 1) * 3 + (3 - row);
+        const hh = col === 0 ? rh * 3 : rh; x.fillStyle = n === 0 ? "#16a34a" : REDS.has(n) ? "#c81e3a" : "#16121c"; x.fillRect(gx0 + col * cw + 1, gy0 + row * rh + 1, cw - 2, hh - 2);
+        if (S.ph === "res" && k >= 1 && n === S.res) { x.strokeStyle = "#ffd166"; x.lineWidth = Z * .006; x.strokeRect(gx0 + col * cw + 2, gy0 + row * rh + 2, cw - 4, hh - 4); }
+        x.fillStyle = "#fff"; x.font = `700 ${Z * .028}px "Barlow Condensed"`; x.textAlign = "center"; x.fillText(n, gx0 + col * cw + cw / 2, gy0 + row * rh + hh / 2 + Z * .01);
+        S.bets.forEach((b, i) => b.forEach(([t, v, a]) => { if (t === 0 && v === n) { const p = S.p[i]; x.fillStyle = PC[p.c]; x.beginPath(); x.arc(gx0 + col * cw + cw * (.25 + (i % 3) * .25), gy0 + row * rh + hh * .82, Z * .011, 0, 7); x.fill(); } })); }
+      x.fillStyle = "#e9f5ee"; x.font = `700 ${Z * .03}px "Barlow Condensed"`; x.textAlign = "left";
+      const tl = []; S.p.forEach((p, i) => { const sum = (S.bets[i] || []).reduce((a, c) => a + c[2], 0); if (sum) tl.push(`${nm(p)}: ${sum}`); });
+      x.fillText(S.st === "wait" ? "Roulette – nur Spielchips" : tl.length ? "Einsätze: " + tl.join(" · ") : "Noch keine Einsätze", gx0, Z * .985);
+    }
+  } };
   Object.values(MG).forEach(g => g.G = g.def.fresh());
   if (location.hash === "#test") window.__madn = { G: () => G, hl: hlNow, move: k => A.move(k), MG: () => MG, mSel, gameUI };
   // Bots der neuen Spiele
-  setInterval(() => { for (const [id, g] of Object.entries(MG)) { const S = g.G; if (S.st !== "play" || g.busy) continue; const cur = plOf(S); if (!cur || !cur.bot) continue;
+  setInterval(() => { for (const [id, g] of Object.entries(MG)) { const S = g.G; if (S.st !== "play" || g.busy) continue;
     const humans = S.p.filter(p => !p.bot); if (!(humans[0] && humans[0].id === device) && !(meInG(S) && Date.now() - S.at > 8000)) continue;
+    if (g.def.tickDue && g.def.tickDue(S)) { actM(id, T => T.st === "play" ? g.def.tick(T) : null); continue; }
+    const cur = plOf(S), need = g.def.botNeeded ? g.def.botNeeded(S) : (cur && cur.bot); if (!need) continue;
     if (Date.now() - (S.at || 0) < 900) continue;
-    actM(id, T => { const c2 = plOf(T); return c2 && c2.bot && T.st === "play" ? g.def.botStep(T) : null; }); } }, 700);
+    actM(id, T => { if (T.st !== "play") return null; if (g.def.botNeeded) return g.def.botNeeded(T) ? g.def.botStep(T) : null; const c2 = plOf(T); return c2 && c2.bot ? g.def.botStep(T) : null; }); } }, 700);
 
   // Spiel-Fenster
   const bc = $("board"), bx = bc.getContext("2d");
@@ -799,7 +1039,7 @@ form button:disabled{opacity:.5}
     const g = MG[id], S = g.G, d = g.def, mi = meInG(S), cur = plOf(S), idle = Date.now() - (S.at || 0) > 60e3;
     if (id === "macke") { const k = S.turn + ":" + S.at; if (k !== mSelKey) { mSelKey = k; mSel.clear(); } }
     const chips = S.p.map((p, i) => `<span class="pl${S.st === "play" && i === S.turn ? " on" : ""}"><i style="background:${PC[p.c]}"></i>${esc(nm(p))}${p.id === device && !p.bot ? " (du)" : ""}${d.chip(S, i)}</span>`).join("");
-    let st = S.st === "wait" ? (S.p.length ? `Warten auf Mitspieler (${S.p.length}/${d.maxP}). Ab 2 geht's los.` : `Noch keiner dabei. Spiel mit – ${d.maxP === 2 ? "zu zweit" : "zu zweit bis zu viert"} oder gegen einen Bot.`) : S.st === "end" ? "Spiel vorbei." : d.status(S);
+    let st = S.st === "wait" ? (S.p.length ? `Warten auf Mitspieler (${S.p.length}/${d.maxP}). Ab 2 geht's los.` : `Noch keiner dabei. Spiel mit – ${d.maxP === 2 ? "zu zweit" : `zu zweit bis zu ${d.maxP === 6 ? "sechst" : "viert"}`} oder gegen Bots.${d.maxP === 6 ? " Nur Spielchips, kein echtes Geld." : ""}`) : S.st === "end" ? "Spiel vorbei." : d.status(S);
     const sh = `${chips ? chips + "<br>" : ""}${st}<span class="ev">${esc(d.ev(S))}</span>`;
     if ($("gStat").dataset.h !== sh) { $("gStat").dataset.h = sh; $("gStat").innerHTML = sh; }
     const b = [];
@@ -809,6 +1049,8 @@ form button:disabled{opacity:.5}
       if (mi && S.p.length >= 2) b.push(["start", "▶ Los geht's", "go"]);
       if (mi) b.push(["leave", "Aussteigen"]);
     } else if (S.st === "play") {
+      if (!mi && d.joinLate && S.p.length < d.maxP) b.push(["join", "✋ Mitspielen", "go"]);
+      if (mi && d.joinLate && S.p.length < d.maxP) b.push(["bot", "🤖 Bot dazu"]);
       d.buttons(S, b);
       if (mi && !myT(S) && idle && cur && !cur.bot) b.push(["skip", "⏭ Überspringen"]);
       if (mi) b.push(["leave", "Aussteigen"]);
@@ -821,6 +1063,7 @@ form button:disabled{opacity:.5}
       if (k === "tvon") { const on = !S.tv; CA.tv(id, on); if (on) { $("gameBox").hidden = true; setTvView(true); } return; }
       if (CA[k]) CA[k](id); else d.act(k); });
   }
+  if (WALL === "familie-demo") $("gTabs").querySelectorAll(".adult").forEach(b => b.remove());
   $("gTabs").querySelectorAll("button").forEach(b => b.onclick = () => { sel = b.dataset.g; $("gStat").dataset.h = ""; $("gBtns").dataset.h = ""; gameUI(); });
   bc.addEventListener("click", e => { const r = bc.getBoundingClientRect(), nx = (e.clientX - r.left) / r.width, ny = (e.clientY - r.top) / r.height;
     if (sel !== "madn") { MG[sel].def.tap(nx, ny); return; }
@@ -1012,7 +1255,10 @@ form button:disabled{opacity:.5}
 
   let downX = 0, downY = 0;
   canvas.addEventListener("pointerdown", e => { dragging = true; lx = downX = e.clientX; ly = downY = e.clientY; });
-  canvas.addEventListener("pointerup", e => { if (tvView && Math.hypot(e.clientX - downX, e.clientY - downY) < 12) tvTap(e); });
+  canvas.addEventListener("pointerup", e => { if (Math.hypot(e.clientX - downX, e.clientY - downY) >= 12) return; if (tvView) { tvTap(e); return; }
+    if (kinoView || !tables.length) return; ndc.set(e.clientX / innerWidth * 2 - 1, -(e.clientY / innerHeight) * 2 + 1); ray.setFromCamera(ndc, camera);
+    const hit = ray.intersectObjects(tables.map(t => t[0]))[0]; if (!hit) return; const t = tables.find(q => q[0] === hit.object);
+    sel = t[1]; $("gStat").dataset.h = ""; $("gBtns").dataset.h = ""; $("gameBox").hidden = false; gameUI(); });
   addEventListener("pointermove", e => { if (!dragging || tvView || kinoView) return; tYaw = Math.max(-.9, Math.min(.9, tYaw - (e.clientX - lx) * .005)); tPitch = Math.max(-.5, Math.min(.2, tPitch - (e.clientY - ly) * .004)); lx = e.clientX; ly = e.clientY; });
   addEventListener("pointerup", () => dragging = false);
   function resize() { const w = innerWidth, h = innerHeight; renderer.setSize(w, h, false); camera.aspect = w / h; camera.fov = w < h ? 72 : 58; camera.updateProjectionMatrix(); }
@@ -1032,6 +1278,7 @@ form button:disabled{opacity:.5}
     camera.rotation.set(pitch, yaw, 0, "YXZ");
     if (++tvFrame % 2 === 0) drawTV(now / 1000); else kDraw(now / 1000);
     if (!$("gameBox").hidden) { bx.clearRect(0, 0, 880, 880); if (sel === "madn") drawBoard(bx, 0, 0, 880, hlNow()); else MG[sel].def.draw(bx, 880, MG[sel].G, sel === "macke" ? mSel : new Set()); }
+    if (rWheel3d) rWheel3d.rotation.y += .01;
     doorOpen += ((now < doorUntil ? 1 : 0) - doorOpen) * .07; doorPivot.rotation.y = doorOpen * 1.25; doorLight.intensity = doorOpen * 1.4;
     for (let i = flights.length - 1; i >= 0; i--) { const f = flights[i], k = (now - f.t0) / f.dur;
       if (k < 1) { f.s.position.lerpVectors(f.pa, f.pb, k); f.s.position.y += Math.sin(k * Math.PI) * .55; f.s.scale.setScalar(.2 + .16 * Math.sin(k * Math.PI)); }
