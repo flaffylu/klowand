@@ -120,7 +120,8 @@ form button:disabled{opacity:.5}
   <div class="acts" id="acts">
     <button type="button" id="aGift">🎁 Geschenk</button>
     <button type="button" id="aGame">🎲 Spiele</button>
-    <button type="button" id="aKino" aria-pressed="false">🎬 Leinwand</button>
+<button type="button" id="aSnooker">🎱 Snooker</button>
+        <button type="button" id="aKino" aria-pressed="false">🎬 Leinwand</button>
     <button type="button" id="aTv" aria-pressed="false">📺 TV</button>
     <button type="button" id="aSong" aria-pressed="false">🎧 <span id="aSongTxt">Eigene Musik</span></button>
   </div>
@@ -1237,6 +1238,7 @@ form button:disabled{opacity:.5}
     kBarUI();
   }
   $("aKino").onclick = () => setKino(!kinoView);
+  $("aSnooker").onclick = () => { location.href = "snooker.html" + location.search; };
   $("kExit").onclick = () => setKino(false);
   $("kPrev").onclick = () => { ytStop(); kSet(kCh - 1); }; $("kNext").onclick = () => { ytStop(); kSet(kCh + 1); };
   $("kSnd").onclick = () => { ytStop(); kSound(!kOn); };
