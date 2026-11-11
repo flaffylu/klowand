@@ -346,6 +346,101 @@ label.bpm input{flex:1;accent-color:var(--pink)}
   const dj = new THREE.Mesh(new THREE.BoxGeometry(1.8, .9, .7), new THREE.MeshStandardMaterial({ color: "#1a1030", roughness: .6 })); dj.position.set(0, .45, -R + .6); scene.add(dj);
   const djFront = new THREE.Mesh(new THREE.PlaneGeometry(1.7, .5), new THREE.MeshBasicMaterial({ transparent: true, map: tex(512, 160, (x, w, h) => { x.fillStyle = "#0b0716"; x.fillRect(0, 0, w, h); x.textAlign = "center"; x.textBaseline = "middle"; x.font = '400 96px "Permanent Marker"'; x.shadowColor = "#ff3ea5"; x.shadowBlur = 24; x.fillStyle = "#ffd1ec"; x.fillText("DJ KLO", w / 2, h / 2); }) }));
   djFront.position.set(0, .5, -R + .96); scene.add(djFront);
+  // ---------- Pikumio-Disco: Rückwand mit Neon-Schrift, Menge, Boxen, Figuren ----------
+  const ZB = -R + .15;
+  const glowText = (x, txt, cx, cy, size, fill, glow, font) => { x.font = `400 ${size}px ${font || '"Permanent Marker"'}`; x.textAlign = "center"; x.textBaseline = "middle";
+    for (const b of [40, 18]) { x.shadowColor = glow; x.shadowBlur = b; x.lineWidth = size * .08; x.strokeStyle = glow; x.strokeText(txt, cx, cy); } x.shadowBlur = 8; x.fillStyle = fill; x.fillText(txt, cx, cy); x.shadowBlur = 0; };
+  const crown = (x, cx, cy, s, c) => { x.shadowColor = c; x.shadowBlur = 20; x.strokeStyle = c; x.lineWidth = s * .09; x.beginPath(); x.moveTo(cx - s, cy + s * .5); x.lineTo(cx - s, cy - s * .4); x.lineTo(cx - s * .5, cy); x.lineTo(cx, cy - s * .7); x.lineTo(cx + s * .5, cy); x.lineTo(cx + s, cy - s * .4); x.lineTo(cx + s, cy + s * .5); x.closePath(); x.stroke(); x.shadowBlur = 0; };
+  // Rückwand: dunkle Ziegel + großes PIKUMIO-Neon
+  const backTex = tex(1024, 512, (x, w, h) => { x.fillStyle = "#0d0620"; x.fillRect(0, 0, w, h);
+    for (let yy = 0; yy < h; yy += 22) for (let xx = (yy / 22) % 2 ? -30 : 0; xx < w; xx += 60) { x.fillStyle = `rgba(${60 + Math.random() * 30},${20 + Math.random() * 20},${110 + Math.random() * 40},.35)`; x.fillRect(xx + 2, yy + 2, 56, 18); }
+    crown(x, 372, 170, 30, "#ffc43d"); glowText(x, "Pikumio", w / 2, 220, 120, "#f3d6ff", "#b44cff");
+    x.shadowColor = "#22e4ff"; x.shadowBlur = 24; x.strokeStyle = "#22e4ff"; x.lineWidth = 8; x.beginPath(); x.moveTo(350, 300); x.quadraticCurveTo(512, 280, 680, 295); x.stroke(); x.shadowBlur = 0; });
+  const backWall = new THREE.Mesh(new THREE.PlaneGeometry(7.6, 3.8), new THREE.MeshBasicMaterial({ map: backTex })); backWall.position.set(0, 1.9, ZB - .02); scene.add(backWall);
+  // Tanzende Menge als Schatten vor der Wand
+  const crowdC = document.createElement("canvas"); crowdC.width = 1024; crowdC.height = 220; const crx = crowdC.getContext("2d"); const crowdT = new THREE.CanvasTexture(crowdC);
+  const crowd = new THREE.Mesh(new THREE.PlaneGeometry(7.2, 1.55), new THREE.MeshBasicMaterial({ map: crowdT, transparent: true, depthWrite: false })); crowd.position.set(0, .95, ZB + .02); scene.add(crowd);
+  const people = Array.from({ length: 26 }, (_, i) => ({ x: 20 + i * 39 + (i * 13 % 17), h: 120 + (i * 29 % 50), ph: i * 1.7, up: i % 3 }));
+  function drawCrowd(t, b) { const x = crx; x.clearRect(0, 0, 1024, 220); x.fillStyle = "rgba(25,8,45,.95)";
+    people.forEach(p => { const jump = Math.max(0, Math.sin(t * 6 + p.ph)) * (6 + b * 22), y = 220 - p.h - jump;
+      x.beginPath(); x.arc(p.x, y, 15, 0, 7); x.fill(); x.fillRect(p.x - 19, y + 12, 38, p.h); x.lineWidth = 9; x.strokeStyle = "rgba(25,8,45,.95)"; x.lineCap = "round";
+      const wave = Math.sin(t * 5 + p.ph) * .5; [-1, 1].forEach(sd => { if (p.up === 2 && sd < 0) return; x.beginPath(); x.moveTo(p.x + sd * 15, y + 22); x.lineTo(p.x + sd * (26 + wave * 8), y - 22 - (p.up ? 14 : 0) + wave * 10); x.stroke(); }); });
+    crowdT.needsUpdate = true; }
+  // Seiten-Neons
+  const sideSign = (txt, sub, c1, c2, x0, rot) => { const t = tex(512, 400, (x, w, h) => { x.fillStyle = "rgba(8,4,18,.92)"; x.fillRect(0, 0, w, h); x.shadowColor = c1; x.shadowBlur = 18; x.strokeStyle = c1; x.lineWidth = 8; x.strokeRect(14, 14, w - 28, h - 28); x.shadowBlur = 0;
+      txt.forEach((l, i) => glowText(x, l, w / 2, 110 + i * (sub ? 95 : 120) - (txt.length > 2 ? 30 : 0), txt.length > 2 ? 84 : 104, "#fff", i % 2 ? c2 : c1, '"Caveat"')); });
+    const m = new THREE.Mesh(new THREE.PlaneGeometry(1.25, .98), new THREE.MeshBasicMaterial({ map: t })); m.position.set(x0, 2.05, ZB + .35); m.rotation.y = rot; scene.add(m); return m; };
+  sideSign(["Pikumio", "Disco"], false, "#22e4ff", "#ff3ea5", -3.15, .55); sideSign(["Play", "Dance", "Enjoy ♥"], true, "#ff3ea5", "#b48cff", 3.15, -.55);
+  // Boxen links und rechts vom Pult
+  const spkM = new THREE.MeshStandardMaterial({ color: "#0b0818", roughness: .5, metalness: .3 }), rings = [];
+  [-1, 1].forEach(sd => { const g = new THREE.Group(); g.position.set(sd * 1.75, 0, ZB + .55); scene.add(g);
+    const bx = new THREE.Mesh(new THREE.BoxGeometry(.75, 1.7, .55), spkM); bx.position.y = .85; g.add(bx);
+    [[1.25, .2], [.6, .26]].forEach(([y, r]) => { const ring = new THREE.Mesh(new THREE.TorusGeometry(r, .022, 10, 40), new THREE.MeshBasicMaterial({ color: sd < 0 ? "#22e4ff" : "#ff3ea5" })); ring.position.set(0, y, .28); g.add(ring);
+      const cone = new THREE.Mesh(new THREE.CircleGeometry(r * .92, 32), new THREE.MeshStandardMaterial({ color: "#1d1530", roughness: .4, metalness: .5 })); cone.position.set(0, y, .279); g.add(cone); rings.push({ ring, cone, r }); }); });
+  // DJ-Pult vorn: Neon-Igel mit Krone
+  djFront.material.map = tex(512, 160, (x, w, h) => { x.fillStyle = "#0b0716"; x.fillRect(0, 0, w, h);
+    x.shadowColor = "#d36bff"; x.shadowBlur = 16; x.strokeStyle = "#e7a6ff"; x.lineWidth = 5; x.beginPath(); x.ellipse(256, 98, 70, 42, 0, 0, 7); x.stroke();
+    for (let k = 0; k < 9; k++) { const a = Math.PI * (1.05 + k * .1); x.beginPath(); x.moveTo(256 + Math.cos(a) * 70, 98 + Math.sin(a) * 42); x.lineTo(256 + Math.cos(a) * 110, 98 + Math.sin(a) * 70); x.stroke(); }
+    x.beginPath(); x.arc(226, 92, 6, 0, 7); x.stroke(); x.beginPath(); x.arc(206, 108, 5, 0, 7); x.fill(); crown(x, 256, 30, 20, "#ffc43d"); x.shadowBlur = 0; });
+  const edgeM = new THREE.MeshBasicMaterial({ color: "#22e4ff" });
+  [[-.92, 0], [.92, 0]].forEach(([dx]) => { const e = new THREE.Mesh(new THREE.BoxGeometry(.04, .9, .04), edgeM); e.position.set(dx, .45, -R + .96); scene.add(e); });
+  const topEdge = new THREE.Mesh(new THREE.BoxGeometry(1.9, .04, .04), edgeM); topEdge.position.set(0, .9, -R + .96); scene.add(topEdge);
+  const deck = new THREE.Mesh(new THREE.BoxGeometry(1.5, .05, .5), new THREE.MeshStandardMaterial({ color: "#222033", metalness: .6, roughness: .3 })); deck.position.set(0, .93, -R + .6); scene.add(deck);
+  const plates = [-.45, .45].map(dx => { const d = new THREE.Mesh(new THREE.CylinderGeometry(.17, .17, .02, 28), new THREE.MeshStandardMaterial({ color: "#111", emissive: "#22e4ff", emissiveIntensity: .2 })); d.position.set(dx, .965, -R + .6); scene.add(d); return d; });
+  // Figuren (eigene Pikumio-Welt): Igel-DJ, Hase Schnuffi, kleiner Igel Flaff
+  const mat = (c, e) => new THREE.MeshStandardMaterial({ color: c, roughness: .9, emissive: e || c, emissiveIntensity: .12 });
+  const sp = (r, m, x, y, z, sx, sy, sz, par) => { const o = new THREE.Mesh(new THREE.SphereGeometry(r, 18, 14), m); o.position.set(x, y, z); o.scale.set(sx || 1, sy || 1, sz || 1); par.add(o); return o; };
+  const glassM = new THREE.MeshStandardMaterial({ color: "#0c0c12", metalness: .8, roughness: .1, emissive: "#3a1a6a", emissiveIntensity: .3 });
+  function shades(par, y, z, w) { [-1, 1].forEach(sd => { const g = new THREE.Mesh(new THREE.BoxGeometry(w, w * .55, .02), glassM); g.position.set(sd * w * .62, y, z); par.add(g); }); const b = new THREE.Mesh(new THREE.BoxGeometry(w * .3, .015, .015), glassM); b.position.set(0, y + w * .1, z); par.add(b); }
+  function hoodie(par, c, y, r) { sp(r, mat(c), 0, y, 0, 1, 1.05, .9, par); const cr = new THREE.Mesh(new THREE.ConeGeometry(.03, .05, 5), mat("#ffc43d")); cr.position.set(0, y + r * .3, r * .88); par.add(cr); }
+  function hedgehog(scale, hood) { const g = new THREE.Group(); const fur = mat("#7a4524"), face = mat("#e8c49a");
+    hoodie(g, hood, .25, .22); const head = new THREE.Group(); head.position.y = .55; g.add(head);
+    sp(.2, fur, 0, 0, 0, 1, .95, 1, head); sp(.13, face, 0, -.04, .11, 1.1, .9, .8, head); sp(.035, mat("#2a1408"), 0, -.03, .225, 1, .8, 1, head);
+    for (let k = 0; k < 22; k++) { const a = (k / 22) * Math.PI * 2, rr = .2; const s = new THREE.Mesh(new THREE.ConeGeometry(.045, .2, 6), fur); const u = new THREE.Vector3(Math.cos(a) * .9, .35 + Math.sin(a * 2) * .2, -Math.abs(Math.sin(a)) - .2).normalize();
+      s.position.copy(u.clone().multiplyScalar(rr * .9)); s.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), u); head.add(s); }
+    shades(head, .03, .2, .07);
+    const arms = [-1, 1].map(sd => { const p = new THREE.Group(); p.position.set(sd * .2, .38, 0); g.add(p); sp(.06, mat(hood), 0, -.1, .02, .8, 1.5, .8, p); sp(.045, face, 0, -.22, .03, 1, 1, 1, p); p.rotation.z = sd * .3; return p; });
+    g.scale.setScalar(scale); scene.add(g); return { g, head, arms }; }
+  const djP = hedgehog(1.15, "#e9e4f0"); djP.g.position.set(0, .45, -R + .3);
+  const hp = new THREE.Mesh(new THREE.TorusGeometry(.215, .025, 8, 24, Math.PI), mat("#16162a")); hp.position.set(0, .05, 0); djP.head.add(hp);
+  [-1, 1].forEach(sd => { const cup = new THREE.Mesh(new THREE.CylinderGeometry(.07, .07, .06, 16), mat("#16162a", "#22e4ff")); cup.rotation.z = Math.PI / 2; cup.position.set(sd * .21, -.02, 0); djP.head.add(cup); });
+  const flaff = hedgehog(.8, "#5a5466"); flaff.g.position.set(2.45, 0, -R + 1.35); flaff.g.rotation.y = -.5;
+  // Hase Schnuffi
+  const bun = (() => { const g = new THREE.Group(), fur = mat("#a9a3b4"), lt = mat("#e9e4ee");
+    hoodie(g, "#3a3646", .25, .22); const head = new THREE.Group(); head.position.y = .56; g.add(head);
+    sp(.19, fur, 0, 0, 0, 1, .95, .95, head); sp(.11, lt, 0, -.06, .12, 1.1, .8, .7, head); sp(.03, mat("#ff9ab8"), 0, -.02, .2, 1, .8, 1, head);
+    const ears = [-1, 1].map(sd => { const e = new THREE.Group(); e.position.set(sd * .08, .14, -.02); head.add(e); sp(.06, fur, 0, .2, 0, .55, 2.6, .4, e); sp(.04, mat("#f2b6c9"), 0, .2, .02, .5, 2.2, .3, e); e.rotation.z = sd * -.18; return e; });
+    shades(head, .03, .19, .07);
+    const arms = [-1, 1].map(sd => { const p = new THREE.Group(); p.position.set(sd * .2, .38, 0); g.add(p); sp(.06, mat("#3a3646"), 0, -.1, .02, .8, 1.5, .8, p); sp(.045, lt, 0, -.22, .03, 1, 1, 1, p); p.rotation.z = sd * .3; return p; });
+    g.position.set(-2.45, 0, -R + 1.35); g.rotation.y = .5; g.scale.setScalar(.9); scene.add(g); return { g, head, arms, ears }; })();
+  // Namensschilder in Neon
+  const nameSign = (txt, c, x0, rot) => { const t = tex(512, 160, (x, w, h) => { x.fillStyle = "rgba(10,6,24,.85)"; x.fillRect(0, 0, w, h); x.shadowColor = c; x.shadowBlur = 14; x.strokeStyle = c; x.lineWidth = 6; x.strokeRect(8, 8, w - 16, h - 16); glowText(x, txt, w / 2, h / 2 + 4, 96, "#fff", c, '"Permanent Marker"'); });
+    const m = new THREE.Mesh(new THREE.BoxGeometry(.8, .26, .06), [0, 0, 0, 0, 1, 0].map(k => k ? new THREE.MeshBasicMaterial({ map: t }) : new THREE.MeshBasicMaterial({ color: c, transparent: true, opacity: .6 })));
+    m.position.set(x0, .32, -R + 1.75); m.rotation.y = rot; m.rotation.x = -.15; scene.add(m); };
+  nameSign("Schnuffi", "#22e4ff", -2.25, .5); nameSign("Flaff", "#ff3ea5", 2.25, -.5);
+  // Lounge: Ledersofas, Glastisch mit Kerze, Leuchtwürfel, Palmen
+  const leather = new THREE.MeshStandardMaterial({ color: "#14101e", roughness: .25, metalness: .2 });
+  [-1, 1].forEach(sd => { const g = new THREE.Group(); g.position.set(sd * 3.4, 0, -.2); g.rotation.y = sd * -Math.PI / 2; scene.add(g);
+    const seat = new THREE.Mesh(new THREE.BoxGeometry(2.2, .4, .8), leather); seat.position.y = .2; g.add(seat); const back = new THREE.Mesh(new THREE.BoxGeometry(2.2, .55, .2), leather); back.position.set(0, .55, -.35); g.add(back);
+    for (let k = 0; k < 4; k++) { const b = new THREE.Mesh(new THREE.SphereGeometry(.03, 8, 6), new THREE.MeshStandardMaterial({ color: "#2a2238", metalness: .6 })); b.position.set(-.8 + k * .53, .6, -.24); g.add(b); } });
+  const glassTop = new THREE.Mesh(new THREE.CylinderGeometry(.45, .45, .03, 32), new THREE.MeshStandardMaterial({ color: "#1a1230", metalness: .9, roughness: .05, transparent: true, opacity: .85 })); glassTop.position.set(-2.4, .5, .9); scene.add(glassTop);
+  const tl = new THREE.Mesh(new THREE.CylinderGeometry(.05, .08, .5, 12), leather); tl.position.set(-2.4, .25, .9); scene.add(tl);
+  const candle = new THREE.Mesh(new THREE.CylinderGeometry(.04, .04, .08, 12), new THREE.MeshStandardMaterial({ color: "#ffe2a8", emissive: "#ffb347", emissiveIntensity: .8 })); candle.position.set(-2.3, .56, .85); scene.add(candle);
+  const candleL = new THREE.PointLight("#ffb347", .7, 2, 2); candleL.position.set(-2.3, .75, .85); scene.add(candleL);
+  const cube = new THREE.Mesh(new THREE.BoxGeometry(.55, .55, .55), new THREE.MeshStandardMaterial({ color: "#3aa8ff", emissive: "#2a8cff", emissiveIntensity: .8, transparent: true, opacity: .85 })); cube.position.set(2.5, .28, .9); scene.add(cube);
+  const palm = (x, z) => { const g = new THREE.Group(); g.position.set(x, 0, z); scene.add(g); const tr = new THREE.Mesh(new THREE.CylinderGeometry(.05, .08, 1.6, 8), new THREE.MeshStandardMaterial({ color: "#3a2a18" })); tr.position.y = .8; g.add(tr);
+    for (let k = 0; k < 7; k++) { const lf = new THREE.Mesh(new THREE.ConeGeometry(.12, .9, 4), new THREE.MeshStandardMaterial({ color: k % 2 ? "#2f8f4f" : "#57b35b", emissive: "#0d3a1c", emissiveIntensity: .3 })); const a = k / 7 * Math.PI * 2;
+      lf.position.set(Math.cos(a) * .35, 1.6, Math.sin(a) * .35); lf.rotation.set(Math.sin(a) * 1.2, 0, -Math.cos(a) * 1.2); g.add(lf); } };
+  palm(-3.6, -3.2); palm(3.6, -3.2);
+  // Konfetti und Nebel
+  const confetti = [], cfG = new THREE.PlaneGeometry(.05, .03);
+  for (let i = 0; i < 120; i++) { const m = new THREE.Mesh(cfG, new THREE.MeshBasicMaterial({ color: new THREE.Color().setHSL(Math.random(), .9, .6), side: THREE.DoubleSide, transparent: true, opacity: 0 }));
+    m.position.set((Math.random() - .5) * 6, H, (Math.random() - .5) * 5); scene.add(m); confetti.push({ m, vy: 0, live: false, r: Math.random() * 6 }); }
+  let confT = 0;
+  const hazeTex = tex(128, 128, (x) => { const g = x.createRadialGradient(64, 64, 0, 64, 64, 64); g.addColorStop(0, "rgba(200,170,255,.35)"); g.addColorStop(1, "rgba(200,170,255,0)"); x.fillStyle = g; x.fillRect(0, 0, 128, 128); });
+  const haze = Array.from({ length: 14 }, (_, i) => { const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: hazeTex, transparent: true, depthWrite: false, opacity: .35 })); s.scale.set(2.6, 1.2, 1); s.position.set((i % 7 - 3) * 1.2, .35, -2.6 + Math.floor(i / 7) * 2.2); scene.add(s); return s; });
+  const strobe = new THREE.PointLight("#ffffff", 0, 14, 1.5); strobe.position.set(0, H - .3, 0); scene.add(strobe);
+  let lastBoom = 0;
   const lasers = [];
   for (let i = 0; i < 10; i++) { const l = new THREE.Mesh(new THREE.CylinderGeometry(.008, .008, 9, 6), new THREE.MeshBasicMaterial({ color: i % 2 ? "#22e4ff" : "#b7ff4a", transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false }));
     const p = new THREE.Group(); p.position.set(0, 1.0, -R + .6); p.add(l); l.position.y = 4.5; scene.add(p); lasers.push({ p, l, k: (i - 4.5) / 4.5 }); }
@@ -375,7 +470,7 @@ label.bpm input{flex:1;accent-color:var(--pink)}
     tiles.forEach(t => {
       const d = Math.hypot(t.i - 4, t.j - 4), wave = Math.sin(now / 260 - d * .9 + t.ph * .2) * .5 + .5;
       const b = idle ? .12 + wave * .2 : .1 + wave * .35 + bass * .65 * (1 - d / 7);
-      col.setHSL((hue + d * .06 + (t.i + t.j) * .015) % 1, .95, Math.min(.6, b * .62));
+      col.setHSL(.58 + .35 * (.5 + .5 * Math.sin((hue * 6.283) + d * .4 + (t.i + t.j) * .1)), .95, Math.min(.6, b * .62));
       if (padHit && Math.random() < .25) col.set(padHit);
       t.m.material.color.copy(col);
     });
@@ -399,6 +494,21 @@ label.bpm input{flex:1;accent-color:var(--pink)}
     laserBurst *= .92;
     const lz = Math.max(laserBurst, energy > .35 ? (energy - .35) * 1.4 : 0);
     lasers.forEach((L, i) => { L.p.rotation.set(-.9 + Math.sin(now / 700 + i) * .15, 0, L.k * .9 + Math.sin(now / 900) * .3); L.l.material.opacity = Math.min(.85, lz); });
+    // Pikumio-Disco: Figuren tanzen, Boxen pumpen, Menge springt, Konfetti
+    const tt = now / 1000, beatK = Math.min(1, bass * 1.6 + (idle ? .15 : 0));
+    if ((now | 0) % 3 === 0 || true) drawCrowd(tt, bass);
+    rings.forEach(r => { const k = 1 + bass * .25; r.ring.scale.setScalar(k); r.cone.position.z = .279 + bass * .04; r.ring.material.color.setHSL((hue + (r.r > .22 ? .5 : 0)) % 1, .95, .6); });
+    djP.head.rotation.x = Math.sin(tt * 8) * (.08 + beatK * .12); djP.g.position.y = .45 + Math.abs(Math.sin(tt * 4)) * .03 * (1 + beatK);
+    djP.arms[1].rotation.set(-1.2 + Math.sin(tt * 2) * .25, 0, -.9); djP.arms[0].rotation.set(-.9 + Math.sin(tt * 8) * .2, 0, .4);
+    plates.forEach((d, i) => d.rotation.y += .05 + energy * .2);
+    [bun, flaff].forEach((c, i) => { const j = Math.abs(Math.sin(tt * 4 + i * 1.3)); c.g.position.y = j * (.05 + beatK * .12); c.head.rotation.z = Math.sin(tt * 4 + i) * .15;
+      c.arms[0].rotation.z = 2.4 + Math.sin(tt * 8 + i) * .35; c.arms[1].rotation.z = -2.4 - Math.sin(tt * 8 + i + 1) * .35; });
+    bun.ears.forEach((e, k) => e.rotation.z = (k ? .18 : -.18) + Math.sin(tt * 8 + k) * .12);
+    haze.forEach((h, i) => { h.position.x += Math.sin(tt * .3 + i) * .002; h.material.opacity = .22 + Math.sin(tt * .7 + i) * .08 + bass * .15; h.material.color.setHSL((hue + i * .07) % 1, .7, .75); });
+    cube.material.emissive.setHSL((hue + .55) % 1, .9, .45); candleL.intensity = .6 + Math.sin(now / 70) * .1;
+    if (bass > .55 && now - lastBoom > 1800) { lastBoom = now; confT = now; strobe.intensity = 4; confetti.forEach(c => { c.live = true; c.m.position.set((Math.random() - .5) * 6, H - .1, (Math.random() - .5) * 5); c.vy = -(.4 + Math.random() * .6); c.m.material.opacity = 1; }); }
+    strobe.intensity *= .8;
+    confetti.forEach(c => { if (!c.live) return; c.m.position.y += c.vy / 60; c.m.position.x += Math.sin(tt * 3 + c.r) * .004; c.m.rotation.x += .1; c.m.rotation.y += .07; if (c.m.position.y < .02) { c.live = false; c.m.material.opacity = 0; } });
     // Kamera wippt im Takt
     if (!drag && idle) tYaw = Math.sin(now / 8000) * .4;
     yaw += (tYaw - yaw) * .06;
