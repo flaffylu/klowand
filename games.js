@@ -142,6 +142,11 @@
   if (isDemoLocked()) dsc.classList.add("locked");
   dsc.onclick = () => { if (isDemoLocked()) { upsell("trial"); return; } location.href = "disco.html?wand=" + encodeURIComponent(typeof WALL !== "undefined" ? WALL : "demo"); };
   mm.after(dsc);
+  // Gibt es den Extras-Kasten mit Disco-Knopf, wird dieser Knopf zur Einkaufsliste
+  window.kloEkSwap = () => { const b = document.getElementById("kgDisco"); if (!b || !window.kloEinkauf || !document.getElementById("famDisco")) return;
+    b.id = "kgEk"; b.innerHTML = "🛒 " + tr("Einkaufsliste", "Shopping list");
+    b.onclick = () => { if (isDemoLocked()) { upsell("trial"); return; } kloEinkauf(); }; };
+  kloEkSwap();
   const mcss = document.createElement("style");
   mcss.textContent = `.mm{position:fixed;inset:0;z-index:31;background:rgba(10,14,12,.55);display:flex;align-items:flex-end;justify-content:center;padding:12px}
   .mm .box{width:min(520px,100%);max-height:88vh;overflow:auto;background:#fff;color:#1d2321;border-radius:20px;padding:18px;box-shadow:0 20px 50px rgba(0,0,0,.4);font-family:var(--f-ui)}

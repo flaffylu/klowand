@@ -18,6 +18,7 @@
   .fambar button+button{background:var(--red)}
   .fambar button.ek{background:#2f6b3a}
   .fambar button.chill{background:linear-gradient(135deg,#4b2c7f,#b0377e)}
+  .fambar button.disco{background:linear-gradient(135deg,#ff3ea5,#7b2cff 55%,#22b8e6)}
   .fambar button{font-size:1.15rem;min-height:56px;border-radius:10px}
   .fambar button.sos{flex:1 1 100%;background:repeating-linear-gradient(-45deg,#b3261e 0 16px,#c8372e 16px 32px);font-size:1.25rem;letter-spacing:.06em;box-shadow:0 4px 0 #7d1a15}
   .fambar button.locked::before{content:"🔒 "}
@@ -142,11 +143,13 @@
     at.insertAdjacentHTML("afterend", `<div class="fambar"><b>${tr("Familien-Planner · nur für euch", "Family Planner · just for you", "ファミリープランナー・家族だけ")}</b>
       <button type="button" id="famPlan" class="${locked ? "locked" : ""}">📅 ${tr("Stundenplan", "Timetable", "時間割")}</button>
       <button type="button" id="famFoto" class="${locked ? "locked" : ""}">📷 ${tr("Familienfotos", "Family photos", "家族の写真")}</button>
-      <button type="button" id="famEk" class="ek">🛒 ${tr("Einkaufsliste", "Shopping list", "買い物リスト")}</button>
+      <button type="button" id="famDisco" class="disco">🪩 ${tr("Disco-Raum", "Disco room", "ディスコルーム")}</button>
       <button type="button" id="famChill" class="chill">🛋️ ${tr("Chill-Raum", "Chill room", "チルルーム")}</button>
       <button type="button" id="famSos" class="sos">🚑 ${tr("Notfall – Hilfe!", "Emergency – help!", "きんきゅう – たすけて！")}</button></div>`);
     const sos = document.getElementById("famSos"); if (sos) sos.onclick = () => window.kloNotfall && kloNotfall();
-    const ek = document.getElementById("famEk"); if (ek) ek.onclick = openEinkauf;
+    const dc = document.getElementById("famDisco"); if (dc) dc.onclick = () => { location.href = "disco.html?wand=" + encodeURIComponent(WALL); };
+    // Tausch: Die Einkaufsliste wandert dorthin, wo sonst der Disco-Knopf bei der Musik sitzt
+    window.kloEinkauf = openEinkauf; window.kloEkSwap && kloEkSwap();
     const ch = document.getElementById("famChill"); if (ch) ch.onclick = () => { location.href = "chill.html?wand=" + encodeURIComponent(WALL); };
   }
 
@@ -223,7 +226,7 @@
     const sos = document.getElementById("famSos");
     const gate = (id, fn) => { const b = document.getElementById(id); if (!b) return; const orig = fn || b.onclick; b.classList.toggle("locked", over()); b.onclick = e => { if (over()) { window.kloUpsell && kloUpsell("trial"); return; } orig && orig.call(b, e); }; };
     gate("famSos", () => window.kloNotfall ? kloNotfall() : (window.kloUpsell && kloUpsell("notfall")));
-    ["famPlan", "famFoto", "famEk"].forEach(id => gate(id));
+    ["famPlan", "famFoto", "famDisco"].forEach(id => gate(id));
     return;
   }
   if (typeof FIXED !== "undefined" && FIXED) return;
