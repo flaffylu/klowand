@@ -1,0 +1,69 @@
+/* Zusätzliche Schriften & Farben für Sprüche – Schriften liegen auf unserem Server (SIL Open Font License). */
+@font-face{font-family:"Pacifico";font-weight:400;font-display:swap;src:url(fonts/pacifico-latin-400-normal.woff2) format("woff2")}
+@font-face{font-family:"Bangers";font-weight:400;font-display:swap;src:url(fonts/bangers-latin-400-normal.woff2) format("woff2")}
+@font-face{font-family:"Shadows Into Light";font-weight:400;font-display:swap;src:url(fonts/shadows-into-light-latin-400-normal.woff2) format("woff2")}
+@font-face{font-family:"Indie Flower";font-weight:400;font-display:swap;src:url(fonts/indie-flower-latin-400-normal.woff2) format("woff2")}
+@font-face{font-family:"Amatic SC";font-weight:700;font-display:swap;src:url(fonts/amatic-sc-latin-700-normal.woff2) format("woff2")}
+@font-face{font-family:"Patrick Hand";font-weight:400;font-display:swap;src:url(fonts/patrick-hand-latin-400-normal.woff2) format("woff2")}
+@font-face{font-family:"Special Elite";font-weight:400;font-display:swap;src:url(fonts/special-elite-latin-400-normal.woff2) format("woff2")}
+@font-face{font-family:"Press Start 2P";font-weight:400;font-display:swap;src:url(fonts/press-start-2p-latin-400-normal.woff2) format("woff2")}
+@font-face{font-family:"Creepster";font-weight:400;font-display:swap;src:url(fonts/creepster-latin-400-normal.woff2) format("woff2")}
+@font-face{font-family:"Lobster";font-weight:400;font-display:swap;src:url(fonts/lobster-latin-400-normal.woff2) format("woff2")}
+@font-face{font-family:"Fredoka";font-weight:600;font-display:swap;src:url(fonts/fredoka-latin-600-normal.woff2) format("woff2")}
+@font-face{font-family:"Satisfy";font-weight:400;font-display:swap;src:url(fonts/satisfy-latin-400-normal.woff2) format("woff2")}
+@font-face{font-family:"Dancing Script";font-weight:700;font-display:swap;src:url(fonts/dancing-script-latin-700-normal.woff2) format("woff2")}
+@font-face{font-family:"Sedgwick Ave Display";font-weight:400;font-display:swap;src:url(fonts/sedgwick-ave-display-latin-400-normal.woff2) format("woff2")}
+@font-face{font-family:"Cherry Bomb One";font-weight:400;font-display:swap;src:url(fonts/cherry-bomb-one-latin-400-normal.woff2) format("woff2")}
+@font-face{font-family:"Rubik Wet Paint";font-weight:400;font-display:swap;src:url(fonts/rubik-wet-paint-latin-400-normal.woff2) format("woff2")}
+@font-face{font-family:"Kalam";font-weight:700;font-display:swap;src:url(fonts/kalam-latin-700-normal.woff2) format("woff2")}
+@font-face{font-family:"Monoton";font-weight:400;font-display:swap;src:url(fonts/monoton-latin-400-normal.woff2) format("woff2")}
+.post.f-schwung .txt,.f-schwung.txt,.text.f-schwung,.fbtn-schwung{font-family:"Pacifico",var(--f-hand,cursive);font-weight:400}
+.post.f-schwung .txt,.text.f-schwung{font-size:1.35rem;}
+.post.f-comic .txt,.f-comic.txt,.text.f-comic,.fbtn-comic{font-family:"Bangers",var(--f-hand,cursive);font-weight:400}
+.post.f-comic .txt,.text.f-comic{font-size:1.65rem;letter-spacing:.04em}
+.post.f-zart .txt,.f-zart.txt,.text.f-zart,.fbtn-zart{font-family:"Shadows Into Light",var(--f-hand,cursive);font-weight:400}
+.post.f-zart .txt,.text.f-zart{font-size:1.6rem;}
+.post.f-blume .txt,.f-blume.txt,.text.f-blume,.fbtn-blume{font-family:"Indie Flower",var(--f-hand,cursive);font-weight:400}
+.post.f-blume .txt,.text.f-blume{font-size:1.5rem;}
+.post.f-duenn .txt,.f-duenn.txt,.text.f-duenn,.fbtn-duenn{font-family:"Amatic SC",var(--f-hand,cursive);font-weight:700}
+.post.f-duenn .txt,.text.f-duenn{font-size:2.0rem;}
+.post.f-schule .txt,.f-schule.txt,.text.f-schule,.fbtn-schule{font-family:"Patrick Hand",var(--f-hand,cursive);font-weight:400}
+.post.f-schule .txt,.text.f-schule{font-size:1.55rem;}
+.post.f-tippen .txt,.f-tippen.txt,.text.f-tippen,.fbtn-tippen{font-family:"Special Elite",var(--f-hand,cursive);font-weight:400}
+.post.f-tippen .txt,.text.f-tippen{font-size:1.2rem;}
+.post.f-pixel .txt,.f-pixel.txt,.text.f-pixel,.fbtn-pixel{font-family:"Press Start 2P",var(--f-hand,cursive);font-weight:400}
+.post.f-pixel .txt,.text.f-pixel{font-size:0.8rem;line-height:1.55}
+.post.f-grusel .txt,.f-grusel.txt,.text.f-grusel,.fbtn-grusel{font-family:"Creepster",var(--f-hand,cursive);font-weight:400}
+.post.f-grusel .txt,.text.f-grusel{font-size:1.65rem;letter-spacing:.03em}
+.post.f-retro .txt,.f-retro.txt,.text.f-retro,.fbtn-retro{font-family:"Lobster",var(--f-hand,cursive);font-weight:400}
+.post.f-retro .txt,.text.f-retro{font-size:1.45rem;}
+.post.f-rund .txt,.f-rund.txt,.text.f-rund,.fbtn-rund{font-family:"Fredoka",var(--f-hand,cursive);font-weight:600}
+.post.f-rund .txt,.text.f-rund{font-size:1.35rem;}
+.post.f-schoen .txt,.f-schoen.txt,.text.f-schoen,.fbtn-schoen{font-family:"Satisfy",var(--f-hand,cursive);font-weight:400}
+.post.f-schoen .txt,.text.f-schoen{font-size:1.6rem;}
+.post.f-tanz .txt,.f-tanz.txt,.text.f-tanz,.fbtn-tanz{font-family:"Dancing Script",var(--f-hand,cursive);font-weight:700}
+.post.f-tanz .txt,.text.f-tanz{font-size:1.6rem;}
+.post.f-graffiti .txt,.f-graffiti.txt,.text.f-graffiti,.fbtn-graffiti{font-family:"Sedgwick Ave Display",var(--f-hand,cursive);font-weight:400}
+.post.f-graffiti .txt,.text.f-graffiti{font-size:1.7rem;}
+.post.f-bubble .txt,.f-bubble.txt,.text.f-bubble,.fbtn-bubble{font-family:"Cherry Bomb One",var(--f-hand,cursive);font-weight:400}
+.post.f-bubble .txt,.text.f-bubble{font-size:1.4rem;}
+.post.f-tropf .txt,.f-tropf.txt,.text.f-tropf,.fbtn-tropf{font-family:"Rubik Wet Paint",var(--f-hand,cursive);font-weight:400}
+.post.f-tropf .txt,.text.f-tropf{font-size:1.45rem;}
+.post.f-notiz .txt,.f-notiz.txt,.text.f-notiz,.fbtn-notiz{font-family:"Kalam",var(--f-hand,cursive);font-weight:700}
+.post.f-notiz .txt,.text.f-notiz{font-size:1.4rem;}
+.post.f-neon .txt,.f-neon.txt,.text.f-neon,.fbtn-neon{font-family:"Monoton",var(--f-hand,cursive);font-weight:400}
+.post.f-neon .txt,.text.f-neon{font-size:1.2rem;line-height:1.25;letter-spacing:.02em}
+.c-pink{color:#d6247a;}.p-pink{background:#d6247a}
+.c-orange{color:#e0610e;}.p-orange{background:#e0610e}
+.c-yellow{color:#f2c200;text-shadow:0 0 1px rgba(0,0,0,.7),1px 1px 0 rgba(0,0,0,.35)}.p-yellow{background:#f2c200}
+.c-purple{color:#7d3fd0;}.p-purple{background:#7d3fd0}
+.c-teal{color:#0d8a8f;}.p-teal{background:#0d8a8f}
+.c-brown{color:#9a5a2a;}.p-brown{background:#9a5a2a}
+.c-lime{color:#58a300;}.p-lime{background:#58a300}
+.c-white{color:#ffffff;text-shadow:0 0 1px rgba(0,0,0,.8),1px 1px 0 rgba(0,0,0,.35)}.p-white{background:#ffffff}
+.c-gold{color:#c8961e;text-shadow:0 1px 0 rgba(90,60,0,.45)}.p-gold{background:#c8961e}
+.c-glow{color:#ff4fa3;text-shadow:0 0 6px #ff4fa3,0 0 14px rgba(255,79,163,.7)}.p-glow{background:#ff4fa3}
+.c-rainbow .txt,.text.c-rainbow,.txt.c-rainbow{background:linear-gradient(90deg,#e0302a,#f08a00,#e8c300,#2f9e44,#1f6fd1,#7b3fc4,#d6247a);-webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent}
+.c-rainbow{color:#e0302a}.p-rainbow{background:conic-gradient(#e0302a,#f08a00,#e8c300,#2f9e44,#1f6fd1,#7b3fc4,#d6247a,#e0302a)}
+.p-glow{box-shadow:inset 0 0 0 2px var(--bar,#1d2321),0 0 8px #ff4fa3}
+.post.carved .txt{background:none!important;-webkit-text-fill-color:currentColor}

@@ -69,8 +69,8 @@ service cloud.firestore {
     function textPost(d) {
       return d.keys().hasOnly(['t', 'color', 'font', 'rot', 'ts', 'ch'])
         && okText(d.t, 120)
-        && d.color in ['ink', 'red', 'blue', 'green', 'silver']
-        && d.font in ['hand', 'marker', 'scrawl'];
+        && d.color in ['ink', 'red', 'blue', 'green', 'silver', 'pink', 'orange', 'yellow', 'purple', 'teal', 'brown', 'lime', 'white', 'gold', 'glow', 'rainbow']
+        && d.font in ['hand', 'marker', 'scrawl', 'schwung', 'comic', 'zart', 'blume', 'duenn', 'schule', 'tippen', 'pixel', 'grusel', 'retro', 'rund', 'schoen', 'tanz', 'graffiti', 'bubble', 'tropf', 'notiz', 'neon'];
     }
 
     function drawPost(d) {

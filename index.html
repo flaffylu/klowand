@@ -11,6 +11,7 @@
 <link rel="apple-touch-icon" href="icon-192.png">
 <link rel="stylesheet" href="fonts.css">
 <link rel="stylesheet" href="fonts-ja.css">
+<link rel="stylesheet" href="schriften.css">
 <style>
 /* Layout: eine lackierte Klokabinentür als Wand, Sprüche frei gestreut, Edding-Leiste unten fixiert */
 :root{
@@ -85,6 +86,10 @@ body{
 .pen[aria-pressed="true"]{border-color:var(--bar-fg)}
 .p-ink{background:#3a4440}.p-red{background:var(--red)}.p-blue{background:var(--blue)}.p-green{background:var(--green)}.p-silver{background:var(--silver)}
 .fonts{display:flex;gap:4px}
+.pens,.fonts{flex:1 1 100%;min-width:0;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;padding:3px 2px;scroll-snap-type:x proximity}
+.pens::-webkit-scrollbar,.fonts::-webkit-scrollbar{display:none}
+.pen{flex:none}.fonts button{flex:none;white-space:nowrap;font-size:1.05rem;min-height:34px}
+.fonts button.fbtn-pixel{font-size:.6rem}.fonts button.fbtn-duenn{font-size:1.4rem}
 .fonts button{background:transparent;color:var(--bar-fg);border:1px solid #4b5652;border-radius:4px;padding:2px 8px;cursor:pointer;font-size:1rem}
 .fonts button[aria-pressed="true"]{background:var(--bar-fg);color:var(--bar)}
 .count{font:500 .8rem var(--f-ui);color:#9aa59f;margin-left:auto}
@@ -368,11 +373,40 @@ html.famdemo .post{border-radius:10px}
         <button type="button" class="pen p-blue" data-c="blue" aria-label="Blau" aria-pressed="false"></button>
         <button type="button" class="pen p-green" data-c="green" aria-label="Grün" aria-pressed="false"></button>
         <button type="button" class="pen p-silver" data-c="silver" aria-label="Silber" aria-pressed="false"></button>
+        <button type="button" class="pen p-pink" data-c="pink" aria-label="Pink" aria-pressed="false"></button>
+        <button type="button" class="pen p-orange" data-c="orange" aria-label="Orange" aria-pressed="false"></button>
+        <button type="button" class="pen p-yellow" data-c="yellow" aria-label="Gelb" aria-pressed="false"></button>
+        <button type="button" class="pen p-purple" data-c="purple" aria-label="Lila" aria-pressed="false"></button>
+        <button type="button" class="pen p-teal" data-c="teal" aria-label="Türkis" aria-pressed="false"></button>
+        <button type="button" class="pen p-brown" data-c="brown" aria-label="Braun" aria-pressed="false"></button>
+        <button type="button" class="pen p-lime" data-c="lime" aria-label="Hellgrün" aria-pressed="false"></button>
+        <button type="button" class="pen p-white" data-c="white" aria-label="Weiß" aria-pressed="false"></button>
+        <button type="button" class="pen p-gold" data-c="gold" aria-label="Gold" aria-pressed="false"></button>
+        <button type="button" class="pen p-glow" data-c="glow" aria-label="Leuchten" aria-pressed="false"></button>
+        <button type="button" class="pen p-rainbow" data-c="rainbow" aria-label="Regenbogen" aria-pressed="false"></button>
       </div>
       <div class="fonts" id="fonts" role="group" aria-label="Schrift">
         <button type="button" data-f="hand" style="font-family:var(--f-hand)" aria-pressed="true">Kuli</button>
         <button type="button" data-f="marker" style="font-family:var(--f-marker)" aria-pressed="false">Edding</button>
         <button type="button" data-f="scrawl" style="font-family:var(--f-scrawl)" aria-pressed="false">Krakel</button>
+        <button type="button" data-f="schwung" class="fbtn-schwung" aria-pressed="false">Schwung</button>
+        <button type="button" data-f="comic" class="fbtn-comic" aria-pressed="false">Comic</button>
+        <button type="button" data-f="zart" class="fbtn-zart" aria-pressed="false">Zart</button>
+        <button type="button" data-f="blume" class="fbtn-blume" aria-pressed="false">Blümchen</button>
+        <button type="button" data-f="duenn" class="fbtn-duenn" aria-pressed="false">Dünn</button>
+        <button type="button" data-f="schule" class="fbtn-schule" aria-pressed="false">Schule</button>
+        <button type="button" data-f="tippen" class="fbtn-tippen" aria-pressed="false">Schreibmaschine</button>
+        <button type="button" data-f="pixel" class="fbtn-pixel" aria-pressed="false">Pixel</button>
+        <button type="button" data-f="grusel" class="fbtn-grusel" aria-pressed="false">Grusel</button>
+        <button type="button" data-f="retro" class="fbtn-retro" aria-pressed="false">Retro</button>
+        <button type="button" data-f="rund" class="fbtn-rund" aria-pressed="false">Rund</button>
+        <button type="button" data-f="schoen" class="fbtn-schoen" aria-pressed="false">Schönschrift</button>
+        <button type="button" data-f="tanz" class="fbtn-tanz" aria-pressed="false">Tanz</button>
+        <button type="button" data-f="graffiti" class="fbtn-graffiti" aria-pressed="false">Graffiti</button>
+        <button type="button" data-f="bubble" class="fbtn-bubble" aria-pressed="false">Bubble</button>
+        <button type="button" data-f="tropf" class="fbtn-tropf" aria-pressed="false">Tropf-Farbe</button>
+        <button type="button" data-f="notiz" class="fbtn-notiz" aria-pressed="false">Notiz</button>
+        <button type="button" data-f="neon" class="fbtn-neon" aria-pressed="false">Neon-Röhre</button>
       </div>
       <div class="sizes" id="sizes" role="group" aria-label="Strichstärke" hidden>
         <button type="button" data-s="3" aria-label="Dünn" aria-pressed="false"><span style="width:4px;height:4px"></span></button>
@@ -414,6 +448,7 @@ translateStatic([
   ["#canvas", "aria-label", "Drawing area: draw with your finger"], ["#padHint", "text", "Draw with your finger …"], ["#clearPad", "text", "Wipe"],
   [".pens", "aria-label", "Pen colour"], [".p-ink", "aria-label", "Black"], [".p-red", "aria-label", "Red"], [".p-blue", "aria-label", "Blue"], [".p-green", "aria-label", "Green"], [".p-silver", "aria-label", "Silver"],
   ["#fonts", "aria-label", "Font"], ["[data-f=hand]", "text", "Pen"], ["[data-f=marker]", "text", "Marker"], ["[data-f=scrawl]", "text", "Scrawl"],
+  [".p-pink", "aria-label", "Pink"], [".p-orange", "aria-label", "Orange"], [".p-yellow", "aria-label", "Yellow"], [".p-purple", "aria-label", "Purple"], [".p-teal", "aria-label", "Turquoise"], [".p-brown", "aria-label", "Brown"], [".p-lime", "aria-label", "Lime"], [".p-white", "aria-label", "White"], [".p-gold", "aria-label", "Gold"], [".p-glow", "aria-label", "Glow"], [".p-rainbow", "aria-label", "Rainbow"], ["[data-f=schwung]", "text", "Swing"], ["[data-f=comic]", "text", "Comic"], ["[data-f=zart]", "text", "Soft"], ["[data-f=blume]", "text", "Flowery"], ["[data-f=duenn]", "text", "Tall"], ["[data-f=schule]", "text", "School"], ["[data-f=tippen]", "text", "Typewriter"], ["[data-f=pixel]", "text", "Pixel"], ["[data-f=grusel]", "text", "Spooky"], ["[data-f=retro]", "text", "Retro"], ["[data-f=rund]", "text", "Round"], ["[data-f=schoen]", "text", "Script"], ["[data-f=tanz]", "text", "Dance"], ["[data-f=graffiti]", "text", "Graffiti"], ["[data-f=bubble]", "text", "Bubble"], ["[data-f=tropf]", "text", "Wet paint"], ["[data-f=notiz]", "text", "Note"], ["[data-f=neon]", "text", "Neon tube"],
   ["#sizes", "aria-label", "Line width"], ["[data-s='3']", "aria-label", "Thin"], ["[data-s='6']", "aria-label", "Medium"], ["[data-s='12']", "aria-label", "Thick"],
   [".send", "text", "Scribble"],
 ]);
@@ -478,7 +513,8 @@ function showInfo() {
 showInfo();
 
 const DAY = 864e5;
-const INK = { ink: "#1d2321", red: "#b3261e", blue: "#1f4fa3", green: "#2f6b3a", silver: "#eef1ef" };
+let hue = 0;
+const INK = { ink: "#1d2321", red: "#b3261e", blue: "#1f4fa3", green: "#2f6b3a", silver: "#eef1ef", pink: "#d6247a", orange: "#e0610e", yellow: "#f2c200", purple: "#7d3fd0", teal: "#0d8a8f", brown: "#9a5a2a", lime: "#58a300", white: "#ffffff", gold: "#c8961e", glow: "#ff4fa3", rainbow: "#e0302a" };
 let sort = "new", pen = "ink", font = "hand", mode = "text", size = 6, openReply = null;
 let posts = [], likes = {}, reports = {}, replies = {}, loaded = false;
 
@@ -712,10 +748,12 @@ const pt = e => { const r = canvas.getBoundingClientRect(); return { x: e.client
 canvas.addEventListener("pointerdown", e => {
   drawing = true; last = pt(e); canvas.setPointerCapture(e.pointerId); padHint.hidden = true;
   ctx.strokeStyle = INK[pen]; ctx.fillStyle = INK[pen]; ctx.lineWidth = size;
+  ctx.shadowBlur = pen === "glow" ? 10 : 0; ctx.shadowColor = INK[pen];
   ctx.beginPath(); ctx.arc(last.x, last.y, size / 2, 0, Math.PI * 2); ctx.fill(); dirty = true;
 });
 canvas.addEventListener("pointermove", e => {
   if (!drawing) return; const p = pt(e);
+  if (pen === "rainbow") { hue = (hue + 4) % 360; ctx.strokeStyle = `hsl(${hue} 85% 50%)`; }
   ctx.beginPath(); ctx.moveTo(last.x, last.y); ctx.lineTo(p.x, p.y); ctx.stroke(); last = p;
 });
 ["pointerup", "pointercancel", "pointerleave"].forEach(t => canvas.addEventListener(t, () => drawing = false));
@@ -750,8 +788,8 @@ document.querySelectorAll(".modes button").forEach(b => b.onclick = () => setMod
 document.querySelectorAll("#sizes button").forEach(b => b.onclick = () => { size = Number(b.dataset.s); document.querySelectorAll("#sizes button").forEach(x => x.setAttribute("aria-pressed", x === b)); });
 
 msg.addEventListener("input", () => $("count").textContent = msg.value.length + "/120");
-document.querySelectorAll(".pen").forEach(b => b.onclick = () => { pen = b.dataset.c; document.querySelectorAll(".pen").forEach(x => x.setAttribute("aria-pressed", x === b)); });
-document.querySelectorAll("#fonts button").forEach(b => b.onclick = () => { font = b.dataset.f; document.querySelectorAll("#fonts button").forEach(x => x.setAttribute("aria-pressed", x === b)); });
+document.querySelectorAll(".pen").forEach(b => b.onclick = () => { pen = b.dataset.c; const m = $("msg"); if (m) m.style.color = pen === "white" || pen === "yellow" || pen === "silver" ? "" : INK[pen]; document.querySelectorAll(".pen").forEach(x => x.setAttribute("aria-pressed", x === b)); });
+document.querySelectorAll("#fonts button").forEach(b => b.onclick = () => { font = b.dataset.f; const m = $("msg"); if (m) m.style.fontFamily = getComputedStyle(b).fontFamily; document.querySelectorAll("#fonts button").forEach(x => x.setAttribute("aria-pressed", x === b)); });
 
 function setChJoin(on) { chJoin = !!on && !!CH_NOW; const b = $("chJoin"); b.setAttribute("aria-pressed", chJoin); b.textContent = chJoin ? "Challenge ✓" : tr("Für die Challenge", "For the challenge"); }
 if (CH_NOW) { $("chJoin").hidden = false; $("chJoin").onclick = () => setChJoin(!chJoin); }

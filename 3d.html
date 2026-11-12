@@ -8,6 +8,7 @@
 <link rel="icon" href="icon-192.png">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="stylesheet" href="fonts.css">
+<link rel="stylesheet" href="schriften.css">
 <style>
 /* Dunkler Neon-Raum: Kabine füllt das Fenster; oben Schild + Schalter, unten Werkzeugleiste. */
 :root{
@@ -206,7 +207,7 @@ const esc = s => String(s).replace(/[&<>"]/g, m => ({ "&": "&amp;", "<": "&lt;",
   const $ = id => document.getElementById(id);
   /* Farben: Schlüssel wie auf der normalen Wand, hier in Neon gezeigt */
   const PENS = [["red", "#ff3ea5", "Pink"], ["blue", "#22e4ff", "Türkis"], ["green", "#b7ff4a", "Grün"], ["silver", "#ffc43d", "Gold"], ["ink", "#f5f0ff", "Weiß"]];
-  const NEON = { red: "#ff3ea5", blue: "#22e4ff", green: "#b7ff4a", silver: "#ffc43d", ink: "#f5f0ff" };
+  const NEON = { pink: "#ff4fa3", orange: "#ff9a3c", yellow: "#ffe14a", purple: "#b78cff", teal: "#3ff0e0", brown: "#e0a070", lime: "#b7ff4a", white: "#ffffff", gold: "#ffd166", glow: "#ff4fa3", rainbow: "#ffd166", red: "#ff3ea5", blue: "#22e4ff", green: "#b7ff4a", silver: "#ffc43d", ink: "#f5f0ff" };
   const ORAKEL = ["Heute wird ein guter Tag. Spätestens nach dem Spülen.", "Wer zuletzt spült, spült am besten.", "Das Klopapier ist dir heute wohlgesonnen.", "Eine große Idee kommt dir … genau hier.", "Du wirst heute einen Strich bekommen. Mindestens.", "Die Rangliste ruft deinen Namen.", "Vertrau dem Plan. Und der Spülung.", "Ein alter Freund schreibt dir bald an die Wand.", "Heute lieber zwei Lagen.", "Das Glück sitzt in Kabine 3."];
   let pen = PENS[0][1], penKey = PENS[0][0], mode = "write";
   const IN_APP = typeof KLO_APP !== "undefined" && KLO_APP;

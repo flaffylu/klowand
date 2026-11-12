@@ -83,8 +83,8 @@ service cloud.firestore {
     function textPost(d) {
       return d.keys().hasOnly([&#x27;t&#x27;, &#x27;color&#x27;, &#x27;font&#x27;, &#x27;rot&#x27;, &#x27;ts&#x27;, &#x27;ch&#x27;])
         &amp;&amp; okText(d.t, 120)
-        &amp;&amp; d.color in [&#x27;ink&#x27;, &#x27;red&#x27;, &#x27;blue&#x27;, &#x27;green&#x27;, &#x27;silver&#x27;]
-        &amp;&amp; d.font in [&#x27;hand&#x27;, &#x27;marker&#x27;, &#x27;scrawl&#x27;];
+        &amp;&amp; d.color in [&#x27;ink&#x27;, &#x27;red&#x27;, &#x27;blue&#x27;, &#x27;green&#x27;, &#x27;silver&#x27;, &#x27;pink&#x27;, &#x27;orange&#x27;, &#x27;yellow&#x27;, &#x27;purple&#x27;, &#x27;teal&#x27;, &#x27;brown&#x27;, &#x27;lime&#x27;, &#x27;white&#x27;, &#x27;gold&#x27;, &#x27;glow&#x27;, &#x27;rainbow&#x27;]
+        &amp;&amp; d.font in [&#x27;hand&#x27;, &#x27;marker&#x27;, &#x27;scrawl&#x27;, &#x27;schwung&#x27;, &#x27;comic&#x27;, &#x27;zart&#x27;, &#x27;blume&#x27;, &#x27;duenn&#x27;, &#x27;schule&#x27;, &#x27;tippen&#x27;, &#x27;pixel&#x27;, &#x27;grusel&#x27;, &#x27;retro&#x27;, &#x27;rund&#x27;, &#x27;schoen&#x27;, &#x27;tanz&#x27;, &#x27;graffiti&#x27;, &#x27;bubble&#x27;, &#x27;tropf&#x27;, &#x27;notiz&#x27;, &#x27;neon&#x27;];
     }
 
     function drawPost(d) {
