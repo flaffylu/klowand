@@ -263,6 +263,25 @@ service cloud.firestore {
       allow read: if famOk(wall, key);
       allow create: if famOk(wall, key) && okVote(request.resource.data, id);
     }
+    // Video-Chat der privaten Gruppe: wer gerade drin ist (Name), und Verbindungs-Nachrichten zwischen den Handys.
+    // Bild und Ton laufen direkt von Handy zu Handy und werden nicht gespeichert.
+    match /walls/{wall}/familie/{key}/call/{id} {
+      allow read, delete: if famOk(wall, key);
+      allow create, update: if famOk(wall, key) && id.matches('[a-zA-Z0-9]{8,40}')
+        && request.resource.data.keys().hasOnly(['n', 'ts'])
+        && okName(request.resource.data.n)
+        && request.resource.data.ts == request.time;
+    }
+    match /walls/{wall}/familie/{key}/sig/{id} {
+      allow read, delete: if famOk(wall, key);
+      allow create: if famOk(wall, key)
+        && request.resource.data.keys().hasOnly(['f', 't', 'k', 'd', 'ts'])
+        && request.resource.data.f is string && request.resource.data.f.matches('[a-zA-Z0-9]{8,40}')
+        && request.resource.data.t is string && request.resource.data.t.matches('[a-zA-Z0-9]{8,40}')
+        && request.resource.data.k in ['offer', 'answer', 'bye']
+        && request.resource.data.d is string && request.resource.data.d.size() <= 30000
+        && request.resource.data.ts == request.time;
+    }
     match /walls/{wall}/familie/{key}/fotos/{id} {
       allow read: if famOk(wall, key);
       allow create: if famOk(wall, key)

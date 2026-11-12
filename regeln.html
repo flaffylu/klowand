@@ -6,7 +6,7 @@ button{font:700 18px system-ui;background:#b3261e;color:#fff;border:none;border-
 .ph{position:sticky;top:0;background:#e3ebe7;padding:10px 16px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;border-top:3px solid #1d2321}.st{font-weight:700}
 .ok{background:#1f7a4d}pre{margin:0;padding:16px;font:12px/1.4 ui-monospace,monospace;white-space:pre-wrap;overflow-wrap:anywhere}
 ol{margin:8px 0 0;padding-left:20px;font-size:15px;color:#e8efec}</style></head><body>
-<div class="top"><b>Firebase-Regeln · 418 Zeilen in 5 Teilen</b>
+<div class="top"><b>Firebase-Regeln · 437 Zeilen in 5 Teilen</b>
 <ol><li>In Firebase: lange drücken → <b>Alles auswählen</b> → <b>Ausschneiden</b>. Das Feld muss <b>leer</b> sein.</li>
 <li>Hier <b>Teil 1</b> kopieren → in Firebase lange drücken → <b>Einfügen</b>.</li>
 <li>Ganz nach unten ins Feld tippen (hinter die letzte Zeile) → <b>Teil 2</b> einfügen. Dann Teil 3, 4 und 5 genauso.</li>
@@ -93,7 +93,7 @@ service cloud.firestore {
         &amp;&amp; d.img.matches(&#x27;data:image/png;base64,[A-Za-z0-9+/=]+&#x27;);
     }
 
-</pre></section><section><div class="ph"><button data-i="1">📋 Teil 2 von 5 kopieren</button><span class="st" id="st1">Zeile 82–157</span></div><pre id="p1">    /* ---------- Gekaufte Wände ---------- */
+</pre></section><section><div class="ph"><button data-i="1">📋 Teil 2 von 5 kopieren</button><span class="st" id="st1">Zeile 82–175</span></div><pre id="p1">    /* ---------- Gekaufte Wände ---------- */
     match /walls/{wall} {
       // Einzelne Wand lesen darf jeder (Name fürs Türschild). Auflisten nur der Besitzer seine eigenen.
       allow get: if true;
@@ -169,7 +169,7 @@ service cloud.firestore {
         &amp;&amp; request.resource.data.n == resource.data.n + 1;
     }
 
-</pre></section><section><div class="ph"><button data-i="2">📋 Teil 3 von 5 kopieren</button><span class="st" id="st2">Zeile 158–251</span></div><pre id="p2">    /* ---------- Familien-Bereich: Stundenplan und Fotos, nur mit dem geheimen Familien-Code ---------- */
+    /* ---------- Familien-Bereich: Stundenplan und Fotos, nur mit dem geheimen Familien-Code ---------- */
     function famKeyDoc(wall) {
       return /databases/$(database)/documents/walls/$(wall)/private/key;
     }
@@ -187,7 +187,7 @@ service cloud.firestore {
         &amp;&amp; request.resource.data.keys().hasOnly([&#x27;k&#x27;, &#x27;ts&#x27;])
         &amp;&amp; request.resource.data.k is string
         &amp;&amp; request.resource.data.k.matches(&#x27;[A-Za-z0-9]{24,40}&#x27;)
-        &amp;&amp; request.resource.data.ts == request.time;
+</pre></section><section><div class="ph"><button data-i="2">📋 Teil 3 von 5 kopieren</button><span class="st" id="st2">Zeile 176–262</span></div><pre id="p2">        &amp;&amp; request.resource.data.ts == request.time;
     }
     match /walls/{wall}/familie/{key}/plaene/{id} {
       allow read, delete: if famOk(wall, key);
@@ -263,7 +263,7 @@ service cloud.firestore {
         &amp;&amp; request.resource.data.ts == request.time;
     }
     // Geburtstage der Familie: Name und Tag (MM-TT), ohne Jahr
-</pre></section><section><div class="ph"><button data-i="3">📋 Teil 4 von 5 kopieren</button><span class="st" id="st3">Zeile 252–346</span></div><pre id="p3">    match /walls/{wall}/familie/{key}/geburtstage/{id} {
+    match /walls/{wall}/familie/{key}/geburtstage/{id} {
       allow read, delete: if famOk(wall, key);
       allow create, update: if famOk(wall, key)
         &amp;&amp; id.matches(&#x27;[a-z0-9]{4,30}&#x27;)
@@ -274,8 +274,27 @@ service cloud.firestore {
         &amp;&amp; request.resource.data.ts == request.time;
     }
     match /walls/{wall}/familie/{key}/umfrage/{id} {
-      allow read: if famOk(wall, key);
+</pre></section><section><div class="ph"><button data-i="3">📋 Teil 4 von 5 kopieren</button><span class="st" id="st3">Zeile 263–350</span></div><pre id="p3">      allow read: if famOk(wall, key);
       allow create: if famOk(wall, key) &amp;&amp; okVote(request.resource.data, id);
+    }
+    // Video-Chat der privaten Gruppe: wer gerade drin ist (Name), und Verbindungs-Nachrichten zwischen den Handys.
+    // Bild und Ton laufen direkt von Handy zu Handy und werden nicht gespeichert.
+    match /walls/{wall}/familie/{key}/call/{id} {
+      allow read, delete: if famOk(wall, key);
+      allow create, update: if famOk(wall, key) &amp;&amp; id.matches(&#x27;[a-zA-Z0-9]{8,40}&#x27;)
+        &amp;&amp; request.resource.data.keys().hasOnly([&#x27;n&#x27;, &#x27;ts&#x27;])
+        &amp;&amp; okName(request.resource.data.n)
+        &amp;&amp; request.resource.data.ts == request.time;
+    }
+    match /walls/{wall}/familie/{key}/sig/{id} {
+      allow read, delete: if famOk(wall, key);
+      allow create: if famOk(wall, key)
+        &amp;&amp; request.resource.data.keys().hasOnly([&#x27;f&#x27;, &#x27;t&#x27;, &#x27;k&#x27;, &#x27;d&#x27;, &#x27;ts&#x27;])
+        &amp;&amp; request.resource.data.f is string &amp;&amp; request.resource.data.f.matches(&#x27;[a-zA-Z0-9]{8,40}&#x27;)
+        &amp;&amp; request.resource.data.t is string &amp;&amp; request.resource.data.t.matches(&#x27;[a-zA-Z0-9]{8,40}&#x27;)
+        &amp;&amp; request.resource.data.k in [&#x27;offer&#x27;, &#x27;answer&#x27;, &#x27;bye&#x27;]
+        &amp;&amp; request.resource.data.d is string &amp;&amp; request.resource.data.d.size() &lt;= 30000
+        &amp;&amp; request.resource.data.ts == request.time;
     }
     match /walls/{wall}/familie/{key}/fotos/{id} {
       allow read: if famOk(wall, key);
@@ -343,7 +362,7 @@ service cloud.firestore {
     match /walls/{wall}/wunschja/{id} {
       allow read: if !famOn(wall) || canModerate(wall);
       allow create: if openWall(wall) &amp;&amp; !famOn(wall) &amp;&amp; okMark(request.resource.data, id);
-      allow delete: if canModerate(wall);
+</pre></section><section><div class="ph"><button data-i="4">📋 Teil 5 von 5 kopieren</button><span class="st" id="st4">Zeile 351–437</span></div><pre id="p4">      allow delete: if canModerate(wall);
     }
     // Quiz-Abend: Punkte pro Spitzname und Tag
     match /walls/{wall}/quiz/{id} {
@@ -358,7 +377,7 @@ service cloud.firestore {
       allow delete: if canModerate(wall);
     }
 
-</pre></section><section><div class="ph"><button data-i="4">📋 Teil 5 von 5 kopieren</button><span class="st" id="st4">Zeile 347–418</span></div><pre id="p4">    match /walls/{wall}/reports/{id} {
+    match /walls/{wall}/reports/{id} {
       allow read: if !famOn(wall) || canModerate(wall);
       allow create: if openWall(wall) &amp;&amp; !famOn(wall) &amp;&amp; okMark(request.resource.data, id);
       allow delete: if canModerate(wall);

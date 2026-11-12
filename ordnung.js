@@ -18,7 +18,8 @@
     door: '<rect x="5" y="3" width="14" height="18" rx="2"/><path d="M15 12h.01"/>',
     tv: '<rect x="3" y="5" width="18" height="12" rx="2"/><path d="M8 21h8M12 17v4"/>',
     chev: '<path d="M9 6l6 6-6 6"/>',
-    x: '<path d="M6 6l12 12M18 6L6 18"/>'
+    x: '<path d="M6 6l12 12M18 6L6 18"/>',
+    cam: '<rect x="2" y="6" width="14" height="12" rx="3"/><path d="M16 10l6-3v10l-6-3"/>'
   };
   const svg = (k, s, c) => `<svg width="${s || 24}" height="${s || 24}" viewBox="0 0 24 24" fill="none" stroke="${c || "currentColor"}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICON[k]}</svg>`;
 
@@ -152,7 +153,8 @@
     const rooms = [tile(disco, ic("disco"), T("Disco", "Disco"), T("Beats, Tanzen, Karaoke", "Beats, dance, karaoke")),
       tile(chill, ic("sofa"), T("Chill-Raum", "Chill room"), T("Quatschen, TV, Dart", "Chat, TV, darts")),
       tile(d3 ? "o3d" : null, ic("door"), T("3D-Kabine", "3D cabin"), T("Geheimtür & Orakel", "Secret door & oracle")),
-      tile(pick("mTv"), ic("tv"), T("TV-Modus", "TV mode"), T("Wand auf dem Fernseher", "Wall on the TV"))].join("");
+      tile(pick("mTv"), ic("tv"), T("TV-Modus", "TV mode"), T("Wand auf dem Fernseher", "Wall on the TV")),
+      tile("oVideo", ic("cam"), T("Video-Chat", "Video chat"), (typeof famBase !== "undefined" && famBase) ? T("Mit eurer Gruppe, bis 6 Leute", "With your group, up to 6") : T("Mit eigener privater Wand", "With your own private wall"))].join("");
     const games = [row(pick("kgOpen"), T("Klo-Spiele", "Loo games"), T("8 Minispiele mit Rangliste", "8 mini games with leaderboard")),
       row(pick("mQz"), T("Quiz-Abend", "Quiz night"), T("Alle spielen gleichzeitig", "Everyone plays at once"), `<span class="badge">Live</span>${svg("chev", 18)}`),
       row(chill, T("Zusammen spielen", "Play together"), T("Mensch ärgere dich nicht, Macke, 4 gewinnt – im Chill-Raum", "Board games in the chill room")),
@@ -187,6 +189,7 @@
   [vSpiel, vMehr].forEach(v => v.addEventListener("click", e => {
     const b = e.target.closest("[data-p]"); if (!b) return; const id = b.dataset.p;
     if (id === "oSnooker") { location.href = "snooker.html?wand=" + encodeURIComponent(WALL); return; }
+    if (id === "oVideo") { location.href = "videochat.html?wand=" + encodeURIComponent(WALL); return; }
     if (id === "kgMusic" || id === "kgTrack") { const o = $(id); o && o.click(); setTimeout(buildMehr, 400); return; }
     press(id);
   }));
@@ -232,5 +235,6 @@
     window.addEventListener("klo-demo", () => setTimeout(sync, 50));
     let n = 0; (function w() { sync(); if (++n < 10) setTimeout(w, 300); })();
   })();
+  if (typeof params !== "undefined" && params.get("holen") && !(typeof KLO_APP !== "undefined" && KLO_APP)) setTimeout(() => window.kloUpsell && kloUpsell("all"), 1200);
   window.kloOrdnung = { go, write };
 })();
