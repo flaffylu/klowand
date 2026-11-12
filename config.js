@@ -121,3 +121,6 @@ const KLO_APP = (() => {
     return sessionStorage.getItem("klowand-app") === "android";
   } catch (e) { return false; }
 })();
+
+/* Besuchs-Benachrichtigung: Kanal in der ntfy-App (ntfy.sh). Leer lassen = aus. */
+const NTFY_TOPIC = "klowand-d3zspdxnrqwkzu";
