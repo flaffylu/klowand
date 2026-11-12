@@ -171,7 +171,8 @@
       (() => { const g = document.querySelector(".fambar .geb"); if (g && !g.id) g.id = "oGeb"; return g ? row("oGeb", T("Geburtstage", "Birthdays")) : ""; })(),
       row(pick("famSos"), "🚑 " + T("Notfall – Hilfe!", "Emergency – help!"), T("Erste Hilfe Schritt für Schritt, Notruf 112", "First aid step by step"))].join("");
     const ex = [["xCal", "📅", T("Kalender", "Calendar")], ["xWet", "⛅", T("Wetter", "Weather")], ["xFb", "📖", T("Freundebuch", "Friends book")], ["xEv", "🎉", T("Tipps", "Events")], ["kgEk", "🛒", T("Einkauf", "Shopping")], ["orcOpen", "🔮", T("Orakel", "Oracle")]]
-      .filter(x => has(x[0])).map(x => tile(x[0], `<span class="em" aria-hidden="true">${x[1]}</span>`, x[2])).join("");
+      .filter(x => has(x[0])).map(x => tile(x[0], `<span class="em" aria-hidden="true">${x[1]}</span>`, x[2])).join("")
+      + tile("oUe", `<span class="em" aria-hidden="true">🗣️</span>`, T("Übersetzer", "Translator"));
     const getown = document.querySelector(".getown a, .getown button"); if (getown && !getown.id) getown.id = "oGetown";
     vMehr.innerHTML = `<div class="in"><h1>${T("Mehr", "More")}</h1>
       <div class="list">${has("mXp") ? `<button type="button" class="row prof" data-p="mXp"><span class="lv">Lv ${lv}</span><span class="tx"><b>${T("Mein Profil", "My profile")}</b><span>${T("Abzeichen und Punkte", "Badges and points")}</span></span>${svg("chev", 18)}</button>` : ""}
@@ -189,6 +190,7 @@
   [vSpiel, vMehr].forEach(v => v.addEventListener("click", e => {
     const b = e.target.closest("[data-p]"); if (!b) return; const id = b.dataset.p;
     if (id === "oSnooker") { location.href = "snooker.html?wand=" + encodeURIComponent(WALL); return; }
+    if (id === "oUe") { location.href = "uebersetzer.html?wand=" + encodeURIComponent(WALL); return; }
     if (id === "oVideo") { location.href = "videochat.html?wand=" + encodeURIComponent(WALL); return; }
     if (id === "kgMusic" || id === "kgTrack") { const o = $(id); o && o.click(); setTimeout(buildMehr, 400); return; }
     press(id);
