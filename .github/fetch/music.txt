@@ -1,2 +1,2 @@
 https://elevenlabsusercontent.com/database/workspace/3a9403b5a0934a7abea301cd6d8c58a5/content_generation/36LikUGP4B49PgKjGXJm/bnWyLPjQrbpKtIpKP3Pt/content.mp3?Expires=1794513600&KeyName=assets-cdn-key-1&Signature=iumEo9BrVgo04uqJ8guQNE-8_tY=
-tmpfetch/music.mp3
+assets/promo-music.mp3
