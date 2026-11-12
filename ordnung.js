@@ -85,7 +85,7 @@
   /* Startbild oben auf der Wand */
   html.ord .wrap > .plate,html.ord .wrap > .demobar{display:none!important}
   .ohero{position:relative;height:clamp(200px,52vw,300px);border-radius:22px;overflow:hidden;margin:2px 0 12px;background:#2a2016;box-shadow:0 10px 30px rgba(0,0,0,.35)}
-  .ohero img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:50% 40%}
+  .ohero img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:50% 40%;transition:opacity 1.2s ease}
   .ohero::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(18,12,26,0) 35%,rgba(18,12,26,.88) 100%)}
   .ohero .txt{position:absolute;left:16px;right:16px;bottom:14px;z-index:1;display:flex;flex-direction:column;gap:4px;color:#fff7ea}
   .ohero h1{margin:0;font:400 clamp(1.8rem,8vw,2.6rem)/1 var(--f-marker);color:#ffd166;text-shadow:0 2px 10px rgba(0,0,0,.5)}
@@ -220,9 +220,15 @@
   (function hero() {
     const plate = document.querySelector(".wrap > .plate"); if (!plate) return;
     const h = document.createElement("header"); h.className = "ohero";
-    h.innerHTML = `<img src="assets/hero-geist.jpg" alt="${T("Ein Gespenst und ein junger Mann sitzen auf dem Klo und schauen aufs Handy", "A ghost and a young man on the loo looking at their phones")}"><span class="live"><i></i>Live</span><span class="ki">${T("Bild KI-generiert", "AI-generated image")}</span>
+    const PICS = [["assets/hero-couch.jpg", T("Ein Igel und ein junger Mann spielen zusammen auf der Couch mit dem Handy", "A hedgehog and a young man playing on their phones on the sofa"), "50% 45%"],
+      ["assets/hero-geist.jpg", T("Ein Gespenst und ein junger Mann sitzen auf dem Klo und schauen aufs Handy", "A ghost and a young man on the loo looking at their phones"), "50% 40%"],
+      ["assets/hero-igel-klo.jpg", T("Ein Igel und ein junger Mann sitzen auf dem Klo und schauen aufs Handy", "A hedgehog and a young man on the loo looking at their phones"), "50% 40%"]];
+    h.innerHTML = PICS.map((p, i) => `<img src="${p[0]}" alt="${p[1]}" style="object-position:${p[2]};opacity:${i ? 0 : 1}"${i ? ' loading="lazy" aria-hidden="true"' : ""}>`).join("") + `<span class="live"><i></i>Live</span><span class="ki">${T("Bild KI-generiert", "AI-generated image")}</span>
       <div class="txt"><h1></h1><small></small><button type="button" class="pill" hidden></button></div>`;
     plate.before(h);
+    // Bilder wechseln alle 6 Sekunden sanft (nicht bei „Bewegung reduzieren“)
+    if (!matchMedia("(prefers-reduced-motion: reduce)").matches) { let cur = 0; const imgs = h.querySelectorAll("img");
+      setInterval(() => { if (document.hidden) return; imgs[cur].style.opacity = 0; imgs[cur].setAttribute("aria-hidden", "true"); cur = (cur + 1) % imgs.length; imgs[cur].style.opacity = 1; imgs[cur].removeAttribute("aria-hidden"); }, 6000); }
     const sync = () => {
       h.querySelector("h1").textContent = ($("venue") || {}).textContent || "Klo-Wand";
       h.querySelector("small").textContent = ((($("venueSub") || {}).textContent) || "").split(" · ")[0];
