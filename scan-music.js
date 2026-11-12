@@ -53,3 +53,35 @@ window.kloScanSong = function (opt) {
   // Andere Musik startet: Lied pausieren
   window.addEventListener("klo-othermusic", () => a.pause());
 };
+
+/* Werbefilm beim Scannen: Wer über den QR-Code kommt, sieht zuerst den Film (60 s).
+   Start ohne Ton (Handys erlauben Ton erst nach Berührung), großer Knopf „Ton an“, jederzeit „Überspringen“.
+   Danach geht es mit dem Klo-Wand-Lied weiter. Pro Besuch nur einmal. */
+window.kloScanVideo = function (then) {
+  then = then || function () {};
+  let seen = false; try { seen = !!sessionStorage.getItem("klowand-film"); sessionStorage.setItem("klowand-film", "1"); } catch (e) {}
+  if (seen || navigator.webdriver) { then(); return; }
+  const css = document.createElement("style");
+  css.textContent = `.kfilm{position:fixed;inset:0;z-index:70;background:#0d0814;display:flex;align-items:center;justify-content:center;opacity:1;transition:opacity .4s}
+  .kfilm.out{opacity:0}
+  .kfilm video{width:100%;height:100%;object-fit:contain;background:#0d0814}
+  .kfilm .kb{position:absolute;z-index:2;display:inline-flex;align-items:center;gap:8px;min-height:48px;padding:0 18px;border-radius:999px;border:2px solid rgba(255,255,255,.35);background:rgba(11,7,22,.72);color:#fff;font:700 1.05rem "Barlow Condensed",system-ui,sans-serif;cursor:pointer;-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
+  .kfilm .skip{top:calc(14px + env(safe-area-inset-top,0px));right:14px}
+  .kfilm .ton{left:50%;bottom:calc(26px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);min-height:58px;padding:0 26px;border:none;background:#ff3ea5;color:#14060f;font-size:1.25rem;box-shadow:0 0 26px rgba(255,62,165,.6);animation:kft 1.4s ease-in-out infinite}
+  .kfilm .ton[hidden]{display:none}
+  @keyframes kft{50%{transform:translateX(-50%) scale(1.06)}} @media (prefers-reduced-motion:reduce){.kfilm .ton{animation:none}}`;
+  document.head.appendChild(css);
+  const box = document.createElement("div"); box.className = "kfilm"; box.setAttribute("role", "dialog"); box.setAttribute("aria-label", "Klo-Wand Werbefilm");
+  box.innerHTML = `<video playsinline muted autoplay preload="auto" poster="assets/werbefilm-poster.jpg" src="assets/werbefilm.mp4"></video>
+    <button type="button" class="kb skip">Überspringen ›</button><button type="button" class="kb ton">🔊 Ton an</button>`;
+  document.body.appendChild(box);
+  const v = box.querySelector("video"), ton = box.querySelector(".ton");
+  let closed = false;
+  const close = () => { if (closed) return; closed = true; try { v.pause(); } catch (e) {} box.classList.add("out"); setTimeout(() => box.remove(), 420); then(); };
+  box.querySelector(".skip").onclick = e => { e.stopPropagation(); close(); };
+  ton.onclick = e => { e.stopPropagation(); v.muted = false; v.volume = 1; if (v.ended || v.currentTime > 55) v.currentTime = 0; v.play().catch(() => {}); ton.hidden = true; };
+  v.addEventListener("click", () => { if (v.muted) ton.onclick({ stopPropagation() {} }); else if (v.paused) v.play().catch(() => {}); });
+  v.addEventListener("ended", close);
+  v.addEventListener("error", close);
+  v.play().catch(() => { /* Autoplay blockiert: Film startet mit dem Ton-Knopf */ });
+};

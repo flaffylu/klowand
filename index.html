@@ -546,8 +546,9 @@ function kloScan(kind) {
 (function () {
   const q = new URLSearchParams(location.search), fromQr = q.has("qr") || !document.referrer;
   if (!fromQr || KLO_APP) return;
-  if (WALL === "familie-demo" && q.get("wand") === "familie-demo") { kloScan("scanfam"); window.kloScanSong && kloScanSong({ bottom: 280 }); }
-  else if (WALL === "demo" && q.get("wand") === "demo") { kloScan("scanbar"); window.kloScanSong && kloScanSong({ bottom: 280 }); }
+  const song = () => window.kloScanSong && kloScanSong({ bottom: 280 }), film = f => window.kloScanVideo ? kloScanVideo(f) : f();
+  if (WALL === "familie-demo" && q.get("wand") === "familie-demo") { kloScan("scanfam"); film(song); }
+  else if (WALL === "demo" && q.get("wand") === "demo") { kloScan("scanbar"); film(song); }
   if (q.has("qr")) { q.delete("qr"); history.replaceState(null, "", location.pathname + (q.toString() ? "?" + q : "") + location.hash); }
 })();
 const base = fs.collection("walls").doc(WALL);
