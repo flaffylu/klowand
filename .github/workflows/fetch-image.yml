@@ -1,0 +1,23 @@
+name: Bild abholen
+on:
+  push:
+    paths: [".github/fetch/*.txt"]
+permissions:
+  contents: write
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Herunterladen
+        run: |
+          for f in .github/fetch/*.txt; do
+            url=$(sed -n 1p "$f"); out=$(sed -n 2p "$f")
+            case "$out" in assets/*) ;; *) echo "bad target"; exit 1;; esac
+            case "$url" in https://elevenlabsusercontent.com/*) ;; *) echo "bad url"; exit 1;; esac
+            curl -sSfL -o "$out" "$url"; file "$out"; rm "$f"
+          done
+      - name: Speichern
+        run: |
+          git config user.name "flaffylu"; git config user.email "flaffylu@users.noreply.github.com"
+          git add -A assets .github/fetch; git commit -m "Bild abgeholt" || true; git push
