@@ -1,3 +1,22 @@
+/* Für ältere iPhones (iOS unter 15.4 / 16): fehlende Funktionen nachrüsten */
+(function () {
+  try {
+    if (window.crypto && !crypto.randomUUID) crypto.randomUUID = function () {
+      const b = crypto.getRandomValues(new Uint8Array(16)); b[6] = (b[6] & 15) | 64; b[8] = (b[8] & 63) | 128;
+      const h = Array.from(b, x => x.toString(16).padStart(2, "0")).join("");
+      return h.slice(0, 8) + "-" + h.slice(8, 12) + "-" + h.slice(12, 16) + "-" + h.slice(16, 20) + "-" + h.slice(20);
+    };
+    const rr = function (x, y, w, h, r) {
+      r = Array.isArray(r) ? (r[0] || 0) : (+r || 0); r = Math.max(0, Math.min(r, Math.abs(w) / 2, Math.abs(h) / 2));
+      this.moveTo(x + r, y); this.lineTo(x + w - r, y); this.arcTo(x + w, y, x + w, y + r, r); this.lineTo(x + w, y + h - r);
+      this.arcTo(x + w, y + h, x + w - r, y + h, r); this.lineTo(x + r, y + h); this.arcTo(x, y + h, x, y + h - r, r);
+      this.lineTo(x, y + r); this.arcTo(x, y, x + r, y, r); this.closePath(); return this;
+    };
+    if (window.CanvasRenderingContext2D && !CanvasRenderingContext2D.prototype.roundRect) CanvasRenderingContext2D.prototype.roundRect = rr;
+    if (window.Path2D && !Path2D.prototype.roundRect) Path2D.prototype.roundRect = rr;
+  } catch (e) {}
+})();
+
 /* ================= KLO-WAND EINSTELLUNGEN =================
    Diese Datei teilen sich die Wand (index.html) und die
    Admin-Seite (admin.html).                                  */
