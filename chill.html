@@ -949,7 +949,7 @@ form button:disabled{opacity:.5}
       actM("poker", T => pkAct(T, device, k === "pk_fold" ? "fold" : k === "pk_call" ? "call" : "raise", to)); },
     primary: S => myT(S) && S.stage <= 3 ? [S.cb - S.bet[S.turn] ? "Mitgehen" : "Checken", "pk_call"] : null,
     tap: () => {},
-    draw: (x, Z, S) => { if (window.Tisch3D) { try { return Tisch3D.poker(x, S, { device, nm, PC, RK, SU, START, REDS, WHEEL }); } catch (e) { console.warn(e); window.Tisch3D = null; } } MG.poker.def.draw2d(x, Z, S); },
+    draw: (x, Z, S) => { if (window.Tisch3D) { try { if (Tisch3D.poker(x, S, { device, nm, PC, RK, SU, START, REDS, WHEEL }) !== false) return; } catch (e) { console.warn(e); window.Tisch3D = null; } } MG.poker.def.draw2d(x, Z, S); },
     draw2d: (x, Z, S) => {
       x.fillStyle = "#1a0f2e"; x.fillRect(0, 0, Z, Z);
       x.fillStyle = "#5a3418"; x.beginPath(); x.ellipse(Z / 2, Z / 2, Z * .47, Z * .36, 0, 0, 7); x.fill();
@@ -1029,12 +1029,12 @@ form button:disabled{opacity:.5}
       const m = /^r_(d?)(\d)$/.exec(k); if (m) actM("roulette", T => m[1] ? rPlace(T, device, 7, +m[2]) : rPlace(T, device, +m[2], 0)); },
     primary: S => S.st === "play" && S.ph === "bet" && S.p.some(p => p.id === device) ? ["🎡 Drehen", "r_spin"] : null,
     tap: (nx, ny) => { const S = MG.roulette.G; if (S.st !== "play" || S.ph !== "bet") return;
-      if (window.Tisch3D) { const c = Tisch3D.rTap(nx, ny); if (c) actM("roulette", T => rPlace(T, device, c[0], c[1])); return; }
+      if (window.Tisch3D && !Tisch3D.lost()) { const c = Tisch3D.rTap(nx, ny); if (c) actM("roulette", T => rPlace(T, device, c[0], c[1])); return; }
       if (ny < .66 || ny > .95) return;
       const gx = (nx - .04) / .92, gy = (ny - .66) / .29; if (gx < 0 || gx > 1) return; const col = Math.floor(gx * 13), row = Math.floor(gy * 3); if (row < 0 || row > 2) return;
       const n = col === 0 ? 0 : (col - 1) * 3 + (3 - row); actM("roulette", T => rPlace(T, device, 0, n)); },
     draw: (x, Z, S) => { if (window.Tisch3D) { if (S.ph === "res" && rAnim.rn !== S.rn) rAnim = { rn: S.rn, t0: performance.now(), from: 0, to: 0 };
-        try { return Tisch3D.roulette(x, S, { device, nm, PC, RK, SU, START, REDS, WHEEL }); } catch (e) { console.warn(e); window.Tisch3D = null; } } MG.roulette.def.draw2d(x, Z, S); },
+        try { if (Tisch3D.roulette(x, S, { device, nm, PC, RK, SU, START, REDS, WHEEL }) !== false) return; } catch (e) { console.warn(e); window.Tisch3D = null; } } MG.roulette.def.draw2d(x, Z, S); },
     draw2d: (x, Z, S) => {
       x.fillStyle = "#123d28"; x.fillRect(0, 0, Z, Z);
       if (S.ph === "res" && rAnim.rn !== S.rn) { const tgt = WHEEL.indexOf(S.res), seg = Math.PI * 2 / 37; const want = -Math.PI / 2 - (tgt + .5) * seg, d = (((want - rAng) % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2); rAnim = { rn: S.rn, t0: performance.now(), from: rAng, to: rAng + Math.PI * 8 + d }; }

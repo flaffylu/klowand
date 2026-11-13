@@ -6,9 +6,13 @@
   const Z = 880; let R = null, cv = null;
   try { cv = document.createElement("canvas"); cv.width = cv.height = Z;
     R = new THREE.WebGLRenderer({ canvas: cv, antialias: true, preserveDrawingBuffer: true, alpha: false });
-    R.setPixelRatio(1); R.setSize(Z, Z, false); R.shadowMap.enabled = true; R.shadowMap.type = THREE.PCFSoftShadowMap;
+    R.setPixelRatio(1); R.setSize(Z, Z, false); R.shadowMap.enabled = true; R.shadowMap.type = THREE.PCFShadowMap;
   } catch (e) { R = null; }
   if (!R) return;
+  // Handy schaltet die 3D-Grafik ab (z. B. zu wenig Speicher): auf das flache Bild umschalten und später neu aufbauen
+  let lost = false, lastR = 0, lastS = "";
+  cv.addEventListener("webglcontextlost", e => { e.preventDefault(); lost = true; }, false);
+  cv.addEventListener("webglcontextrestored", () => { lost = false; P = null; Q = null; lastR = 0; lastS = ""; }, false);
 
   const ctex = (w, h, fn) => { const c = document.createElement("canvas"); c.width = w; c.height = h; fn(c.getContext("2d"), w, h); const t = new THREE.CanvasTexture(c); t.anisotropy = 4; return t; };
   const std = (o) => new THREE.MeshStandardMaterial(o);
@@ -28,7 +32,7 @@
 
   function stage(bg) { const sc = new THREE.Scene(); sc.background = new THREE.Color(bg); sc.fog = new THREE.Fog(bg, 14, 26);
     sc.add(new THREE.HemisphereLight("#ffe7c2", "#20102a", .55));
-    const sp = new THREE.SpotLight("#fff1d6", 1.25, 30, .75, .55, 1.2); sp.position.set(0, 11, 2.5); sp.target.position.set(0, 0, .3); sp.castShadow = true; sp.shadow.mapSize.set(1024, 1024); sp.shadow.bias = -.0004; sc.add(sp, sp.target);
+    const sp = new THREE.SpotLight("#fff1d6", 1.25, 30, .75, .55, 1.2); sp.position.set(0, 11, 2.5); sp.target.position.set(0, 0, .3); sp.castShadow = true; sp.shadow.mapSize.set(768, 768); sp.shadow.bias = -.0004; sc.add(sp, sp.target);
     const rim = new THREE.PointLight("#ff4fa3", .35, 18, 2); rim.position.set(-6, 3, -4); sc.add(rim); const rim2 = new THREE.PointLight("#4cc9ff", .3, 18, 2); rim2.position.set(6, 3, -4); sc.add(rim2);
     return sc; }
 
@@ -81,14 +85,19 @@
     x.strokeStyle = "rgba(255,200,103,.75)"; x.lineWidth = 6; x.strokeRect(16, 16, w - 32, h - 32); x.globalAlpha = .35; for (let i = -h; i < w; i += 18) { x.beginPath(); x.moveTo(i, 0); x.lineTo(i + h, h); x.stroke(); } x.globalAlpha = 1;
     x.fillStyle = "#ffd166"; x.font = '400 40px "Permanent Marker"'; x.textAlign = "center"; x.fillText("Klo", w / 2, h / 2 + 14); })); }
   const edgeM = std({ color: "#f2efe6", roughness: .6 });
-  function card(c, up, RK, SU, dim) { const top = up ? cardTex(c, RK, SU) : backTex();
-    const tm = std({ map: top, roughness: .55, transparent: !!dim, opacity: dim ? .45 : 1 }), bm = std({ map: backTex(), roughness: .55, transparent: !!dim, opacity: dim ? .45 : 1 });
-    const m = new THREE.Mesh(cardGeo, [edgeM, edgeM, tm, bm, edgeM, edgeM]); m.castShadow = true; return m; }
+  const matC = {};
+  const faceM = (key, tex, dim) => matC[key] || (matC[key] = std({ map: tex, roughness: .55, transparent: !!dim, opacity: dim ? .45 : 1 }));
+  function card(c, up, RK, SU, dim) { const d = dim ? 1 : 0, key = (up ? c : "b") + "|" + d;
+    const mats = matC["set" + key] || (matC["set" + key] = [edgeM, edgeM, faceM(key, up ? cardTex(c, RK, SU) : backTex(), dim), faceM("b|" + d, backTex(), dim), edgeM, edgeM]);
+    const m = new THREE.Mesh(cardGeo, mats); m.castShadow = true; return m; }
+  const slotGeo = new THREE.PlaneGeometry(.62, .88), slotM = new THREE.MeshBasicMaterial({ color: "#fff", transparent: true, opacity: .09 });
+  const puckGeo = new THREE.SphereGeometry(.26, 20, 14);
+  const puckM = (col, glow) => matC["pk" + col + glow] || (matC["pk" + col + glow] = std({ color: col, roughness: .35, emissive: col, emissiveIntensity: glow ? .6 : .12 }));
   // Karten fliegen beim ersten Auftauchen vom Geber herein
-  function deal(m, key, tx, ty, tz, ry, rx, from) { const t0 = P.seen[key] || (P.seen[key] = now()), k = ease((now() - t0) / 420);
+  function deal(m, key, tx, ty, tz, ry, rx, from) { const t0 = P.seen[key] || (P.seen[key] = now()), k = ease((now() - t0) / 420); if (k < 1) P.moving = now();
     m.position.set(from[0] + (tx - from[0]) * k, ty + Math.sin(k * Math.PI) * .9, from[2] + (tz - from[2]) * k); m.rotation.set(rx || 0, ry || 0, (1 - k) * Math.PI); }
 
-  function poker(x, S, H) { if (!P) buildPoker();
+  function poker(x, S, H) { if (lost) return false; if (!P) buildPoker();
     const { device, nm, PC, RK, SU, START } = H, dyn = P.dyn; while (dyn.children.length) dyn.remove(dyn.children[0]);
     const n = S.p.length, mine = S.p.findIndex(p => p.id === device && !p.bot), base = mine >= 0 ? mine : 0, pot = (S.tot || []).reduce((a, c) => a + c, 0);
     const handKey = (S.hn || 0) + ":" + (S.dl || 0); if (P.key !== handKey) { P.key = handKey; P.seen = {}; }
@@ -97,7 +106,7 @@
     // Tischkarten
     for (let k = 0; k < 5; k++) { const cx = (k - 2) * .74;
       if (S.board && S.board[k] != null) { const m = card(S.board[k], true, RK, SU); deal(m, "b" + k + ":" + S.board[k], cx, .06, -.15, 0, 0, from); dyn.add(m); }
-      else { const m = new THREE.Mesh(new THREE.PlaneGeometry(.62, .88), new THREE.MeshBasicMaterial({ color: "#fff", transparent: true, opacity: .09 })); m.rotation.x = -Math.PI / 2; m.position.set(cx, .02, -.15); dyn.add(m); } }
+      else { const m = new THREE.Mesh(slotGeo, slotM); m.rotation.x = -Math.PI / 2; m.position.set(cx, .02, -.15); dyn.add(m); } }
     if (S.st === "play" && S.stage < 5 && pot) { const g = makeStack(pot, null, 16); g.position.set(0, 0, .95); dyn.add(g); }
     const labels = [];
     S.p.forEach((p, i) => { const [c, s] = seat(i), me = i === mine;
@@ -110,11 +119,13 @@
       if (i === S.dl && S.st === "play") P.dealer.position.set(c * P.RX * .62 + s * .5, .04, s * P.RZ * .62 - c * .4);
       const on = S.st === "play" && S.stage <= 3 && i === S.turn, won = S.stage === 5 && (S.win || []).includes(i);
       // Spieler-Puck mit Farbe hinter der Bande
-      const pk = new THREE.Mesh(new THREE.SphereGeometry(.26, 20, 14), std({ color: PC[p.c], roughness: .35, emissive: PC[p.c], emissiveIntensity: on || won ? .6 : .12 }));
+      const pk = new THREE.Mesh(puckGeo, puckM(PC[p.c], on || won ? 1 : 0));
       pk.position.set(c * P.RX * 1.13, .25 + (on ? Math.sin(now() / 220) * .08 : 0), s * P.RZ * 1.15); pk.castShadow = true; dyn.add(pk);
       labels.push([c * P.RX * 1.13, .3, s * P.RZ * 1.15 + (s > .5 ? -.05 : 0), nm(p).slice(0, 12) + (me ? " (du)" : ""), `${S.chips && S.chips[i] != null ? S.chips[i] : START} 🪙${S.bet && S.bet[i] ? ` · Einsatz ${S.bet[i]}` : ""}`, on, won, PC[p.c], s > .5]); });
     P.dealer.visible = S.st === "play" && S.dl >= 0;
-    R.render(P.sc, P.cam); x.drawImage(cv, 0, 0, Z, Z);
+    const t = now(), anim = t - (P.moving || 0) < 120 || S.st === "play" && S.stage <= 3;
+    if (t - lastR >= (anim ? 33 : 250) || lastS !== "p") { R.render(P.sc, P.cam); lastR = t; lastS = "p"; }
+    x.drawImage(cv, 0, 0, Z, Z);
     labels.forEach(([lx, ly, lz, t1, t2, on, won, col, front]) => { const [sx, sy] = proj(P.cam, lx, ly, lz); plate(x, Math.max(110, Math.min(Z - 110, sx)), Math.min(Z - 40, sy + (front ? 0 : -64)), t1, t2, on, won, col); });
     x.textAlign = "center";
     if (S.st === "play" && S.stage < 5 && pot) { const [sx, sy] = proj(P.cam, .75, .1, .95); x.textAlign = "left"; x.font = '800 34px "Barlow Condensed"'; x.lineWidth = 6; x.strokeStyle = "rgba(0,0,0,.7)"; x.strokeText(`Pot: ${pot} 🪙`, sx, sy + 10); x.fillStyle = "#ffd166"; x.fillText(`Pot: ${pot} 🪙`, sx, sy + 10); x.textAlign = "center"; }
@@ -174,7 +185,7 @@
     const dyn = new THREE.Group(); sc.add(dyn);
     Q = { sc, cam, dyn, grid, gridC, gridT, spin, ball, RW, seg, wAng: 0, anim: { rn: -1, t0: -1e9, from: 0, to: 0, ball0: 0 }, hk: "x", ray: new THREE.Raycaster() }; drawGrid(H, -1); }
 
-  function roulette(x, S, H) { if (!Q) buildRoulette(H);
+  function roulette(x, S, H) { if (lost) return false; if (!Q) buildRoulette(H);
     const { REDS, WHEEL, device, nm, PC } = H, A = Q.anim, seg = Q.seg;
     if (S.ph === "res" && A.rn !== S.rn) { A.rn = S.rn; A.t0 = now(); A.from = Q.wAng; A.to = Q.wAng + Math.PI * 6 + Math.random() * Math.PI; }
     const k = (now() - A.t0) / 4000, spinning = S.ph === "res" && A.rn === S.rn && k < 1;
@@ -193,7 +204,8 @@
     const dyn = Q.dyn; while (dyn.children.length) dyn.remove(dyn.children[0]);
     (S.bets || []).forEach((b, i) => { const p = S.p[i]; if (!p) return; b.forEach(([t, v, a]) => { const [u, vv] = cellCenter(t, v), [wx, wz] = uvW(u, vv);
       const g = makeStack(a, PC[p.c], 8); g.scale.setScalar(.85); g.position.set(wx + ((i % 3) - 1) * .2, .012, wz + (Math.floor(i / 3) - .5) * .2); dyn.add(g); }); });
-    R.render(Q.sc, Q.cam); x.drawImage(cv, 0, 0, Z, Z);
+    { const t = now(); if (t - lastR >= (spinning ? 33 : 50) || lastS !== "r") { R.render(Q.sc, Q.cam); lastR = t; lastS = "r"; } }
+    x.drawImage(cv, 0, 0, Z, Z);
     x.textAlign = "center";
     if (done) { const [sx, sy] = proj(Q.cam, 0, 1.2, -2.35); const col = S.res === 0 ? "#16a34a" : REDS.has(S.res) ? "#c81e3a" : "#16121c";
       x.save(); x.shadowColor = "#ffd166"; x.shadowBlur = 30; x.fillStyle = col; x.strokeStyle = "#ffd166"; x.lineWidth = 6; x.beginPath(); x.arc(sx, sy, 62, 0, 7); x.fill(); x.stroke(); x.restore();
@@ -209,5 +221,5 @@
   // Antippen: Punkt auf dem Feld finden -> [Art, Wert]
   function rTap(nx, ny) { if (!Q) return null; Q.ray.setFromCamera(new THREE.Vector2(nx * 2 - 1, -(ny * 2 - 1)), Q.cam); const h = Q.ray.intersectObject(Q.grid)[0]; if (!h || !h.uv) return null; return cellAt(h.uv.x, 1 - h.uv.y); }
   const spinning = () => !!Q && Q.anim && now() < Q.anim.t0 + 4200;
-  window.Tisch3D = { ok: true, poker, roulette, rTap, spinning };
+  window.Tisch3D = { ok: true, poker, roulette, rTap, spinning, lost: () => lost, mem: () => R.info.memory };
 })();
