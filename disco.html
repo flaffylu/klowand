@@ -24,6 +24,7 @@ html,body{height:100%;margin:0;background:var(--night);color:var(--ink);font-fam
   background:linear-gradient(0deg,rgba(6,3,13,.97) 78%,rgba(6,3,13,0));display:flex;flex-direction:column;gap:8px}
 .tabs{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none}.tabs::-webkit-scrollbar{display:none}
 .tabs button{flex:1 0 auto;min-height:44px;padding:0 10px;border-radius:12px;border:1.5px solid var(--line);background:rgba(255,255,255,.05);color:var(--ink);font:700 .9rem var(--f-ui);cursor:pointer;white-space:nowrap}
+.tabs .djlink{flex:1 0 auto;min-height:44px;padding:0 10px;border-radius:12px;border:1.5px solid var(--gold);background:rgba(255,196,61,.12);color:var(--gold);font:700 .9rem var(--f-ui);display:inline-flex;align-items:center;justify-content:center;text-decoration:none}
 .tabs button[aria-selected=true]{background:var(--pink);border-color:var(--pink);color:#140612}
 .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 .btn{min-height:44px;padding:0 16px;border-radius:12px;border:1.5px solid var(--line);background:rgba(255,255,255,.07);color:var(--ink);font:700 1rem var(--f-ui);cursor:pointer}
@@ -84,6 +85,7 @@ label.bpm input{flex:1;accent-color:var(--pink)}
     <button type="button" role="tab" aria-selected="false" data-t="own">🎧 Lied</button>
     <button type="button" role="tab" aria-selected="false" data-t="tanz">🕺 Tanzen</button>
     <button type="button" role="tab" aria-selected="false" data-t="kar">🎤 Karaoke</button>
+    <a href="dj.html" id="djLink" class="djlink">🎚️ DJ-Pult</a>
   </div>
 
   <section id="t-beat">
@@ -290,6 +292,7 @@ label.bpm input{flex:1;accent-color:var(--pink)}
   $("ownPlay").onclick = () => { if (!ownAudio) return; if (ownAudio.paused) { if (playing) $("play").click(); ownAudio.play().catch(() => {}); } else ownAudio.pause(); };
 
   // ---------- Tabs ----------
+  { const dl = document.getElementById("djLink"); if (dl) dl.href = "dj.html" + location.search; }
   document.querySelectorAll(".tabs button").forEach(b => b.onclick = () => {
     document.querySelectorAll(".tabs button").forEach(x => x.setAttribute("aria-selected", x === b));
     ["beat", "pads", "smp", "own", "tanz", "kar"].forEach(t => $("t-" + t).hidden = t !== b.dataset.t);

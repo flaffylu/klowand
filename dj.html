@@ -1,0 +1,308 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#06030d">
+<title>DJ-Pult · Klo-Wand</title>
+<link rel="icon" href="icon-192.png">
+<link rel="stylesheet" href="fonts.css">
+<style>
+:root{--night:#06030d;--ink:#f6f0ff;--muted:#b3a8d6;--pink:#ff3ea5;--cyan:#22e4ff;--lime:#b7ff4a;--gold:#ffc43d;--line:rgba(255,255,255,.14);--card:rgba(255,255,255,.05);
+  --f-sign:"Permanent Marker",cursive;--f-ui:"Barlow Condensed",system-ui,sans-serif}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--night);color:var(--ink);font-family:var(--f-ui);-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none}
+body{min-height:100vh;background:radial-gradient(120% 60% at 50% 0%,#2a0f44 0%,#06030d 60%)}
+.top{position:sticky;top:0;z-index:5;display:flex;align-items:center;gap:8px;padding:calc(10px + env(safe-area-inset-top,0px)) 12px 10px;background:rgba(6,3,13,.86);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
+.top h1{margin:0;flex:1;font:400 1.6rem/1 var(--f-sign);background:linear-gradient(90deg,#ff3ea5,#ffc43d,#b7ff4a,#22e4ff);-webkit-background-clip:text;background-clip:text;color:transparent}
+.top a,.top button{min-height:44px;padding:0 14px;border-radius:999px;border:1.5px solid var(--line);background:rgba(255,255,255,.07);color:var(--ink);font:700 .95rem var(--f-ui);text-decoration:none;display:inline-flex;align-items:center;cursor:pointer}
+.top button[aria-pressed=true]{background:#ff2d55;border-color:#ff2d55;color:#fff;animation:rec 1s infinite}
+@keyframes rec{50%{opacity:.6}}
+main{max-width:960px;margin:0 auto;padding:6px 10px calc(20px + env(safe-area-inset-bottom,0px))}
+.decks{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.deck{background:var(--card);border:1.5px solid var(--line);border-radius:18px;padding:8px;display:flex;flex-direction:column;gap:6px;min-width:0}
+.deck.b{--acc:var(--cyan)}.deck.a{--acc:var(--pink)}
+.deck h2{margin:0;display:flex;align-items:center;gap:6px;font:800 1rem var(--f-ui);letter-spacing:.06em;color:var(--acc)}
+.deck h2 span{flex:1;min-width:0;color:var(--ink);font-weight:700;letter-spacing:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.vinyl{width:100%;aspect-ratio:1;touch-action:none;cursor:grab;border-radius:50%}
+.wave{width:100%;height:38px;border-radius:8px;background:rgba(0,0,0,.35);touch-action:none;cursor:pointer}
+.time{display:flex;justify-content:space-between;font:700 .85rem var(--f-ui);color:var(--muted)}
+.row{display:flex;gap:6px;flex-wrap:wrap}
+.btn{flex:1;min-height:44px;padding:0 8px;border-radius:12px;border:1.5px solid var(--line);background:rgba(255,255,255,.07);color:var(--ink);font:800 1rem var(--f-ui);cursor:pointer;white-space:nowrap}
+.btn.play{background:var(--acc);border-color:var(--acc);color:#0b0716}
+.btn[aria-pressed=true]{background:var(--acc);border-color:var(--acc);color:#0b0716}
+.sl{display:flex;align-items:center;gap:6px;font:700 .85rem var(--f-ui);color:var(--muted)}
+.sl input{flex:1;min-width:0;accent-color:var(--acc,var(--pink))}
+.sl b{min-width:42px;text-align:right;color:var(--ink)}
+.stems{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+.stem{background:var(--card);border:1.5px solid var(--line);border-radius:18px;padding:10px}
+.stem.a{--acc:var(--pink)}.stem.b{--acc:var(--cyan)}
+.stem h3{margin:0 0 6px;font:800 .9rem var(--f-ui);letter-spacing:.08em;text-transform:uppercase;color:var(--acc)}
+.faders{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;justify-items:center}
+.fader{display:flex;flex-direction:column;align-items:center;gap:4px;font:700 .8rem var(--f-ui);color:var(--muted)}
+.fader input{writing-mode:vertical-lr;direction:rtl;-webkit-appearance:slider-vertical;width:34px;height:110px;accent-color:var(--acc)}
+.fader span{font-size:1.25rem}
+.mix{margin-top:8px;background:var(--card);border:1.5px solid var(--line);border-radius:18px;padding:10px;display:flex;flex-direction:column;gap:8px}
+.xf{display:flex;align-items:center;gap:8px;font:800 1rem var(--f-ui)}
+.xf input{flex:1;accent-color:var(--gold);height:34px}
+.xf .A{color:var(--pink)}.xf .B{color:var(--cyan)}
+.vu{height:8px;border-radius:4px;background:rgba(255,255,255,.08);overflow:hidden}.vu i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--lime),var(--gold),#ff2d55)}
+.pads{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.pads button{min-height:62px;border-radius:14px;border:none;font:800 .85rem/1.1 var(--f-ui);color:#0b0716;cursor:pointer}
+.pads button b{display:block;font-size:1.5rem}
+.pads button:active{transform:scale(.94)}
+.note{margin:8px 2px 0;font:600 .85rem/1.3 var(--f-ui);color:var(--muted)}
+.pick{position:fixed;inset:0;z-index:20;background:rgba(6,3,13,.8);display:grid;place-items:center;padding:14px}
+.pick[hidden]{display:none}
+.pick .box{width:min(420px,100%);background:#1a1030;border:1.5px solid var(--line);border-radius:18px;padding:14px;display:flex;flex-direction:column;gap:8px}
+.pick h2{margin:0;font:400 1.4rem var(--f-sign);color:var(--gold)}
+.pick button,.pick label.file{min-height:52px;border-radius:14px;border:1.5px solid var(--line);background:rgba(255,255,255,.07);color:var(--ink);font:700 1.05rem var(--f-ui);cursor:pointer;display:flex;align-items:center;gap:10px;padding:0 14px;text-align:left}
+.pick label.file{background:var(--lime);color:#0b0716;border-color:var(--lime)}
+.pick input[type=file]{position:absolute;width:1px;height:1px;opacity:0}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:30;background:#1b1424;color:var(--gold);border:2px solid var(--gold);border-radius:14px;padding:10px 16px;font:700 1rem var(--f-ui);max-width:90vw;text-align:center}
+@media (orientation:landscape) and (min-width:700px){.stems{grid-template-columns:1fr 1fr}}
+@media (prefers-reduced-motion:reduce){.top button[aria-pressed=true]{animation:none}}
+</style>
+</head>
+<body>
+<div class="top">
+  <h1>DJ-Pult</h1>
+  <button type="button" id="rec" aria-pressed="false">⏺ Mix aufnehmen</button>
+  <a id="back" href="disco.html">Zurück</a>
+</div>
+<main>
+  <div class="decks">
+    <section class="deck a" data-d="0" aria-label="Plattenteller A">
+      <h2>A <span class="tn">Kein Lied</span></h2>
+      <canvas class="vinyl" width="300" height="300" aria-label="Plattenteller A – drehen zum Scratchen"></canvas>
+      <canvas class="wave" width="400" height="60" aria-label="Lied-Verlauf A – antippen zum Springen"></canvas>
+      <div class="time"><span class="cur">0:00</span><span class="dur">0:00</span></div>
+      <div class="row"><button type="button" class="btn play">▶</button><button type="button" class="btn cue">CUE</button><button type="button" class="btn load">🎵 Lied</button></div>
+      <label class="sl">Tempo <input type="range" class="tempo" min="-16" max="16" value="0" step="0.5"><b class="tv">0%</b></label>
+      <label class="sl">Filter <input type="range" class="filt" min="-100" max="100" value="0"></label>
+      <div class="row"><button type="button" class="btn echo" aria-pressed="false">Echo</button><button type="button" class="btn loop" aria-pressed="false">Loop</button></div>
+    </section>
+    <section class="deck b" data-d="1" aria-label="Plattenteller B">
+      <h2>B <span class="tn">Kein Lied</span></h2>
+      <canvas class="vinyl" width="300" height="300" aria-label="Plattenteller B – drehen zum Scratchen"></canvas>
+      <canvas class="wave" width="400" height="60" aria-label="Lied-Verlauf B – antippen zum Springen"></canvas>
+      <div class="time"><span class="cur">0:00</span><span class="dur">0:00</span></div>
+      <div class="row"><button type="button" class="btn play">▶</button><button type="button" class="btn cue">CUE</button><button type="button" class="btn load">🎵 Lied</button></div>
+      <label class="sl">Tempo <input type="range" class="tempo" min="-16" max="16" value="0" step="0.5"><b class="tv">0%</b></label>
+      <label class="sl">Filter <input type="range" class="filt" min="-100" max="100" value="0"></label>
+      <div class="row"><button type="button" class="btn echo" aria-pressed="false">Echo</button><button type="button" class="btn loop" aria-pressed="false">Loop</button></div>
+    </section>
+  </div>
+
+  <div class="stems">
+    <section class="stem a" data-d="0"><h3>Trennen A</h3>
+      <div class="faders"><label class="fader"><span>🎤</span><input type="range" min="0" max="100" value="100" data-s="v" aria-label="Stimme A">Stimme</label>
+        <label class="fader"><span>🥁</span><input type="range" min="0" max="100" value="100" data-s="b" aria-label="Bass und Beat A">Bass</label>
+        <label class="fader"><span>🎸</span><input type="range" min="0" max="100" value="100" data-s="i" aria-label="Instrumente A">Musik</label></div>
+      <div class="row" style="margin-top:6px"><button type="button" class="btn" data-pre="kar">Ohne Stimme</button><button type="button" class="btn" data-pre="voc">Nur Stimme</button><button type="button" class="btn" data-pre="all">Alles</button></div>
+    </section>
+    <section class="stem b" data-d="1"><h3>Trennen B</h3>
+      <div class="faders"><label class="fader"><span>🎤</span><input type="range" min="0" max="100" value="100" data-s="v" aria-label="Stimme B">Stimme</label>
+        <label class="fader"><span>🥁</span><input type="range" min="0" max="100" value="100" data-s="b" aria-label="Bass und Beat B">Bass</label>
+        <label class="fader"><span>🎸</span><input type="range" min="0" max="100" value="100" data-s="i" aria-label="Instrumente B">Musik</label></div>
+      <div class="row" style="margin-top:6px"><button type="button" class="btn" data-pre="kar">Ohne Stimme</button><button type="button" class="btn" data-pre="voc">Nur Stimme</button><button type="button" class="btn" data-pre="all">Alles</button></div>
+    </section>
+  </div>
+
+  <section class="mix" aria-label="Mischpult">
+    <div class="xf"><span class="A">A</span><input type="range" id="xf" min="0" max="100" value="50" aria-label="Crossfader"><span class="B">B</span></div>
+    <div class="vu" aria-hidden="true"><i id="vu"></i></div>
+    <div class="pads">
+      <button type="button" data-pad="horn" style="background:#ffc43d"><b>📯</b>Tröte</button>
+      <button type="button" data-pad="scratch" style="background:#22e4ff"><b>💿</b>Scratch</button>
+      <button type="button" data-pad="clap" style="background:#b7ff4a"><b>👏</b>Klatschen</button>
+      <button type="button" data-pad="flush" style="background:#ff3ea5"><b>🚽</b>Spülung</button>
+    </div>
+  </section>
+  <p class="note">Tipp: Platte drehen = Scratchen. „Ohne Stimme“ nimmt die Stimme aus der Mitte des Lieds – klappt am besten bei Stereo-Liedern, bei denen der Gesang mittig ist. Eigene Lieder vom Handy bleiben auf deinem Handy und werden nirgends hochgeladen.</p>
+</main>
+
+<div class="pick" id="pick" hidden role="dialog" aria-label="Lied wählen"><div class="box">
+  <h2>Lied für Deck <b id="pickD">A</b></h2>
+  <button type="button" data-src="assets/scan-song.mp3" data-n="Klo-Wand-Lied">🚽 Klo-Wand-Lied <small style="margin-left:auto;color:var(--muted)">mit Gesang</small></button>
+  <button type="button" data-src="assets/tt-beat.mp3" data-n="Klo-Beat">🥁 Klo-Beat</button>
+  <button type="button" data-src="musik/ruhig.mp3" data-n="Ruhig">🌙 Ruhig</button>
+  <label class="file">📱 Eigenes Lied vom Handy<input type="file" id="file" accept="audio/*"></label>
+  <button type="button" data-x>Abbrechen</button>
+</div></div>
+
+<script src="config.js"></script>
+<script src="xp.js"></script>
+<script>
+(function () {
+  const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
+  const q = new URLSearchParams(location.search); $("#back").href = "disco.html" + location.search;
+  const toast = t => { const e = document.createElement("div"); e.className = "toast"; e.textContent = t; document.body.appendChild(e); setTimeout(() => e.remove(), 3000); };
+  const fmt = s => { s = Math.max(0, s || 0); return Math.floor(s / 60) + ":" + String(Math.floor(s % 60)).padStart(2, "0"); };
+  let ctx = null, master, comp, ana, recDest;
+  function audio() {
+    if (ctx) { if (ctx.state === "suspended") ctx.resume(); return ctx; }
+    ctx = new (window.AudioContext || window.webkitAudioContext)();
+    master = ctx.createGain(); master.gain.value = .9;
+    comp = ctx.createDynamicsCompressor(); comp.threshold.value = -8; comp.ratio.value = 12; comp.attack.value = .003; comp.release.value = .2;
+    ana = ctx.createAnalyser(); ana.fftSize = 512;
+    master.connect(comp); comp.connect(ana); ana.connect(ctx.destination);
+    try { recDest = ctx.createMediaStreamDestination(); comp.connect(recDest); } catch (e) {}
+    D.forEach(build); xfade(); return ctx;
+  }
+  const smooth = (p, v) => p.setTargetAtTime(v, ctx.currentTime, .03);
+
+  // ---------- Decks ----------
+  const D = $$(".deck").map((el, i) => ({ i, el, stem: $$(".stem")[i], a: new Audio(), name: "", peaks: null, cue: 0, rate: 1, ang: 0, drag: null, loop: null }));
+  D.forEach(d => { d.a.preload = "auto"; d.a.crossOrigin = "anonymous"; d.a.preservesPitch = false; d.a.mozPreservesPitch = false; d.a.webkitPreservesPitch = false; d.a.loop = false; });
+
+  // Stimme / Bass / Musik trennen: Mitte (Gesang, Bass) und Seiten (Instrumente) des Stereo-Signals aufteilen
+  function build(d) {
+    const src = ctx.createMediaElementSource(d.a), spl = ctx.createChannelSplitter(2); src.connect(spl);
+    const mid = ctx.createGain(), side = ctx.createGain(), mkG = v => { const g = ctx.createGain(); g.gain.value = v; return g; };
+    const l1 = mkG(.5), r1 = mkG(.5), l2 = mkG(.5), r2 = mkG(-.5);
+    spl.connect(l1, 0); spl.connect(r1, 1); l1.connect(mid); r1.connect(mid);
+    spl.connect(l2, 0); spl.connect(r2, 1); l2.connect(side); r2.connect(side);
+    const bq = (type, f, Q) => { const b = ctx.createBiquadFilter(); b.type = type; b.frequency.value = f; b.Q.value = Q || .707; return b; };
+    const vHp = bq("highpass", 220), vLp = bq("lowpass", 4500), bLp = bq("lowpass", 200), hHp = bq("highpass", 4500);
+    d.gV = mkG(0); d.gB = mkG(0); d.gI = mkG(0); d.gDir = mkG(1);
+    mid.connect(vHp); vHp.connect(vLp); vLp.connect(d.gV);
+    mid.connect(bLp); bLp.connect(d.gB);
+    mid.connect(hHp); hHp.connect(d.gI);
+    // Seiten-Signal auf beide Kanäle gleich (bleibt auch auf Handys mit nur einem Lautsprecher hörbar)
+    side.connect(d.gI);
+    const bus = ctx.createGain(); src.connect(d.gDir); [d.gDir, d.gV, d.gB, d.gI].forEach(g => g.connect(bus));
+    d.filt = bq("allpass", 1000); bus.connect(d.filt);
+    d.xf = mkG(1); d.filt.connect(d.xf); d.xf.connect(master);
+    // Echo
+    d.send = mkG(0); d.dly = ctx.createDelay(2); d.dly.delayTime.value = .375; d.fb = mkG(.42); d.wet = mkG(.8);
+    d.xf.connect(d.send); d.send.connect(d.dly); d.dly.connect(d.fb); d.fb.connect(d.dly); d.dly.connect(d.wet); d.wet.connect(master);
+    stems(d); filt(d);
+  }
+  function stems(d) { if (!ctx || !d.gV) return; const v = +d.stem.querySelector('[data-s=v]').value / 100, b = +d.stem.querySelector('[data-s=b]').value / 100, i = +d.stem.querySelector('[data-s=i]').value / 100;
+    const orig = v > .99 && b > .99 && i > .99; smooth(d.gDir.gain, orig ? 1 : 0); smooth(d.gV.gain, orig ? 0 : v * 1.15); smooth(d.gB.gain, orig ? 0 : b); smooth(d.gI.gain, orig ? 0 : i * 1.1); }
+  function filt(d) { if (!ctx || !d.filt) return; const v = +d.el.querySelector(".filt").value;
+    if (Math.abs(v) < 4) { d.filt.type = "allpass"; return; }
+    if (v < 0) { d.filt.type = "lowpass"; d.filt.frequency.setTargetAtTime(18000 * Math.pow(200 / 18000, -v / 100), ctx.currentTime, .02); d.filt.Q.value = 4; }
+    else { d.filt.type = "highpass"; d.filt.frequency.setTargetAtTime(30 * Math.pow(5000 / 30, v / 100), ctx.currentTime, .02); d.filt.Q.value = 4; } }
+  function xfade() { if (!ctx) return; const x = +$("#xf").value / 100; smooth(D[0].xf.gain, Math.cos(x * Math.PI / 2)); smooth(D[1].xf.gain, Math.sin(x * Math.PI / 2)); }
+  $("#xf").addEventListener("input", xfade);
+
+  // Lied laden
+  let pickFor = 0;
+  async function load(d, url, name, file) {
+    audio(); d.a.pause(); d.name = name; d.el.querySelector(".tn").textContent = name; d.peaks = null; d.cue = 0; d.loop = null; d.el.querySelector(".loop").setAttribute("aria-pressed", "false");
+    if (d.url && d.url.startsWith("blob:")) URL.revokeObjectURL(d.url);
+    d.url = file ? URL.createObjectURL(file) : url; d.a.src = d.url; d.a.load(); playBtn(d);
+    try { const buf = file ? await file.arrayBuffer() : await (await fetch(url)).arrayBuffer(); const ab = await ctx.decodeAudioData(buf);
+      const ch = ab.getChannelData(0), n = 400, step = Math.floor(ch.length / n), pk = new Float32Array(n);
+      for (let k = 0; k < n; k++) { let m = 0; for (let j = k * step, e = j + step; j < e; j += 16) { const v = Math.abs(ch[j]); if (v > m) m = v; } pk[k] = m; }
+      d.peaks = pk; d.mono = ab.numberOfChannels < 2;
+      if (d.mono) toast("Hinweis: Dieses Lied ist Mono – Stimme trennen klappt dann kaum.");
+    } catch (e) { d.peaks = null; }
+  }
+  $$(".load").forEach((b, i) => b.onclick = () => { audio(); pickFor = i; $("#pickD").textContent = "AB"[i]; $("#pick").hidden = false; });
+  $("#pick").addEventListener("click", e => { const b = e.target.closest("[data-src]"); if (b) { $("#pick").hidden = true; load(D[pickFor], b.dataset.src, b.dataset.n); return; }
+    if (e.target.closest("[data-x]") || e.target === $("#pick")) $("#pick").hidden = true; });
+  $("#file").addEventListener("change", e => { const f = e.target.files && e.target.files[0]; if (!f) return; $("#pick").hidden = true;
+    load(D[pickFor], null, f.name.replace(/\.[a-z0-9]+$/i, "").slice(0, 40), f); e.target.value = ""; });
+
+  // Steuerung
+  const playBtn = d => { const b = d.el.querySelector(".play"); b.textContent = d.a.paused ? "▶" : "⏸"; };
+  D.forEach(d => {
+    const el = d.el;
+    el.querySelector(".play").onclick = async () => { audio(); if (!d.a.src) { el.querySelector(".load").click(); return; }
+      if (d.a.paused) { try { await d.a.play(); } catch (e) { toast("Lied lässt sich nicht abspielen."); } } else d.a.pause(); playBtn(d);
+      if (!d.played && window.kloXP) { d.played = true; kloXP.add("spiel"); } };
+    el.querySelector(".cue").onclick = () => { audio(); if (!d.a.src) return; if (d.a.paused) { d.cue = d.a.currentTime; toast(`Deck ${"AB"[d.i]}: Startpunkt gesetzt (${fmt(d.cue)})`); } else { d.a.currentTime = d.cue; } };
+    el.querySelector(".tempo").addEventListener("input", e => { const v = +e.target.value; d.rate = 1 + v / 100; d.a.playbackRate = d.rate; el.querySelector(".tv").textContent = (v > 0 ? "+" : "") + v + "%"; });
+    el.querySelector(".filt").addEventListener("input", () => { audio(); filt(d); });
+    el.querySelector(".filt").addEventListener("dblclick", e => { e.target.value = 0; filt(d); });
+    el.querySelector(".echo").onclick = e => { audio(); const on = e.currentTarget.getAttribute("aria-pressed") !== "true"; e.currentTarget.setAttribute("aria-pressed", on); smooth(d.send.gain, on ? .55 : 0); };
+    el.querySelector(".loop").onclick = e => { if (!d.a.src) return; const on = e.currentTarget.getAttribute("aria-pressed") !== "true"; e.currentTarget.setAttribute("aria-pressed", on);
+      d.loop = on ? { a: d.a.currentTime, b: d.a.currentTime + 2 } : null; };
+    d.a.addEventListener("ended", () => playBtn(d)); d.a.addEventListener("pause", () => playBtn(d)); d.a.addEventListener("play", () => playBtn(d));
+    d.a.addEventListener("loadedmetadata", () => { el.querySelector(".dur").textContent = fmt(d.a.duration); });
+    // Springen im Verlauf
+    const wv = el.querySelector(".wave"); wv.addEventListener("pointerdown", e => { if (!d.a.duration) return; const r = wv.getBoundingClientRect(); d.a.currentTime = (e.clientX - r.left) / r.width * d.a.duration; });
+    // Scratchen
+    const vy = el.querySelector(".vinyl");
+    const angOf = e => { const r = vy.getBoundingClientRect(); return Math.atan2(e.clientY - (r.top + r.height / 2), e.clientX - (r.left + r.width / 2)); };
+    vy.addEventListener("pointerdown", e => { if (!d.a.src) { el.querySelector(".load").click(); return; } audio(); vy.setPointerCapture(e.pointerId);
+      d.drag = { last: angOf(e), t: performance.now(), wasPlaying: !d.a.paused }; });
+    vy.addEventListener("pointermove", e => { if (!d.drag) return; const a = angOf(e); let da = a - d.drag.last; if (da > Math.PI) da -= 2 * Math.PI; if (da < -Math.PI) da += 2 * Math.PI;
+      const now = performance.now(), dt = Math.max(8, now - d.drag.t); d.drag.last = a; d.drag.t = now; d.ang += da;
+      const sec = da / (2 * Math.PI) * 1.8, speed = sec / (dt / 1000);
+      if (speed > .05) { d.a.playbackRate = Math.max(.25, Math.min(4, speed)); if (d.a.paused) d.a.play().catch(() => {}); }
+      else { d.a.currentTime = Math.max(0, d.a.currentTime + sec); d.a.playbackRate = .5; } });
+    const up = () => { if (!d.drag) return; const was = d.drag.wasPlaying; d.drag = null; d.a.playbackRate = d.rate; if (!was) d.a.pause(); };
+    vy.addEventListener("pointerup", up); vy.addEventListener("pointercancel", up);
+  });
+  // Stimme / Bass / Musik
+  $$(".stem").forEach((st, i) => {
+    st.addEventListener("input", e => { if (e.target.dataset.s) { audio(); stems(D[i]); } });
+    st.addEventListener("click", e => { const b = e.target.closest("[data-pre]"); if (!b) return; audio();
+      const v = { kar: [0, 100, 100], voc: [100, 0, 0], all: [100, 100, 100] }[b.dataset.pre];
+      ["v", "b", "i"].forEach((k, j) => st.querySelector(`[data-s=${k}]`).value = v[j]); stems(D[i]); });
+  });
+
+  // ---------- Effekt-Knöpfe (selbst erzeugte Klänge) ----------
+  function noise(sec) { const b = ctx.createBuffer(1, ctx.sampleRate * sec, ctx.sampleRate), c = b.getChannelData(0); for (let k = 0; k < c.length; k++) c[k] = Math.random() * 2 - 1; const s = ctx.createBufferSource(); s.buffer = b; return s; }
+  const PADS = {
+    horn() { const t = ctx.currentTime; [0, .22, .44].forEach((o, k) => { const g = ctx.createGain(); g.gain.setValueAtTime(0, t + o); g.gain.linearRampToValueAtTime(.32, t + o + .02); g.gain.setValueAtTime(.32, t + o + (k === 2 ? .5 : .16)); g.gain.linearRampToValueAtTime(0, t + o + (k === 2 ? .62 : .2)); g.connect(master);
+      [466, 587, 698].forEach(f => { const os = ctx.createOscillator(); os.type = "sawtooth"; os.frequency.setValueAtTime(f * .97, t + o); os.frequency.linearRampToValueAtTime(f, t + o + .05); os.connect(g); os.start(t + o); os.stop(t + o + .7); }); }); },
+    scratch() { const t = ctx.currentTime, s = noise(.5), bp = ctx.createBiquadFilter(), g = ctx.createGain(); bp.type = "bandpass"; bp.Q.value = 6; g.gain.value = .9;
+      [0, .12, .2, .34, .42].forEach((o, k) => bp.frequency.setValueAtTime(k % 2 ? 2600 : 700, t + o)); [0, .12, .2, .34, .42].forEach((o, k) => bp.frequency.linearRampToValueAtTime(k % 2 ? 700 : 2600, t + o + .1));
+      s.connect(bp); bp.connect(g); g.connect(master); s.start(t); s.stop(t + .5); },
+    clap() { const t = ctx.currentTime; [0, .012, .024].forEach(o => { const s = noise(.2), bp = ctx.createBiquadFilter(), g = ctx.createGain(); bp.type = "bandpass"; bp.frequency.value = 1400; bp.Q.value = 1;
+      g.gain.setValueAtTime(.9, t + o); g.gain.exponentialRampToValueAtTime(.001, t + o + .16); s.connect(bp); bp.connect(g); g.connect(master); s.start(t + o); s.stop(t + o + .2); }); },
+    flush() { const t = ctx.currentTime, s = noise(2.6), lp = ctx.createBiquadFilter(), g = ctx.createGain(); lp.type = "lowpass"; lp.Q.value = 3;
+      lp.frequency.setValueAtTime(3500, t); lp.frequency.exponentialRampToValueAtTime(260, t + 2.4); g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(.7, t + .15); g.gain.exponentialRampToValueAtTime(.001, t + 2.5);
+      s.connect(lp); lp.connect(g); g.connect(master); s.start(t); s.stop(t + 2.6);
+      for (let k = 0; k < 6; k++) { const os = ctx.createOscillator(), og = ctx.createGain(), tt = t + 1.2 + k * .17; os.type = "sine"; os.frequency.setValueAtTime(260 + Math.random() * 160, tt); os.frequency.exponentialRampToValueAtTime(120, tt + .12);
+        og.gain.setValueAtTime(.18, tt); og.gain.exponentialRampToValueAtTime(.001, tt + .14); os.connect(og); og.connect(master); os.start(tt); os.stop(tt + .15); } }
+  };
+  $$("[data-pad]").forEach(b => b.addEventListener("pointerdown", () => { audio(); PADS[b.dataset.pad](); }));
+
+  // ---------- Mix aufnehmen ----------
+  let rec = null, chunks = [];
+  $("#rec").onclick = () => { audio(); const b = $("#rec");
+    if (rec) { rec.stop(); return; }
+    if (!recDest || typeof MediaRecorder === "undefined") { toast("Aufnehmen geht in diesem Browser leider nicht."); return; }
+    const type = ["audio/webm;codecs=opus", "audio/mp4", "audio/webm", "audio/ogg"].find(t => MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported(t)) || "";
+    try { rec = new MediaRecorder(recDest.stream, type ? { mimeType: type } : undefined); } catch (e) { toast("Aufnehmen geht hier leider nicht."); return; }
+    chunks = []; rec.ondataavailable = e => e.data.size && chunks.push(e.data);
+    rec.onstop = () => { const bl = new Blob(chunks, { type: rec.mimeType || "audio/webm" }), ext = /mp4/.test(bl.type) ? "m4a" : /ogg/.test(bl.type) ? "ogg" : "webm";
+      const a = document.createElement("a"); a.href = URL.createObjectURL(bl); a.download = "mein-klo-mix." + ext; a.click(); rec = null; b.setAttribute("aria-pressed", "false"); b.textContent = "⏺ Mix aufnehmen"; toast("🎧 Dein Mix ist gespeichert!"); window.kloXP && kloXP.add("share"); };
+    rec.start(); b.setAttribute("aria-pressed", "true"); b.textContent = "⏹ Stopp"; toast("Aufnahme läuft – leg los!"); };
+
+  // ---------- Zeichnen ----------
+  const LBL = [["#ff3ea5", "#ffc43d"], ["#22e4ff", "#b48cff"]];
+  function drawVinyl(d) { const c = d.el.querySelector(".vinyl").getContext("2d"), W = 300, R = W / 2;
+    c.clearRect(0, 0, W, W); c.save(); c.translate(R, R);
+    c.fillStyle = "#0c0a10"; c.beginPath(); c.arc(0, 0, R - 2, 0, 7); c.fill();
+    c.strokeStyle = "rgba(255,255,255,.07)"; for (let r = 40; r < R - 6; r += 6) { c.lineWidth = 1; c.beginPath(); c.arc(0, 0, r, 0, 7); c.stroke(); }
+    c.rotate(d.ang);
+    c.strokeStyle = "rgba(255,255,255,.18)"; c.lineWidth = 3; c.beginPath(); c.arc(0, 0, R - 26, -.5, .3); c.stroke(); c.beginPath(); c.arc(0, 0, R - 50, 2.6, 3.2); c.stroke();
+    const g = c.createLinearGradient(-44, -44, 44, 44); g.addColorStop(0, LBL[d.i][0]); g.addColorStop(1, LBL[d.i][1]); c.fillStyle = g; c.beginPath(); c.arc(0, 0, 46, 0, 7); c.fill();
+    c.fillStyle = "#0b0716"; c.font = '400 22px "Permanent Marker", cursive'; c.textAlign = "center"; c.fillText("Klo", 0, -6); c.font = '800 13px "Barlow Condensed", sans-serif'; c.fillText(d.name ? d.name.slice(0, 14) : "DJ", 0, 16);
+    c.fillStyle = "#fff"; c.beginPath(); c.arc(0, 0, 4, 0, 7); c.fill(); c.restore(); }
+  function drawWave(d) { const cv = d.el.querySelector(".wave"), c = cv.getContext("2d"), W = cv.width, H = cv.height; c.clearRect(0, 0, W, H);
+    const p = d.a.duration ? d.a.currentTime / d.a.duration : 0, col = d.i ? "#22e4ff" : "#ff3ea5";
+    if (d.peaks) { const n = d.peaks.length, m = Math.max(...d.peaks) || 1; for (let k = 0; k < n; k++) { const h = d.peaks[k] / m * (H - 6); c.fillStyle = k / n < p ? col : "rgba(255,255,255,.35)"; c.fillRect(k / n * W, (H - h) / 2, Math.max(1, W / n - .3), h); } }
+    else { c.fillStyle = "rgba(255,255,255,.15)"; c.fillRect(0, H / 2 - 1, W, 2); }
+    if (d.loop) { c.fillStyle = "rgba(255,196,61,.25)"; c.fillRect(d.loop.a / d.a.duration * W, 0, 2 / d.a.duration * W, H); }
+    c.fillStyle = "#fff"; c.fillRect(p * W - 1, 0, 2, H); }
+  let last = performance.now(); const buf = new Uint8Array(256);
+  function frame(t) { const dt = (t - last) / 1000; last = t;
+    D.forEach(d => { if (!d.drag && !d.a.paused) d.ang += dt * d.a.playbackRate * 2 * Math.PI * (33.3 / 60);
+      if (d.loop && !d.a.paused && d.a.currentTime >= d.loop.b) d.a.currentTime = d.loop.a;
+      drawVinyl(d); drawWave(d); d.el.querySelector(".cur").textContent = fmt(d.a.currentTime); });
+    if (ana) { ana.getByteTimeDomainData(buf); let m = 0; for (const v of buf) m = Math.max(m, Math.abs(v - 128)); $("#vu").style.width = Math.min(100, m / 128 * 140) + "%"; }
+    requestAnimationFrame(frame); }
+  requestAnimationFrame(frame);
+  if (location.hash === "#test") window.__dj = { an: () => ana, D };
+})();
+</script>
+</body>
+</html>

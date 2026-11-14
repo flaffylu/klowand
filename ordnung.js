@@ -158,7 +158,8 @@
     const games = [row(pick("kgOpen"), T("Klo-Spiele", "Loo games"), T("8 Minispiele mit Rangliste", "8 mini games with leaderboard")),
       row(pick("mQz"), T("Quiz-Abend", "Quiz night"), T("Alle spielen gleichzeitig", "Everyone plays at once"), `<span class="badge">Live</span>${svg("chev", 18)}`),
       row(chill, T("Zusammen spielen", "Play together"), T("Mensch ärgere dich nicht, Macke, 4 gewinnt – im Chill-Raum", "Board games in the chill room")),
-      row("oSnooker", T("Snooker 3D", "Snooker 3D"), T("Gegen Bot oder zu zweit online", "Against a bot or online"))].join("");
+      row("oSnooker", T("Snooker 3D", "Snooker 3D"), T("Gegen Bot oder zu zweit online", "Against a bot or online")),
+      row("oDj", "🎚️ " + T("DJ-Pult", "DJ decks"), T("Zwei Plattenteller, Scratchen, Stimme raus", "Two decks, scratching, remove vocals"))].join("");
     vSpiel.innerHTML = `<div class="in"><h1>${T("Spielen &amp; Räume", "Play &amp; rooms")}</h1>
       ${rooms ? `<div><h2>${T("Räume", "Rooms")}</h2><div class="tiles">${rooms}</div></div>` : ""}
       <div><h2>${T("Spielen", "Games")}</h2><div class="list">${games}</div></div></div>`;
@@ -191,6 +192,7 @@
   }
   [vSpiel, vMehr].forEach(v => v.addEventListener("click", e => {
     const b = e.target.closest("[data-p]"); if (!b) return; const id = b.dataset.p;
+    if (id === "oDj") { location.href = "dj.html?wand=" + encodeURIComponent(WALL); return; }
     if (id === "oSnooker") { location.href = "snooker.html?wand=" + encodeURIComponent(WALL); return; }
     if (id === "oUe") { location.href = "uebersetzer.html?wand=" + encodeURIComponent(WALL); return; }
     if (id === "oVideo") { location.href = "videochat.html?wand=" + encodeURIComponent(WALL); return; }
