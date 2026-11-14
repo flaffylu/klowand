@@ -34,6 +34,16 @@ main{max-width:960px;margin:0 auto;padding:6px 10px calc(20px + env(safe-area-in
 .sl{display:flex;align-items:center;gap:6px;font:700 .85rem var(--f-ui);color:var(--muted)}
 .sl input{flex:1;min-width:0;accent-color:var(--acc,var(--pink))}
 .sl b{min-width:42px;text-align:right;color:var(--ink)}
+.chs{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+.ch{background:var(--card);border:1.5px solid var(--line);border-radius:18px;padding:10px}
+.ch.a{--acc:var(--pink)}.ch.b{--acc:var(--cyan)}
+.ch h3{margin:0 0 6px;font:800 .9rem var(--f-ui);letter-spacing:.08em;text-transform:uppercase;color:var(--acc)}
+.eqs{display:grid;grid-template-columns:repeat(4,1fr);gap:2px;justify-items:center}
+.eqs .fader input{height:120px;width:30px}
+.eqs .fader.vol input{accent-color:var(--gold)}
+.eqs .fader em{font:700 .78rem var(--f-ui);font-style:normal;color:var(--ink);min-width:28px;text-align:center}
+.eqs .fader span{font:800 .8rem var(--f-ui);letter-spacing:.06em;color:var(--acc)}
+.btn.kill[aria-pressed=true]{background:#ff2d55;border-color:#ff2d55;color:#fff}
 .stems{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
 .stem{background:var(--card);border:1.5px solid var(--line);border-radius:18px;padding:10px}
 .stem.a{--acc:var(--pink)}.stem.b{--acc:var(--cyan)}
@@ -91,6 +101,27 @@ main{max-width:960px;margin:0 auto;padding:6px 10px calc(20px + env(safe-area-in
       <label class="sl">Tempo <input type="range" class="tempo" min="-16" max="16" value="0" step="0.5"><b class="tv">0%</b></label>
       <label class="sl">Filter <input type="range" class="filt" min="-100" max="100" value="0"></label>
       <div class="row"><button type="button" class="btn echo" aria-pressed="false">Echo</button><button type="button" class="btn loop" aria-pressed="false">Loop</button></div>
+    </section>
+  </div>
+
+  <div class="chs">
+    <section class="ch a" data-d="0" aria-label="Kanal A"><h3>Kanal A</h3>
+      <div class="eqs">
+        <label class="fader"><span>HI</span><input type="range" min="-26" max="6" value="0" data-eq="hi" aria-label="Höhen A"><em>0</em></label>
+        <label class="fader"><span>MID</span><input type="range" min="-26" max="6" value="0" data-eq="mid" aria-label="Mitten A"><em>0</em></label>
+        <label class="fader"><span>LOW</span><input type="range" min="-26" max="6" value="0" data-eq="low" aria-label="Bass A"><em>0</em></label>
+        <label class="fader vol"><span>VOL</span><input type="range" min="0" max="100" value="85" data-eq="vol" aria-label="Lautstärke A"><em>85</em></label>
+      </div>
+      <div class="row" style="margin-top:6px"><button type="button" class="btn kill" data-kill="low" aria-pressed="false">Bass weg</button><button type="button" class="btn" data-eqreset>EQ 0</button></div>
+    </section>
+    <section class="ch b" data-d="1" aria-label="Kanal B"><h3>Kanal B</h3>
+      <div class="eqs">
+        <label class="fader"><span>HI</span><input type="range" min="-26" max="6" value="0" data-eq="hi" aria-label="Höhen B"><em>0</em></label>
+        <label class="fader"><span>MID</span><input type="range" min="-26" max="6" value="0" data-eq="mid" aria-label="Mitten B"><em>0</em></label>
+        <label class="fader"><span>LOW</span><input type="range" min="-26" max="6" value="0" data-eq="low" aria-label="Bass B"><em>0</em></label>
+        <label class="fader vol"><span>VOL</span><input type="range" min="0" max="100" value="85" data-eq="vol" aria-label="Lautstärke B"><em>85</em></label>
+      </div>
+      <div class="row" style="margin-top:6px"><button type="button" class="btn kill" data-kill="low" aria-pressed="false">Bass weg</button><button type="button" class="btn" data-eqreset>EQ 0</button></div>
     </section>
   </div>
 
@@ -156,6 +187,14 @@ main{max-width:960px;margin:0 auto;padding:6px 10px calc(20px + env(safe-area-in
   const D = $$(".deck").map((el, i) => ({ i, el, stem: $$(".stem")[i], a: new Audio(), name: "", peaks: null, cue: 0, rate: 1, ang: 0, drag: null, loop: null }));
   D.forEach(d => { d.a.preload = "auto"; d.a.crossOrigin = "anonymous"; d.a.preservesPitch = false; d.a.mozPreservesPitch = false; d.a.webkitPreservesPitch = false; d.a.loop = false; });
 
+  // Equalizer
+  $$(".ch").forEach((ch, i) => {
+    ch.addEventListener("input", e => { if (e.target.dataset.eq) { audio(); eq(D[i]); } });
+    ch.addEventListener("dblclick", e => { const f = e.target.closest("[data-eq]"); if (f && f.dataset.eq !== "vol") { f.value = 0; eq(D[i]); } });
+    ch.querySelector("[data-kill]").onclick = e => { audio(); const b = e.currentTarget; b.setAttribute("aria-pressed", b.getAttribute("aria-pressed") !== "true"); eq(D[i]); };
+    ch.querySelector("[data-eqreset]").onclick = () => { audio(); ["hi", "mid", "low"].forEach(k => ch.querySelector(`[data-eq=${k}]`).value = 0); ch.querySelector("[data-kill]").setAttribute("aria-pressed", "false"); eq(D[i]); };
+    eq(D[i]);
+  });
   // Stimme / Bass / Musik trennen: Mitte (Gesang, Bass) und Seiten (Instrumente) des Stereo-Signals aufteilen
   function build(d) {
     const src = ctx.createMediaElementSource(d.a), spl = ctx.createChannelSplitter(2); src.connect(spl);
@@ -172,13 +211,25 @@ main{max-width:960px;margin:0 auto;padding:6px 10px calc(20px + env(safe-area-in
     // Seiten-Signal auf beide Kanäle gleich (bleibt auch auf Handys mit nur einem Lautsprecher hörbar)
     side.connect(d.gI);
     const bus = ctx.createGain(); src.connect(d.gDir); [d.gDir, d.gV, d.gB, d.gI].forEach(g => g.connect(bus));
-    d.filt = bq("allpass", 1000); bus.connect(d.filt);
+    // 3-Band-EQ und Kanal-Lautstärke
+    d.low = ctx.createBiquadFilter(); d.low.type = "lowshelf"; d.low.frequency.value = 220;
+    d.mid = ctx.createBiquadFilter(); d.mid.type = "peaking"; d.mid.frequency.value = 1000; d.mid.Q.value = .8;
+    d.hi = ctx.createBiquadFilter(); d.hi.type = "highshelf"; d.hi.frequency.value = 3500;
+    d.vol = mkG(.85);
+    bus.connect(d.low); d.low.connect(d.mid); d.mid.connect(d.hi); d.hi.connect(d.vol);
+    d.filt = bq("allpass", 1000); d.vol.connect(d.filt);
     d.xf = mkG(1); d.filt.connect(d.xf); d.xf.connect(master);
     // Echo
     d.send = mkG(0); d.dly = ctx.createDelay(2); d.dly.delayTime.value = .375; d.fb = mkG(.42); d.wet = mkG(.8);
     d.xf.connect(d.send); d.send.connect(d.dly); d.dly.connect(d.fb); d.fb.connect(d.dly); d.dly.connect(d.wet); d.wet.connect(master);
-    stems(d); filt(d);
+    stems(d); filt(d); eq(d);
   }
+  function eq(d) { if (!ctx || !d.low) return; const ch = $$(".ch")[d.i], v = k => +ch.querySelector(`[data-eq=${k}]`).value;
+    const kill = ch.querySelector("[data-kill]").getAttribute("aria-pressed") === "true";
+    const db = x => x <= -25.5 ? -40 : x; // ganz unten = Band aus
+    smooth(d.hi.gain, db(v("hi"))); smooth(d.mid.gain, db(v("mid"))); smooth(d.low.gain, kill ? -40 : db(v("low")));
+    smooth(d.vol.gain, Math.pow(v("vol") / 100, 1.6));
+    ch.querySelectorAll("[data-eq]").forEach(i => { i.parentNode.querySelector("em").textContent = i.dataset.eq === "vol" ? i.value : (+i.value <= -25.5 ? "AUS" : (i.value > 0 ? "+" : "") + i.value); }); }
   function stems(d) { if (!ctx || !d.gV) return; const v = +d.stem.querySelector('[data-s=v]').value / 100, b = +d.stem.querySelector('[data-s=b]').value / 100, i = +d.stem.querySelector('[data-s=i]').value / 100;
     const orig = v > .99 && b > .99 && i > .99; smooth(d.gDir.gain, orig ? 1 : 0); smooth(d.gV.gain, orig ? 0 : v * 1.15); smooth(d.gB.gain, orig ? 0 : b); smooth(d.gI.gain, orig ? 0 : i * 1.1); }
   function filt(d) { if (!ctx || !d.filt) return; const v = +d.el.querySelector(".filt").value;
