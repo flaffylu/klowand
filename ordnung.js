@@ -227,6 +227,8 @@
     const PICS = [["assets/hero-couch.jpg", T("Ein Igel und ein junger Mann spielen zusammen auf der Couch mit dem Handy", "A hedgehog and a young man playing on their phones on the sofa"), "50% 45%"],
       ["assets/hero-geist.jpg", T("Ein Gespenst und ein junger Mann sitzen auf dem Klo und schauen aufs Handy", "A ghost and a young man on the loo looking at their phones"), "50% 40%"],
       ["assets/hero-igel-klo.jpg", T("Ein Igel und ein junger Mann sitzen auf dem Klo und schauen aufs Handy", "A hedgehog and a young man on the loo looking at their phones"), "50% 40%"]];
+    // Über den QR-Code gekommen: das Scan-Bild kommt zuerst
+    try { if (WALL === "demo" && sessionStorage.getItem("klowand-scanbg") && !localStorage.getItem("klowand-stil")) PICS.unshift(["assets/scan-bg.jpg", T("Ein Mann mit Kappe und Kopfhörern, lila Licht", "A man with a cap and headphones in purple light"), "50% 30%"]); } catch (e) {}
     h.innerHTML = PICS.map((p, i) => `<img src="${p[0]}" alt="${p[1]}" style="object-position:${p[2]};opacity:${i ? 0 : 1}"${i ? ' loading="lazy" aria-hidden="true"' : ""}>`).join("") + `<span class="live"><i></i>Live</span><span class="ki">${T("Bild KI-generiert", "AI-generated image")}</span>
       <div class="txt"><h1></h1><small></small><button type="button" class="pill" hidden></button></div>`;
     plate.before(h);

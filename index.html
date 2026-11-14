@@ -479,6 +479,14 @@ window.kloApplyBg = function (css, light, theme) {
     else if (w && w.own) { const f = localStorage.getItem("klowand-stil-foto"); if (f && f.startsWith("data:image/jpeg")) { css = `url("${f}")`; light = !!w.light; } }
     else if (w && typeof w.css === "string") { css = w.css; light = !!w.light; theme = w.theme || ""; }
   } catch (e) {}
+  /* Wer den QR-Code der Bar-Demo scannt, sieht das Scan-Bild als Hintergrund (bleibt für diesen Besuch, eigener Stil geht vor) */
+  try {
+    const q = new URLSearchParams(location.search), w0 = (q.get("wand") || "").toLowerCase();
+    if (w0 === "demo" && q.has("qr")) sessionStorage.setItem("klowand-scanbg", "1");
+    const mine = localStorage.getItem("klowand-stil");
+    if (!famDemo && !mine && sessionStorage.getItem("klowand-scanbg") && (w0 === "demo" || (!w0 && localStorage.getItem("klowand-last") === "demo"))) {
+      css = 'linear-gradient(180deg,rgba(11,7,22,.15) 0%,rgba(11,7,22,.35) 45%,#0b0716 80%), url("assets/scan-bg.jpg") 50% 0/auto 72% no-repeat, linear-gradient(#0b0716,#0b0716)'; light = false; theme = "neon"; }
+  } catch (e) {}
   kloApplyBg(css, light, theme);
 })();
 const params = new URLSearchParams(location.search);
