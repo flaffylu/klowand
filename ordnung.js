@@ -176,6 +176,8 @@
     const getown = document.querySelector(".getown a, .getown button"); if (getown && !getown.id) getown.id = "oGetown";
     vMehr.innerHTML = `<div class="in"><h1>${T("Mehr", "More")}</h1>
       <div class="list">${has("mXp") ? `<button type="button" class="row prof" data-p="mXp"><span class="lv">Lv ${lv}</span><span class="tx"><b>${T("Mein Profil", "My profile")}</b><span>${T("Abzeichen und Punkte", "Badges and points")}</span></span>${svg("chev", 18)}</button>` : ""}
+        ${row(pick("mShop"), "🛍️ " + T("Avatar-Shop", "Avatar shop"), window.kloXP ? `🪙 ${kloXP.coins()} ${T("Klo-Münzen", "coins")} · 🔥 ${kloXP.streak().n} ${T("Tage Streak", "day streak")}` : "")}
+        ${row(pick("mWeek"), "📸 " + T("Wochenrückblick", "My week"), T("Dein Story-Bild für TikTok & Insta", "Your story picture for TikTok & Insta"))}
         ${row(pick("mInv"), T("Freunde einladen", "Invite friends"), T("Jeder Freund = ein Gratis-Tag mehr", "Each friend = one more free day"))}</div>
       ${music ? `<div><h2>${T("Musik", "Music")}</h2><div class="list">
         <button type="button" class="row" data-p="kgMusic"><span class="tx"><b>${T("Musik", "Music")}${lockI("kgMusic")}</b><span>${E(($("kgTrackTxt") && $("kgTrackTxt").textContent) ? T("Lied: ", "Song: ") + $("kgTrackTxt").textContent : "Lo-Fi")}</span></span><span class="sw${on ? " on" : ""}"></span></button>

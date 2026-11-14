@@ -27,6 +27,11 @@
   .mehrbar .g{display:grid;grid-template-columns:repeat(auto-fit,minmax(92px,1fr));gap:6px}
   .mehrbar button{min-height:62px;border-radius:12px;border:none;color:#fff;font:700 .85rem/1.1 var(--f-ui);cursor:pointer;padding:6px 4px}
   .mehrbar button span{display:block;font-size:1.45rem;margin-bottom:3px}
+  .kstreak{display:flex;align-items:center;justify-content:center;gap:6px;width:100%;min-height:44px;margin:10px 0 0;border-radius:999px;border:2px solid #ff8a3d;background:linear-gradient(90deg,rgba(255,138,61,.18),rgba(255,79,163,.18));color:inherit;font:700 1rem var(--f-ui);cursor:pointer}
+  .kstreak b{font-size:1.2rem;color:#ff8a3d}
+  .kstreak.risk{border-color:#ff4fa3;background:#ff4fa3;color:#fff;animation:kst 1.6s ease-in-out infinite}.kstreak.risk b{color:#fff}
+  @keyframes kst{50%{transform:scale(1.025)}} @media (prefers-reduced-motion:reduce){.kstreak.risk{animation:none}}
+  .mehrbar .sh{background:#d4602a}.mehrbar .wk{background:#2b6fd6}
   .mehrbar .xp{background:#b0377e}.mehrbar .wu{background:#1f7a8c}.mehrbar .qz{background:#6a3fc9}.mehrbar .tv{background:#c76a12}.mehrbar .inv{background:#2f8f4f}
   .post .meta button[data-a="share"]{font-weight:700}
   .champ.monat .crown{background:#6a3fc9!important;color:#fff!important}
@@ -158,6 +163,77 @@
   /* ---------- 🏅 Abzeichen ---------- */
   function openXP() { const el = box("🏅 " + T("Deine Abzeichen", "Your badges"), kloXP.panelHtml()); }
 
+  /* ---------- 🛍️ Avatar-Shop mit Klo-Münzen (Spielgeld) ---------- */
+  function openShop() {
+    const el = box("🛍️ " + T("Avatar-Shop", "Avatar shop"), `<div data-shop>${kloXP.shopHtml()}</div>`,
+      `<button type="button" class="btn primary" data-ch>🐻 ${T("Im Chill-Raum anziehen", "Wear it in the chill room")}</button>`);
+    el.querySelector("[data-shop]").addEventListener("click", e => { const b = e.target.closest("[data-buy]"); if (!b) return;
+      const it = kloXP.SHOP.find(x => x[0] === b.dataset.buy);
+      if (kloXP.buy(b.dataset.buy)) { kloXP.toast(`${it[4]} ${it[3]} ${T("gehört jetzt dir!", "is yours now!")}`); try { navigator.vibrate && navigator.vibrate([20, 40, 20]); } catch (er) {} }
+      else kloXP.toast(`🪙 ${T("Noch", "Need")} ${it[5] - kloXP.coins()} ${T("Münzen – schreib, spiel oder halte deinen Streak!", "more coins – write, play or keep your streak!")}`);
+      el.querySelector("[data-shop]").innerHTML = kloXP.shopHtml(); });
+    el.querySelector("[data-ch]").onclick = () => { location.href = "chill.html" + location.search + (location.search ? "&" : "?") + "avatar=1"; };
+  }
+
+  /* ---------- 📸 Wochenrückblick als Story-Bild ---------- */
+  async function openWeek() {
+    const W = 1080, H = 1920, cv = document.createElement("canvas"); cv.width = W; cv.height = H; const c = cv.getContext("2d");
+    try { await document.fonts.load('80px "Permanent Marker"'); } catch (e) {}
+    const days = kloXP.days(), sum = {}, keys = []; for (let i = 6; i >= 0; i--) { const d = new Date(); d.setDate(d.getDate() - i); keys.push(kloXP.dkey(d)); }
+    keys.forEach(k => Object.entries(days[k] || {}).forEach(([a, n]) => sum[a] = (sum[a] || 0) + n));
+    const st = kloXP.streak(), lv = kloXP.level();
+    // Bester eigener Spruch der Woche (meiste Striche)
+    const week = Date.now() - 7 * 864e5, mine = kloXP.mine().filter(m => m.at > week && m.t);
+    let best = null; mine.forEach(m => { const n = (likes[m.id] || new Set()).size; if (!best || n > best.n) best = { t: m.t, n }; });
+    if (!best) { const top = posts.filter(p => p.t && !p.img).map(p => ({ t: p.t, n: (likes[p.id] || new Set()).size + (p.n || 0) })).sort((a, b) => b.n - a.n)[0]; if (top) best = Object.assign({ wall: true }, top); }
+    // Hintergrund
+    const g = c.createLinearGradient(0, 0, 0, H); g.addColorStop(0, "#2a1048"); g.addColorStop(1, "#0d0814"); c.fillStyle = g; c.fillRect(0, 0, W, H);
+    for (let i = 0; i < 26; i++) { c.fillStyle = ["#ff4fa3", "#ffd166", "#7df9ff", "#c6ff6a"][i % 4]; c.globalAlpha = .35; c.beginPath(); c.arc((i * 397) % W, (i * 631) % 700 + 40, 6 + (i % 3) * 4, 0, 7); c.fill(); } c.globalAlpha = 1;
+    c.textAlign = "center"; c.textBaseline = "alphabetic";
+    c.fillStyle = "#ffd166"; c.font = '400 64px "Permanent Marker", cursive'; c.fillText(T("Meine Woche", "My week"), W / 2, 170);
+    c.fillStyle = "#fff"; c.font = '400 92px "Permanent Marker", cursive'; c.fillText(T("an der Klo-Wand", "on the Klo-Wand"), W / 2, 280);
+    // Streak-Flamme
+    c.font = "220px system-ui, sans-serif"; c.fillText(st.n ? "🔥" : "🧻", W / 2, 560);
+    c.fillStyle = "#ff4fa3"; c.font = '400 120px "Permanent Marker", cursive'; c.fillText(st.n ? `${st.n} ${st.n === 1 ? T("Tag", "day") : T("Tage", "days")}` : T("Neustart!", "Fresh start!"), W / 2, 700);
+    c.fillStyle = "#d9d0f5"; c.font = '700 44px system-ui, sans-serif'; c.fillText(st.n ? T("Streak am Stück", "streak in a row") : T("Schreib heute was und starte deinen Streak", "Write today to start a streak"), W / 2, 760);
+    // Kacheln
+    const tiles = [["✍️", sum.post || 0, T("Sprüche", "Posts")], ["|||", sum.like || 0, T("Striche", "Tallies")], ["💬", (sum.reply || 0) + (sum.chill || 0), T("Nachrichten", "Messages")], ["🎮", (sum.game || 0) + (sum.spiel || 0) + (sum.dart || 0) + (sum.dance || 0), T("Spiele", "Games")]];
+    tiles.forEach(([e, n, l], i) => { const x = 90 + (i % 2) * 460, y = 830 + Math.floor(i / 2) * 250;
+      c.fillStyle = "rgba(255,255,255,.08)"; c.beginPath(); c.roundRect(x, y, 440, 220, 36); c.fill();
+      c.fillStyle = "#fff"; c.font = e === "|||" ? '800 60px system-ui' : "60px system-ui, sans-serif"; c.fillText(e, x + 220, y + 78);
+      c.fillStyle = "#ffd166"; c.font = '800 84px system-ui, sans-serif'; c.fillText(String(n), x + 220, y + 162);
+      c.fillStyle = "#d9d0f5"; c.font = '700 34px system-ui, sans-serif'; c.fillText(l, x + 220, y + 204); });
+    // Spruch der Woche
+    c.fillStyle = "#fff7ea"; c.beginPath(); c.roundRect(90, 1360, W - 180, 290, 36); c.fill();
+    c.fillStyle = "#b0377e"; c.font = '800 32px system-ui, sans-serif'; c.fillText(best && !best.wall ? T("MEIN SPRUCH DER WOCHE", "MY POST OF THE WEEK") : T("SPRUCH DER WOCHE", "POST OF THE WEEK"), W / 2, 1412);
+    const txt = best ? best.t : T("Noch kein Spruch – das ändern wir!", "No post yet – let's change that!");
+    let fs = 62, lines; for (; fs > 34; fs -= 4) { c.font = `400 ${fs}px "Permanent Marker", cursive`; lines = []; let l = ""; txt.split(/\s+/).forEach(w => { const t = (l + " " + w).trim(); if (c.measureText(t).width > W - 280) { lines.push(l); l = w; } else l = t; }); lines.push(l); if (lines.length * fs * 1.15 <= 190) break; }
+    c.fillStyle = "#1b1424"; const y0 = 1520 - (lines.length - 1) * fs * .575; lines.forEach((l, i) => c.fillText(l, W / 2, y0 + i * fs * 1.15));
+    // Fuß
+    c.fillStyle = "#ffd166"; c.font = '800 44px system-ui, sans-serif'; c.fillText(`⭐ Level ${lv}   ·   🪙 ${kloXP.coins()}`, W / 2, 1730);
+    const url = "https://flaffylu.github.io/klowand/?wand=" + (PRIV ? "demo" : encodeURIComponent(WALL));
+    qrDraw(c, url, W - 230, H - 210, 170);
+    c.textAlign = "left"; c.fillStyle = "#fff"; c.font = '700 40px system-ui, sans-serif'; c.fillText(T("Mach mit an der Klo-Wand!", "Join the Klo-Wand!"), 90, H - 130);
+    c.fillStyle = "#cbbfd9"; c.font = '600 32px system-ui, sans-serif'; c.fillText("TikTok: @pikumio", 90, H - 80);
+    const blob = await new Promise(r => cv.toBlob(r, "image/png"));
+    const el = box("📸 " + T("Dein Wochenrückblick", "Your week"), `<p class="note">${T("Für deine Story auf TikTok, Instagram oder WhatsApp:", "For your TikTok, Instagram or WhatsApp story:")}</p><img class="shareimg" alt="" src="${URL.createObjectURL(blob)}">`,
+      `<button type="button" class="btn primary" data-s>📤 ${T("Teilen", "Share")}</button><button type="button" class="btn dark" data-d>⬇️ ${T("Speichern", "Save")}</button>`);
+    const file = new File([blob], "klo-wand-woche.png", { type: "image/png" });
+    el.querySelector("[data-s]").onclick = async () => {
+      try { if (navigator.canShare && navigator.canShare({ files: [file] })) { await navigator.share({ files: [file], text: T("Meine Woche an der Klo-Wand 🔥 ", "My week on the Klo-Wand 🔥 ") + url }); kloXP.add("share"); return; } } catch (e) { return; }
+      el.querySelector("[data-d]").click(); };
+    el.querySelector("[data-d]").onclick = () => { const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "klo-wand-woche.png"; a.click(); kloXP.add("share"); };
+  }
+
+  /* ---------- 🔥 Streak-Erinnerung oben an der Wand ---------- */
+  function streakBar() {
+    const st = kloXP.streak(); let b = document.querySelector(".kstreak");
+    if (!st.n) { if (b) b.remove(); return; }
+    if (!b) { b = document.createElement("button"); b.type = "button"; b.className = "kstreak"; const w = document.getElementById("wall"); w.parentNode.insertBefore(b, w); b.onclick = () => { if (st.risk) { const f = document.querySelector(".ofab"); if (f) f.click(); else { const m = document.getElementById("msg"); m && m.focus(); } } else openXP(); }; }
+    b.classList.toggle("risk", st.risk);
+    b.innerHTML = st.risk ? `🔥 <b>${st.n}</b> ${T("Tage Streak – läuft heute ab! Schreib was ✍️", "day streak – ends today! Write something ✍️")}` : `🔥 <b>${st.n}</b> ${st.n === 1 ? T("Tag Streak", "day streak") : T("Tage Streak", "day streak")} · 🪙 ${kloXP.coins()}`;
+  }
+
   /* ---------- 🎵 Musikwünsche ---------- */
   function openWunsch() {
     const since = firebase.firestore.Timestamp.fromMillis(Date.now() - 12 * 36e5);
@@ -253,14 +329,17 @@
   const lvTxt = () => `Lv ${kloXP.level()}`;
   bar.innerHTML = `<b>🎉 ${T("Mitmachen", "Join in")}</b><div class="g">
     <button type="button" class="xp" id="mXp"><span>🏅</span>${T("Abzeichen", "Badges")} · <em id="mLv" style="font-style:normal">${lvTxt()}</em></button>
+    <button type="button" class="sh" id="mShop"><span>🛍️</span>${T("Avatar-Shop", "Avatar shop")}</button>
+    <button type="button" class="wk" id="mWeek"><span>📸</span>${T("Wochenrückblick", "My week")}</button>
     ${PRIV ? "" : `<button type="button" class="wu" id="mWu"><span>🎵</span>${T("Musikwünsche", "Requests")}</button>
     <button type="button" class="qz" id="mQz"><span>🧠</span>${T("Quiz-Abend", "Quiz night")}</button>
     <button type="button" class="tv" id="mTv"><span>📺</span>${T("TV-Modus", "TV mode")}</button>`}
     ${DEMO ? `<button type="button" class="inv" id="mInv"><span>🤝</span>${T("Freunde einladen", "Invite")}</button>` : ""}</div>`;
   const fr = document.querySelector(".kfrage"); fr.after(bar);
-  window.addEventListener("klo-xp", () => { const l = document.getElementById("mLv"); if (l) l.textContent = lvTxt(); });
+  window.addEventListener("klo-xp", () => { const l = document.getElementById("mLv"); if (l) l.textContent = lvTxt(); streakBar(); });
+  streakBar(); setInterval(streakBar, 60000);
   const on = (id, fn) => { const b = document.getElementById(id); if (b) b.onclick = fn; };
-  on("mXp", openXP); on("mWu", openWunsch); on("mQz", openQuiz); on("mInv", openInvite);
+  on("mXp", openXP); on("mShop", openShop); on("mWeek", openWeek); on("mWu", openWunsch); on("mQz", openQuiz); on("mInv", openInvite);
   on("mTv", () => { location.href = "tv.html?wand=" + encodeURIComponent(WALL); });
-  window.kloMehr = { openXP, openWunsch, openQuiz, openInvite, shareImage };
+  window.kloMehr = { openShop, openWeek, streakBar, openXP, openWunsch, openQuiz, openInvite, shareImage };
 })();

@@ -391,8 +391,8 @@ form button:disabled{opacity:.5}
   const GLASS = new THREE.MeshStandardMaterial({ color: "#16131f", metalness: .6, roughness: .15, emissive: "#ff6a3d", emissiveIntensity: .08 });
   const sph = (r, m, x, y, z, sx, sy, sz, par) => { const o = new THREE.Mesh(new THREE.SphereGeometry(r, 20, 16), m); o.position.set(x, y, z); o.scale.set(sx || 1, sy || 1, sz || 1); par.add(o); return o; };
   // Eigener Avatar: 4 Ziffern = Fell, Farbe, Hut, Brille
-  const AVF = [["#b06d3c", "#d79a62"], ["#e8e2d6", "#fff8ee"], ["#8a8a92", "#c4c4cc"], ["#3a2e28", "#6a5446"]], AVC = ["", "#ff4d6d", "#ffd23f", "#3ddc84", "#4cc9ff", "#c084fc", "#ff9f43"];
-  const avParse = av => { const d = /^[0-9]{4}$/.test(av || "") ? av.split("").map(Number) : [0, 0, 0, 0]; return { f: d[0] % 4, c: d[1] % 7, h: d[2] % 4, g: d[3] % 2 }; };
+  const AVF = [["#b06d3c", "#d79a62"], ["#e8e2d6", "#fff8ee"], ["#8a8a92", "#c4c4cc"], ["#3a2e28", "#6a5446"], ["#ff8fc4", "#ffd1e6"], ["#5aa8ff", "#b9dcff"], ["#e0a92e", "#ffe08a"]], AVC = ["", "#ff4d6d", "#ffd23f", "#3ddc84", "#4cc9ff", "#c084fc", "#ff9f43"];
+  const avParse = av => { const d = /^[0-9]{4}$/.test(av || "") ? av.split("").map(Number) : [0, 0, 0, 0]; return { f: d[0] % 7, c: d[1] % 7, h: d[2], g: d[3] % 4 }; };
   let myAv = ""; try { myAv = localStorage.getItem("klowand-av") || ""; } catch (e) {}
   function avatar(name, av) {
     const A = avParse(av), FUR = A.f ? new THREE.MeshStandardMaterial({ color: AVF[A.f][0], roughness: .95, emissive: AVF[A.f][0], emissiveIntensity: .08 }) : FUR0, FUR2 = A.f ? new THREE.MeshStandardMaterial({ color: AVF[A.f][1], roughness: .95, emissive: AVF[A.f][1], emissiveIntensity: .06 }) : FUR20;
@@ -413,6 +413,13 @@ form button:disabled{opacity:.5}
     const ears = [-1, 1].map(sd => { const e = sph(.05, FUR, sd * .105, .11, -.01, 1, 1, .7, head); sph(.028, FUR2, sd * .105, .11, .02, 1, 1, .4, head); return e; });
     sph(.06, FUR2, 0, -.07, .12, 1.3, .85, .8, head);
     sph(.058, NOSE, 0, -.055, .17, 1.35, .9, .9, head);
+    if (A.g === 2 || A.g === 3) { // 🤓 Nerd-Brille (schwarz, klar) / 😍 Herzbrille (rot)
+      const RIM = new THREE.MeshStandardMaterial({ color: A.g === 2 ? "#141018" : "#ff2d6b", roughness: .4, emissive: A.g === 3 ? "#ff2d6b" : "#000", emissiveIntensity: A.g === 3 ? .35 : 0 });
+      const LENS = new THREE.MeshStandardMaterial({ color: A.g === 2 ? "#cfe8ff" : "#ff5c8a", transparent: true, opacity: A.g === 2 ? .35 : .85, roughness: .1 });
+      [-1, 1].forEach(sd => { const l = new THREE.Mesh(new THREE.CylinderGeometry(.05, .05, .01, 20), LENS); l.rotation.x = Math.PI / 2; l.position.set(sd * .06, .012, .14); head.add(l);
+        const r = new THREE.Mesh(new THREE.TorusGeometry(.05, .011, 8, 20), RIM); r.position.set(sd * .06, .012, .146); head.add(r); });
+      const br2 = new THREE.Mesh(new THREE.BoxGeometry(.026, .01, .01), RIM); br2.position.set(0, .02, .15); head.add(br2);
+    }
     if (!A.g) {    [-1, 1].forEach(sd => { const l = new THREE.Mesh(new THREE.CylinderGeometry(.045, .045, .012, 20), GLASS); l.rotation.x = Math.PI / 2; l.position.set(sd * .058, .012, .138); head.add(l);
       const rim = new THREE.Mesh(new THREE.TorusGeometry(.045, .006, 6, 20), GOLD); rim.position.set(sd * .058, .012, .145); head.add(rim); });
     const br = new THREE.Mesh(new THREE.BoxGeometry(.03, .008, .008), GOLD); br.position.set(0, .022, .148); head.add(br);
@@ -431,6 +438,30 @@ form button:disabled{opacity:.5}
       const bn = new THREE.Mesh(new THREE.SphereGeometry(.155, 20, 12, 0, Math.PI * 2, 0, Math.PI / 2), CAP); bn.position.set(0, .04, 0); bn.scale.set(1.05, .9, 1.03); head.add(bn);
       const rim2 = new THREE.Mesh(new THREE.TorusGeometry(.15, .025, 8, 24), CAP); rim2.rotation.x = Math.PI / 2; rim2.position.y = .045; head.add(rim2);
       sph(.04, new THREE.MeshStandardMaterial({ color: "#fff", roughness: 1 }), 0, .19, 0, 1, 1, 1, head);
+    }
+    else if (A.h === 4) {   // 🎩 Zylinder
+      const BLK = new THREE.MeshStandardMaterial({ color: "#16121c", roughness: .5 });
+      const top = new THREE.Mesh(new THREE.CylinderGeometry(.09, .095, .17, 24), BLK); top.position.set(0, .2, 0); head.add(top);
+      const bri = new THREE.Mesh(new THREE.CylinderGeometry(.16, .16, .014, 28), BLK); bri.position.set(0, .12, 0); head.add(bri);
+      const band = new THREE.Mesh(new THREE.CylinderGeometry(.097, .097, .035, 24, 1, true), CAP); band.position.set(0, .145, 0); head.add(band);
+    } else if (A.h === 5) { // 🤠 Cowboyhut
+      const BR = new THREE.MeshStandardMaterial({ color: "#9a5b2a", roughness: .8 });
+      const cr = new THREE.Mesh(new THREE.CylinderGeometry(.075, .1, .11, 20), BR); cr.position.set(0, .17, 0); head.add(cr);
+      const bri = new THREE.Mesh(new THREE.TorusGeometry(.15, .03, 8, 28), BR); bri.rotation.x = Math.PI / 2; bri.position.set(0, .115, 0); bri.scale.set(1.15, 1, 1); head.add(bri);
+      const disc = new THREE.Mesh(new THREE.CylinderGeometry(.16, .16, .012, 28), BR); disc.position.set(0, .115, 0); disc.scale.set(1.15, 1, 1); head.add(disc);
+    } else if (A.h === 6) { // 🥳 Partyhut
+      const cone = new THREE.Mesh(new THREE.ConeGeometry(.075, .2, 20), CAP); cone.position.set(.02, .22, 0); cone.rotation.z = -.15; head.add(cone);
+      sph(.028, GOLD, .045, .325, 0, 1, 1, 1, head);
+    } else if (A.h === 7) { // 😇 Heiligenschein
+      const halo = new THREE.Mesh(new THREE.TorusGeometry(.1, .014, 10, 32), new THREE.MeshStandardMaterial({ color: "#ffe680", emissive: "#ffd23f", emissiveIntensity: 1.1, roughness: .3 }));
+      halo.rotation.x = Math.PI / 2; halo.position.set(0, .26, 0); head.add(halo);
+    } else if (A.h === 8) { // 🐰 Hasenohren
+      const WH = new THREE.MeshStandardMaterial({ color: "#fff", roughness: .9 }), PK = new THREE.MeshStandardMaterial({ color: "#ff9cc4", roughness: .9 });
+      [-1, 1].forEach(sd => { const e = sph(.045, WH, sd * .06, .25, 0, .8, 2.6, .5, head); e.rotation.z = -sd * .2; const i = sph(.026, PK, sd * .06, .25, .018, .7, 2.2, .3, head); i.rotation.z = -sd * .2; });
+    } else if (A.h === 9) { // 🎧 Kopfhörer
+      const BLK = new THREE.MeshStandardMaterial({ color: "#1d1826", roughness: .4 });
+      const arc = new THREE.Mesh(new THREE.TorusGeometry(.16, .016, 8, 28, Math.PI), BLK); arc.position.set(0, .02, 0); head.add(arc);
+      [-1, 1].forEach(sd => { const cup = new THREE.Mesh(new THREE.CylinderGeometry(.055, .055, .04, 20), CAP); cup.rotation.z = Math.PI / 2; cup.position.set(sd * .16, .01, 0); head.add(cup); });
     }
     const lb = label(name, c); lb.position.set(0, .62, 0); g.add(lb);
     g.userData = { av: av || "", name, phase: Math.random() * 6, bubble: null, bubbleUntil: 0, bear, body, head, arms, ears, waveUntil: 0 };
@@ -1327,12 +1358,19 @@ form button:disabled{opacity:.5}
   // 🐻 Avatar-Baukasten
   $("aAv").onclick = () => {
     const A = avParse(myAv), el = document.createElement("div"); el.className = "avov";
-    const row = (k, label, opts) => `<div class="avr"><b>${label}</b><div>${opts.map((o, i) => `<button type="button" data-k="${k}" data-v="${i}" aria-pressed="${A[k] === i}" style="${o[1] ? `background:${o[1]};color:#111` : ""}">${o[0]}</button>`).join("")}</div></div>`;
-    el.innerHTML = `<div class="avbox"><h2>🐻 Mein Avatar</h2>${row("f", "Fell", [["Braun", "#b06d3c"], ["Eisbär", "#e8e2d6"], ["Grau", "#8a8a92"], ["Dunkel", "#3a2e28"]])}
-      ${row("c", "Farbe", AVC.map((c, i) => [i ? "●" : "Name", c]))}${row("h", "Auf dem Kopf", [["🧢 Kappe"], ["👑 Krone"], ["🧶 Mütze"], ["Nichts"]])}${row("g", "Brille", [["😎 Sonnenbrille"], ["Ohne"]])}
+    const X = window.kloXP, lockOf = (k, i) => X && X.locked ? X.locked(k, i) : null;
+    const row = (k, label, opts) => `<div class="avr"><b>${label}</b><div>${opts.map((o, i) => o ? (() => { const L = lockOf(k, i);
+      return `<button type="button" data-k="${k}" data-v="${i}" ${L ? `data-lock="${L[0]}"` : ""} aria-pressed="${A[k] === i}" style="${o[1] ? `background:${o[1]};color:#111` : ""}">${o[0]}${L ? ` 🔒${L[5]}` : ""}</button>`; })() : "").join("")}</div></div>`;
+    const draw = () => `<div class="avbox"><h2>🐻 Mein Avatar</h2>${X ? `<p class="hint" style="margin:-2px 0 6px">🪙 ${X.coins()} Klo-Münzen – 🔒 Teile kannst du hier direkt kaufen</p>` : ""}${row("f", "Fell", [["Braun", "#b06d3c"], ["Eisbär", "#e8e2d6"], ["Grau", "#8a8a92"], ["Dunkel", "#3a2e28"], ["Pink", "#ff8fc4"], ["Blau", "#5aa8ff"], ["Gold", "#e0a92e"]])}
+      ${row("c", "Farbe", AVC.map((c, i) => [i ? "●" : "Name", c]))}${row("h", "Auf dem Kopf", [["🧢 Kappe"], ["👑 Krone"], ["🧶 Mütze"], ["Nichts"], ["🎩 Zylinder"], ["🤠 Cowboy"], ["🥳 Partyhut"], ["😇 Heiligenschein"], ["🐰 Hasenohren"], ["🎧 Kopfhörer"]])}${row("g", "Brille", [["😎 Sonnenbrille"], ["Ohne"], ["🤓 Nerd"], ["😍 Herz"]])}
       <p class="hint">Die anderen im Chill-Raum sehen deinen Avatar auf der Couch.</p><div class="avb"><button type="button" class="go" data-save>Speichern</button><button type="button" data-x>Abbrechen</button></div></div>`;
+    el.innerHTML = draw();
     document.body.appendChild(el);
     el.addEventListener("click", e => { const b = e.target.closest("[data-k]");
+      if (b && b.dataset.lock) { const it = X.SHOP.find(x => x[0] === b.dataset.lock);
+        if (X.coins() < it[5]) { toast(`🪙 ${it[4]} ${it[3]} kostet ${it[5]} Münzen – dir fehlen noch ${it[5] - X.coins()}. Schreib, spiel oder halte deinen Streak!`); return; }
+        if (!confirm(`${it[4]} ${it[3]} für ${it[5]} Klo-Münzen kaufen?`)) return;
+        X.buy(it[0]); toast(`${it[4]} ${it[3]} gehört jetzt dir!`); A[b.dataset.k] = +b.dataset.v; myAv = `${A.f}${A.c}${A.h}${A.g}`; el.innerHTML = draw(); placePeople(curList); return; }
       if (b) { A[b.dataset.k] = +b.dataset.v; el.querySelectorAll(`[data-k="${b.dataset.k}"]`).forEach(x => x.setAttribute("aria-pressed", x === b)); myAv = `${A.f}${A.c}${A.h}${A.g}`; placePeople(curList); }
       if (e.target.closest("[data-save]")) { try { localStorage.setItem("klowand-av", myAv); } catch (er) {} window.__avBeat && __avBeat(); el.remove(); toast("🐻 Avatar gespeichert!"); }
       if (e.target.closest("[data-x]") || e.target === el) { try { myAv = localStorage.getItem("klowand-av") || ""; } catch (er) {} placePeople(curList); el.remove(); } });
@@ -1579,6 +1617,7 @@ form button:disabled{opacity:.5}
     });
   }
   if (okName(me)) enter();
+  if (new URLSearchParams(location.search).get("avatar") === "1") setTimeout(() => $("aAv").click(), 1200);
   else {
     if (DEMOW) $("nameHint").textContent = "Dein Spitzname (2–12 Zeichen). Nimm nicht deinen echten Namen – alle, die gerade die Demo testen, sehen ihn.";
     $("nameBox").hidden = false; $("nameIn").focus();
