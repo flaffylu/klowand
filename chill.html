@@ -197,6 +197,7 @@ form button:disabled{opacity:.5}
 <script src="config.js"></script>
 <script src="filter.js"></script>
 <script src="music.js"></script>
+<script src="spielchat.js"></script>
 <script src="spotify.js"></script>
 <script src="xp.js"></script>
 <script>
@@ -467,7 +468,8 @@ form button:disabled{opacity:.5}
   }
 
   // ---------- Geschenke ----------
-  const GIFTS = [["🍺", "Bier"], ["🥤", "Cola"], ["🧃", "Saft"], ["☕", "Kaffee"], ["🍕", "Pizza"], ["🥨", "Brezel"], ["🍿", "Popcorn"], ["🍫", "Schoki"], ["🍩", "Donut"], ["🍦", "Eis"], ["🌹", "Rose"], ["🧸", "Teddy"]]
+  const GIFTS = [["🍺", "Bier"], ["🥤", "Cola"], ["🧃", "Saft"], ["☕", "Kaffee"], ["🍕", "Pizza"], ["🥨", "Brezel"], ["🍿", "Popcorn"], ["🍫", "Schoki"], ["🍩", "Donut"], ["🍦", "Eis"], ["🌹", "Rose"], ["🧸", "Teddy"],
+    ["🍀", "Glück"], ["🏆", "Pokal"], ["👏", "Applaus"], ["🔥", "Feuer"], ["⭐", "Stern"], ["🎈", "Ballon"], ["💐", "Blumen"]]
     .filter(([e]) => !(e === "🍺" && WALL === "familie-demo"));
   const GIFT_RE = /^🎁 (\S+) ([A-Za-zÄÖ]+) für (.{2,12})$/;
   const parseGift = t => { const m = GIFT_RE.exec(t || ""); if (!m) return null; const g = GIFTS.find(([e, l]) => e === m[1] && l === m[2]) || (m[1] === "🍺" && m[2] === "Bier" ? ["🍺", "Bier"] : null); return g ? { e: g[0], l: g[1], to: m[3] } : null; };
@@ -1559,6 +1561,10 @@ form button:disabled{opacity:.5}
         else say(x.n, x.t); } });
       first = false;
     }, () => mod("Der Chill-Raum ist gerade nicht erreichbar. Lade die Seite neu."));
+    // Chat, Geschenke und Musik direkt im Spielfenster (Poker, Roulette, alle Spiele)
+    if (window.KloSpielChat) { const gc = document.createElement("div"); gc.style.marginTop = "10px"; $("gameBox").querySelector(".sheetIn").appendChild(gc);
+      KloSpielChat.mount({ host: gc, grp, me, demo: DEMOW, wall: WALL, names: () => curList.map(p => p.n),
+        onMusic: () => { if (!song.paused) song.pause(); KloSpotify.stop(); setTimeout(() => $("music").setAttribute("aria-pressed", KloMusik.isOn()), 400); } }); }
     sendGift = (e, l, to) => grp.collection("chill").add({ n: me, t: `🎁 ${e} ${l} für ${to}`, ts: now() }).catch(er => toast(er && er.code === "permission-denied" ? "Hat nicht geklappt. Sind die neuen Firebase-Regeln schon drin?" : "Hat nicht geklappt."));
     for (const [id, g] of Object.entries(MG)) { g.ref = grp.collection("chillspiel").doc(id);
       g.ref.onSnapshot(sn => { let n = null; if (sn.exists) try { n = JSON.parse(sn.data().s); } catch (e) {} g.G = g.def.valid(n) ? n : g.def.fresh(); gameUI(); }, () => {}); }

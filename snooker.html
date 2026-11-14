@@ -46,6 +46,7 @@ html,body{height:100%;margin:0;background:var(--night);color:var(--ink);font-fam
 <div class="score"><div id="s0">Du<b>0</b></div><div id="s1">Bot<b>0</b></div></div>
 <div class="msg" id="msg" aria-live="polite"></div>
 <div class="panel">
+  <div id="sChat"></div>
   <p class="hint" id="hint">Tipp auf den Tisch, wohin du zielen willst. Mit ◀ ▶ fein einstellen.</p>
   <div class="row">
     <button type="button" class="btn" id="aL" aria-label="Ziel nach links">◀</button>
@@ -69,6 +70,9 @@ html,body{height:100%;margin:0;background:var(--night);color:var(--ink);font-fam
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script src="lang.js"></script>
 <script src="config.js"></script>
+<script src="filter.js"></script>
+<script src="music.js"></script>
+<script src="spielchat.js"></script>
 <script>
 (function () {
   "use strict";
@@ -326,9 +330,11 @@ html,body{height:100%;margin:0;background:var(--night);color:var(--ink);font-fam
     try { firebase.initializeApp(firebaseConfig); fsdb = firebase.firestore();
       const grp = DEMOW ? fsdb.collection("walls").doc(WALL) : fsdb.collection("walls").doc(WALL).collection("familie").doc(KEY);
       oref = grp.collection("chillspiel").doc("snooker");
+      if (window.KloSpielChat) KloSpielChat.mount({ host: $("sChat"), grp, me: myName, demo: DEMOW, wall: WALL, names: () => (OS ? OS.p.filter(p => p.id !== device).map(p => safeN(p.n)) : []) });
       oref.onSnapshot(sn => { let n = null; if (sn.exists) try { n = JSON.parse(sn.data().s); } catch (e) {} onSnap(validS(n) ? n : freshS()); }, () => {});
     } catch (e) { $("vsOn").hidden = true; }
   }
+  if (!CAN_ON && window.KloSpielChat) KloSpielChat.mount({ host: $("sChat"), musicOnly: true });
   $("vsOn").onclick = () => {
     if (mode !== "online") { mode = "online"; lobby(); }
     const S = OS || freshS(), mi = S.p.some(p => p.id === device);
